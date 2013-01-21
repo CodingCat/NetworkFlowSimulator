@@ -17,10 +17,9 @@ public class NFSFlow extends Entity {
 	}
 	
 	public double Start(NFSNode src, NFSNode dst) {
-		datarate = Math.min(src.RealllocateBW(), dst.RealllocateBW());
 		src.AddNewFlow(this);
 		dst.AddNewFlow(this);
+		datarate = Math.min(src.getFlowAllocation(this), dst.getFlowAllocation(this));
 		return datarate;
 	}
-
 }
