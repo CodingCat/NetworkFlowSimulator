@@ -1,14 +1,17 @@
 package simulator.entity;
 
-import desmoj.core.simulator.Entity;
+import simulator.entity.application.NFSApplication;
 import desmoj.core.simulator.Model;
 
-public class NFSHost extends Entity{
-
-	public NFSHost(Model model, String entityName, boolean showInLog) {
-		super(model, entityName, showInLog);
-		// TODO Auto-generated constructor stub
+public class NFSHost extends NFSNode{
+	
+	NFSApplication app = null;
+	
+	public NFSHost(Model model, String entityName, boolean showInLog, double bandWidth, String ip) {
+		super(model, entityName, showInLog, bandWidth, ip);
 	}
 	
-	
+	public void send(){
+		//TODO: send the flows
+	}
 }

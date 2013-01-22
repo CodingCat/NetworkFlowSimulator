@@ -10,26 +10,22 @@ import desmoj.core.simulator.Model;
 public class NFSNode extends Entity{
 	
 	protected double totalBandWidth = 0.0;
-	protected double availableBandWidth = 0.0;
 	protected LinkedList<NFSFlow> runningFlows = null;
 	protected HashMap<String, NFSLink> outLinks = null;//nexthop address -> link
 	protected HashMap<NFSFlow, Double> flowAllocationTable = null;//flow->allocation
+	protected String ipaddress = null;
 	
-	protected Model ownermodel;
-	
-	public NFSNode(Model model, String entityName, boolean showInLog, double bandWidth) {
+	public NFSNode(Model model, String entityName, boolean showInLog, double bandWidth, String ip) {
 		super(model, entityName, showInLog);
-		this.ownermodel = model;
 		this.totalBandWidth = bandWidth;
-		this.availableBandWidth = this.totalBandWidth;
 		runningFlows = new LinkedList<NFSFlow>();
 		outLinks = new HashMap<String, NFSLink>();
 		flowAllocationTable = new HashMap<NFSFlow, Double>();
+		ipaddress = ip;
 	}
 
 	public int AddNewFlow(NFSFlow flow) {
 		// max-min fair
-		//TODO: need to be checked
 		runningFlows.add(flow);
 		double avr = totalBandWidth / (runningFlows.size());
 		int cnt = 1;
@@ -49,4 +45,13 @@ public class NFSNode extends Entity{
 		return flowAllocationTable.get(flow);
 	}
 	
+	public void AddNewLink(String dstip, double rate) {
+		NFSLink link = new NFSLink(getModel(), "link-" + this + "-" + dstip, true, rate);
+		outLinks.put(dstip, link);
+	}
+	
+	@Override
+	public String toString() {
+		return this.ipaddress;
+	}
 }
