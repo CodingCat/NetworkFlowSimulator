@@ -45,13 +45,28 @@ public class NFSNode extends Entity{
 		return flowAllocationTable.get(flow);
 	}
 	
-	public void AddNewLink(String dstip, double rate) {
-		NFSLink link = new NFSLink(getModel(), "link-" + this + "-" + dstip, true, rate);
-		outLinks.put(dstip, link);
+	public void AddNewLink(NFSNode dst, double rate) {
+		NFSLink link = new NFSLink(getModel(), "link-" + this + "-" + dst, true, rate, this, dst);
+		outLinks.put(dst.toString(), link);
 	}
 	
+	public void AssignIPAddress(String ip) {
+		ipaddress = ip;
+	}
+	
+	public boolean HasAllocatedIP() { 
+		return ipaddress != null;
+	}
+	 
 	@Override
 	public String toString() {
 		return this.ipaddress;
+	}
+	
+	
+	public void PrintLinks() {
+		for (NFSLink link : outLinks.values()) {
+			System.out.println(link);
+		}
 	}
 }

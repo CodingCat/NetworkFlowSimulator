@@ -14,11 +14,12 @@ public class NetworkFlowSimulator {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		parser = NFSXmlParser.Instance(args[0]);
+		
 		NFSModel mainModel = new NFSModel(null, "NetworksFlowModel", true, true);
 		Experiment exp = new Experiment("NetworksFlowExperiments");
 		mainModel.connectToExperiment(exp);
 		
-		parser = NFSXmlParser.Instance(args[1]);
 		
 		exp.tracePeriod(new TimeInstant(0), new TimeInstant(100));
 		exp.debugPeriod(new TimeInstant(0), new TimeInstant(100));
