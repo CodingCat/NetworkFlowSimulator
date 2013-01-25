@@ -32,7 +32,7 @@ public class NFSBuilding extends Entity{
 	}
 	
 	private void build() {
-		NFSL2SwitchBasedLAN  lanbuilder = new NFSL2SwitchBasedLAN();
+		NFSSwitchBasedLAN  lanbuilder = new NFSSwitchBasedLAN();
 		NFSIpv4Installer ipv4Installer = new NFSIpv4Installer();
 		//Assign ip address to hosts and l2 switch
 		for (int i = 0; i < l2num; i++) {

@@ -79,10 +79,12 @@ public class NFSRouter extends NFSNode {
 	@Override
 	public void AssignIPAddress(String ip) {
 		if (IPs.size() == 0) {
+			System.out.println(this.toString() + ":" + ip);
 			super.AssignIPAddress(ip);
 			IPs.add(ipaddress);
 		}
 		else {
+			//System.out.println(this.toString() + ":" + ip);
 			IPs.add(ip);
 		}
 	}

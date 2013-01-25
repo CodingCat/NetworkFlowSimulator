@@ -20,7 +20,6 @@ public class NetworkFlowSimulator {
 		Experiment exp = new Experiment("NetworksFlowExperiments");
 		mainModel.connectToExperiment(exp);
 		
-		
 		exp.tracePeriod(new TimeInstant(0), new TimeInstant(100));
 		exp.debugPeriod(new TimeInstant(0), new TimeInstant(100));
 		exp.stop(new TimeInstant(150)); 

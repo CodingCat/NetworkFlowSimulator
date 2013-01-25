@@ -33,4 +33,8 @@ public class NFSRoutersContainer extends NFSNodesContainer{
 		return routers.get(i);
 	}
 	
+	public void Add(NFSRouter newrouter) {
+		routers.add(newrouter);
+	}
+	
 }

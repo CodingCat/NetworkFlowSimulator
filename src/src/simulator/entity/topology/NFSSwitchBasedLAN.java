@@ -7,7 +7,7 @@ import simulator.entity.NFSRouter;
 import simulator.entity.NFSRoutersContainer;
 
 
-public class NFSL2SwitchBasedLAN {
+public class NFSSwitchBasedLAN {
 	
 	/**
 	 * build a local lan with the network gate router

@@ -2,6 +2,7 @@ package simulator.model;
 
 import simulator.NetworkFlowSimulator;
 import simulator.entity.topology.NFSBuilding;
+import simulator.entity.topology.NFSNetworksBackbone;
 import desmoj.core.simulator.Model;
 
 public class NFSModel extends Model{
@@ -29,11 +30,20 @@ public class NFSModel extends Model{
 		int l3switchnum = NetworkFlowSimulator.parser.getInt("fluidsim.topology.l3switchnum", 2);
 		int l2switchnum = NetworkFlowSimulator.parser.getInt("fluidsim.topology.l2switchnum", 4);
 		int hostsperl2sw = NetworkFlowSimulator.parser.getInt("fluidsim.topology.hostsperl2sw", 100);
-		
+		int coreNum = NetworkFlowSimulator.parser.getInt("fluidsim.topology.corenum", 2);
+	
+		NFSBuilding [] buildings = new NFSBuilding[buildingNum];
+		NFSNetworksBackbone backbone = new NFSNetworksBackbone(getModel(), "networks back bone", true, coreNum);
 		for (int i = 0 ; i < buildingNum; i++) {
 			NFSBuilding building = new NFSBuilding(getModel(), "building " + i, true, i + 1, l3switchnum, l2switchnum, 
 					hostsperl2sw);
-			building.dumpTopology();
+			buildings[i] = building;
+		}
+		
+		backbone.connect(buildings);
+		
+		for (int i = 0; i < buildingNum; i++) {
+			buildings[i].dumpTopology();
 		}
 	}
 }
