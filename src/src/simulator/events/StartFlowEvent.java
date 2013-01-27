@@ -1,8 +1,8 @@
 package simulator.events;
 
 
-import simulator.entity.NFSFlow;
 import simulator.entity.NFSNode;
+import simulator.entity.application.NFSFlow;
 import desmoj.core.simulator.EventOf3Entities;
 import desmoj.core.simulator.Model;
 

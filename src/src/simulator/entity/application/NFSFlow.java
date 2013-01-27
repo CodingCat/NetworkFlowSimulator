@@ -1,15 +1,16 @@
-package simulator.entity;
+package simulator.entity.application;
 
+import simulator.entity.NFSNode;
 import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
 
 public class NFSFlow extends Entity {
 	
-	double demand = 0;
-	double datarate = 0; //in kbps
+	public double demand = 0;
+	public double datarate = 0; //in kbps
 	
-	String dst = "";
-	String srt = "";
+	public String dst = "";
+	public String srt = "";
 	
 	public NFSFlow(Model arg0, String arg1, boolean arg2) {
 		super(arg0, arg1, arg2);

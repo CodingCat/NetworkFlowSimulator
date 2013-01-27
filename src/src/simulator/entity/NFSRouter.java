@@ -4,6 +4,9 @@ package simulator.entity;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import simulator.entity.application.NFSFlow;
+import simulator.entity.topology.NFSLink;
+
 
 
 import desmoj.core.simulator.Model;

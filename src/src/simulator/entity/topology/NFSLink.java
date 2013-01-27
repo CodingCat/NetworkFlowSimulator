@@ -1,5 +1,6 @@
-package simulator.entity;
+package simulator.entity.topology;
 
+import simulator.entity.NFSNode;
 import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
 

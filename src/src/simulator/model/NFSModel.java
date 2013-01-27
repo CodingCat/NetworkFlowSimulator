@@ -25,7 +25,6 @@ public class NFSModel extends Model{
 
 	@Override
 	public void init() {
-		//TODO: build the topology
 		int buildingNum = NetworkFlowSimulator.parser.getInt("fluidsim.topology.buildingnum", 2);
 		int l3switchnum = NetworkFlowSimulator.parser.getInt("fluidsim.topology.l3switchnum", 2);
 		int l2switchnum = NetworkFlowSimulator.parser.getInt("fluidsim.topology.l2switchnum", 4);

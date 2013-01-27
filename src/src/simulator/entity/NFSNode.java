@@ -3,6 +3,9 @@ package simulator.entity;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import simulator.entity.application.NFSFlow;
+import simulator.entity.topology.NFSLink;
+
 
 
 import desmoj.core.simulator.Entity;
