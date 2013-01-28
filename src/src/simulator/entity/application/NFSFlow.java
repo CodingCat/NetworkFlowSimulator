@@ -3,6 +3,9 @@ package simulator.entity.application;
 import simulator.entity.NFSNode;
 import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
+import desmoj.core.simulator.TimeInstant;
+import desmoj.core.simulator.TimeOperations;
+import desmoj.core.simulator.TimeSpan;
 
 public class NFSFlow extends Entity {
 	
@@ -12,15 +15,40 @@ public class NFSFlow extends Entity {
 	public String dst = "";
 	public String srt = "";
 	
-	public NFSFlow(Model arg0, String arg1, boolean arg2) {
-		super(arg0, arg1, arg2);
-		// TODO Auto-generated constructor stub
+	private TimeSpan lastingTime;
+	private TimeInstant lastStartPoint;
+	double throughput = 0.0;
+	
+	public double activeTimeUpbound = 0;
+	public double idleTimeDownbound = 0;
+	
+	public NFSFlow(Model model, String entityname, boolean showinreport) {
+		super(model, entityname, showinreport);
+		lastingTime = new TimeSpan(0);
+		lastStartPoint = new TimeInstant(0);
 	}
 	
 	public double Start(NFSNode src, NFSNode dst) {
 		src.AddNewFlow(this);
 		dst.AddNewFlow(this);
 		datarate = Math.min(src.getFlowAllocation(this), dst.getFlowAllocation(this));
+		lastStartPoint = presentTime();
 		return datarate;
 	}
+	
+	public void Free(){
+		TimeSpan recentLastSpan = TimeOperations.diff(presentTime(), lastStartPoint);
+		double oldtotaldataamount = throughput * lastingTime.getTimeAsDouble();
+		double recentdataamount = datarate * recentLastSpan.getTimeAsDouble();
+		//increase the lastineTime
+		lastingTime  = TimeOperations.add(lastingTime, recentLastSpan);
+		//Calculate throughput
+		throughput = ((oldtotaldataamount + recentdataamount) / lastingTime.getTimeAsDouble());  
+	}
+	
+	public void UpdateDatarate(double rate) {
+		this.datarate = rate;
+	}
+	
+	
 }

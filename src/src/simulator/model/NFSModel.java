@@ -19,8 +19,8 @@ public class NFSModel extends Model{
 
 	@Override
 	public void doInitialSchedules() {
-		// TODO Auto-generated method stub
-		
+	
+		//TODO:
 	}
 
 	@Override
@@ -41,8 +41,7 @@ public class NFSModel extends Model{
 		
 		backbone.connect(buildings);
 		
-		for (int i = 0; i < buildingNum; i++) {
-			buildings[i].dumpTopology();
-		}
+		//build route table
+		
 	}
 }

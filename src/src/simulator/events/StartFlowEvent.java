@@ -14,6 +14,6 @@ public class StartFlowEvent extends EventOf3Entities<NFSNode, NFSNode, NFSFlow> 
 
 	@Override
 	public void eventRoutine(NFSNode srcNode, NFSNode dstNode, NFSFlow flow) {
-		flow.Start(srcNode, dstNode);
+	
 	}
 }

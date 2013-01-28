@@ -4,6 +4,10 @@ import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
 
 import simulator.NetworkFlowSimulator;
+import simulator.entity.NFSHost;
+import simulator.entity.NFSHostsContainer;
+import simulator.entity.NFSNode;
+import simulator.entity.NFSNodesContainer;
 import simulator.entity.NFSRouter;
 import simulator.entity.NFSRoutersContainer;
 
@@ -13,6 +17,7 @@ public class NFSNetworksBackbone extends Entity{
 	NFSRoutersContainer distributionSwitches = null;
 	NFSIpv4Installer ipinstaller = null;
 	NFSSwitchBasedLAN lanbuilder = null;
+	NFSNode dummynode = null; //this node is the target of all traffic out from the enterprise networks
 	
 	public NFSNetworksBackbone(Model model, 
 			String entityname, 
@@ -51,5 +56,12 @@ public class NFSNetworksBackbone extends Entity{
 			lanbuilder.buildLan(coreswitches[i], distributionSwitches, 0, distributionSwitches.GetN());
 		}
 		
+		//set a dummy node representing the networks out of current enterprise networks
+		String dummy_ip = "10." + (coreswitches.length + 1 + buildinglist.length) + "1.1";
+		ipinstaller.assignIPAddress(dummy_ip, dummynode);
+		NFSHostsContainer dummycontainer = new NFSHostsContainer(getModel(), "dummy container", true);
+		for (int i = 0; i < coreswitches.length; i++) {
+			lanbuilder.buildLan(coreswitches[i], dummycontainer, 0, 1);
+		}
 	}
 }

@@ -67,7 +67,6 @@ public class NFSNode extends Entity{
 		return this.ipaddress;
 	}
 	
-	
 	public void PrintLinks() {
 		for (NFSLink link : outLinks.values()) {
 			System.out.println(link);
