@@ -19,8 +19,9 @@ public class NFSHostsContainer extends NFSNodesContainer{
 		for (int i = 0; i < n; i++) {
 			NFSHost node = new NFSHost(getModel(), "node " + i, 
 					true, 
-					NetworkFlowSimulator.parser.getDouble("fluidsim.node.default.bandwidth", 1000),
-					null);
+					NetworkFlowSimulator.parser.getDouble("fluidsim.node.nicbandwidth", 1000),
+					null, 
+					NetworkFlowSimulator.parser.getInt("fluidsim.node.multihome", 1));
 			hosts.add(node);
 		}
 	}

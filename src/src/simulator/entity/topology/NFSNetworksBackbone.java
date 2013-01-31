@@ -4,10 +4,7 @@ import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
 
 import simulator.NetworkFlowSimulator;
-import simulator.entity.NFSHost;
-import simulator.entity.NFSHostsContainer;
 import simulator.entity.NFSNode;
-import simulator.entity.NFSNodesContainer;
 import simulator.entity.NFSRouter;
 import simulator.entity.NFSRoutersContainer;
 
@@ -29,7 +26,7 @@ public class NFSNetworksBackbone extends Entity{
 		for (int i = 0; i < n; i++) {
 			coreswitches[i] = new NFSRouter(getModel(), "core " + i, true, 
 					NetworkFlowSimulator.parser.getDouble("fluidsim.topology.corebandwidth", 1000), 
-					null);
+					null, NFSRouter.RouterType.Core);
 		}
 		ipinstaller = new NFSIpv4Installer();
 		lanbuilder = new NFSSwitchBasedLAN();
@@ -59,9 +56,9 @@ public class NFSNetworksBackbone extends Entity{
 		//set a dummy node representing the networks out of current enterprise networks
 		String dummy_ip = "10." + (coreswitches.length + 1 + buildinglist.length) + "1.1";
 		ipinstaller.assignIPAddress(dummy_ip, dummynode);
-		NFSHostsContainer dummycontainer = new NFSHostsContainer(getModel(), "dummy container", true);
+		NFSPointToPointInstaller p2pinstaller = new NFSPointToPointInstaller();
 		for (int i = 0; i < coreswitches.length; i++) {
-			lanbuilder.buildLan(coreswitches[i], dummycontainer, 0, 1);
+			p2pinstaller.Link(coreswitches[i], dummynode);
 		}
 	}
 }

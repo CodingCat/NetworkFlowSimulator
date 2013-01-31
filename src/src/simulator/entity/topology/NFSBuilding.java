@@ -4,6 +4,7 @@ import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
 import simulator.entity.NFSHostsContainer;
 import simulator.entity.NFSRoutersContainer;
+import simulator.entity.NFSRouter.RouterType;
 
 public class NFSBuilding extends Entity{
 	
@@ -27,7 +28,9 @@ public class NFSBuilding extends Entity{
 		l3switches = new NFSRoutersContainer(model, "l3 switches in " + entityname, debugmodel);
 		hosts.create(hostsperl2 * l2num);
 		l2switches.create(l2num);
+		l2switches.SetRouterType(RouterType.Aggererate);
 		l3switches.create(l3num);
+		l3switches.SetRouterType(RouterType.Distribution);
 		build();
 	}
 	

@@ -19,10 +19,14 @@ public class NFSRoutersContainer extends NFSNodesContainer{
 		for (int i = 0; i < n; i++) {
 			NFSRouter node = new NFSRouter(getModel(), "node " + i, 
 					true, 
-					NetworkFlowSimulator.parser.getDouble("fluidsim.node.default.bandwidth", 1024.0),
+					NetworkFlowSimulator.parser.getDouble("fluidsim.node.nicbandwidth", 1024.0),
 					null);
 			routers.add(node);
 		}
+	}
+	
+	public void SetRouterType(NFSRouter.RouterType type) {
+		for (NFSRouter router : routers) router.SetRouterType(type);
 	}
 
 	public int GetN() {

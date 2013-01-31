@@ -15,8 +15,13 @@ public class NFSRouter extends NFSNode {
 	
 	private HashMap<String, ArrayList<NFSLink> > routetable = null;//dst ip range -> links
 	private HashMap<String, NFSLink> lanLinks = null;//the connected host ip address -> links
-	
 	private ArrayList<String> IPs;
+	static public enum RouterType { 
+		Aggererate,
+		Distribution,
+		Core;
+	};
+	private RouterType routertype = null;
 	
 	public NFSRouter(Model model, String entityName, boolean showInLog,
 			double bandWidth, String ipaddr) {
@@ -24,6 +29,19 @@ public class NFSRouter extends NFSNode {
 		routetable = new HashMap<String, ArrayList<NFSLink> >();
 		lanLinks = new HashMap<String, NFSLink>();
 		IPs = new ArrayList<String>();
+	}
+	
+	public NFSRouter(Model model, String entityName, boolean showInLog,
+			double bandWidth, String ipaddr, RouterType type) {
+		super(model, entityName, showInLog, bandWidth, ipaddr);
+		routetable = new HashMap<String, ArrayList<NFSLink> >();
+		lanLinks = new HashMap<String, NFSLink>();
+		IPs = new ArrayList<String>();
+		routertype = type;
+	}
+	
+	public void SetRouterType(RouterType type) {
+		routertype = type;
 	}
 	
 	/**
@@ -38,45 +56,26 @@ public class NFSRouter extends NFSNode {
 		if (routetable.containsKey(dst) == false) {
 			routetable.put(dst, new ArrayList<NFSLink>());
 		}
-		//TODO: need to be checked
-		/*NFSLink link = new NFSLink(getModel(), "link", true, );
-		routetable.get(dst).add(link);*/
 	}
 	
 	public void registerIncomingLink(NFSNode node, double rate) {
+		if (node.getClass().equals(NFSRouter.class)) {
+			registerIncomingLink((NFSRouter)node, rate);
+		}
+		if (node.getClass().equals(NFSHost.class)) {
+			registerIncomingLink((NFSHost)node, rate);
+		}
+	}
+	
+	private void registerIncomingLink(NFSHost node, double rate) {
 		NFSLink link = new NFSLink(getModel(), "incoming link from " + node, true, rate, node, this);
 		lanLinks.put(node.toString(), link);
 	}
 	
-	public void Forward(NFSFlow flow) {
-		try {
-			//get the destination ip range
-			String dstiprange = flow.dst.substring(0, flow.dst.lastIndexOf(".")) + ".0";
-			//lookup the lan links to check if it's in the local subset
-			if (lanLinks.containsKey(flow.dst)) {
-				//TODO:send out the flow
-				return ;
-			}
-			
-			//search the route table
-			if (routetable.containsKey(dstiprange) == false) {
-				throw new Exception("dead path");
-			}
-			else {
-			//	int availablePathNum = routetable.get(dstiprange).size();
-				//int selectedIndex = flow.dst.hashCode() % availablePathNum;
-				//String nextHopAddr = (String) outLinks.keySet().toArray()[selectedIndex];
-				/*
-				StartFlowEvent evt = new StartFlowEvent(ownermodel, 
-						"Start New flow from " + this.toString() + " to " + nextHopAddr, true);
-				evt.schedule((NFSNode)this, (NFSNode)outLinks.get(nextHopAddr).dst, flow, new TimeInstant(0));
-				*/
-				//TODO:send out the flows
-			}
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
+	private void registerIncomingLink(NFSRouter router, double rate) {
+		NFSLink link = new NFSLink(getModel(), "incoming link from " + router, true, rate, router, this);
+		String iprangekey = router.ipaddress.substring(0, router.ipaddress.lastIndexOf(".")) + ".0";
+		lanLinks.put(iprangekey, link);
 	}
 	
 	@Override
@@ -92,6 +91,78 @@ public class NFSRouter extends NFSNode {
 		}
 	}
 	
+	public NFSLink ChooseECMPLink(String dstString, NFSLink [] links) {
+		int index = dstString.hashCode() % links.length;
+		return links[index];
+	}
+	
+	public void ReceiveFlow(NFSFlow flow) {
+		try {
+			if (routertype == null) throw new Exception("unindicated router type");
+			
+			NFSNode nexthopNode = null;
+			String dstcrange = flow.dstipString.substring(0, flow.dstipString.lastIndexOf(".")) + ".0";
+			String localcrange = this.ipaddress.substring(0, flow.dstipString.lastIndexOf(".")) + ".0";
+			//get the building tag
+			//get the later 3 segment
+			String dstlater3seg = flow.dstipString.substring(flow.dstipString.indexOf(".") + 1, 
+					flow.dstipString.length());
+			String dstbuildingTag = dstlater3seg.substring(0, dstlater3seg.indexOf("."));
+			if (routertype.equals(RouterType.Aggererate)) {
+				if (dstcrange.equals(localcrange)) {
+					//in the same lan
+					if (lanLinks.containsKey(flow.dstipString)) nexthopNode = lanLinks.get(flow.dstipString).src;
+				}
+				else{
+					//send through arbitrary outlinks
+					ChooseECMPLink(flow.dstipString, (NFSLink[]) outLinks.values().toArray());
+				}
+			}
+			else {
+				if (routertype.equals(RouterType.Distribution)) {
+					String locallater3seg = this.ipaddress.substring(this.ipaddress.indexOf(".") + 1, 
+							this.ipaddress.length());
+					String localbuildingTag = locallater3seg.substring(0, locallater3seg.indexOf("."));
+					if (dstbuildingTag.equals(localbuildingTag)) {
+						//local query
+						if (lanLinks.containsKey(dstcrange)) nexthopNode = lanLinks.get(dstcrange).src;
+					}
+					else {
+						//send through arbitrary link
+						ChooseECMPLink(flow.dstipString, (NFSLink[]) outLinks.values().toArray());
+					}
+				}
+				else {
+					//Must be core
+					//local query
+					ArrayList<NFSLink> potentialLinks = new ArrayList<NFSLink>();
+					for (String link: lanLinks.keySet()) {
+						String linklater3seg = link.substring(link.indexOf(".") + 1, link.length());
+						String linkbuildingTag = linklater3seg.substring(0, linklater3seg.indexOf("."));
+						if (linkbuildingTag.equals(dstbuildingTag)) {
+							potentialLinks.add(lanLinks.get(link));
+						}
+					}
+					if (potentialLinks.size() != 0) {
+						int selectedIdx = flow.dstipString.hashCode() % outLinks.size();
+						nexthopNode = potentialLinks.get(selectedIdx).src;
+					}
+					else {
+						//send out
+						nexthopNode = (NFSNode) outLinks.values().toArray()[0];
+					}
+				}
+			}
+			if (nexthopNode == null) {
+				throw new Exception("could not find ip: " + flow.dstipString);
+			}
+			//TODO:schedule receiveflowevent with the target host
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+		
 	@Override
 	public void PrintLinks() {
 		System.out.println("Allocated IPs");

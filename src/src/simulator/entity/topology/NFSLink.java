@@ -7,8 +7,8 @@ import desmoj.core.simulator.Model;
 public class NFSLink extends Entity{
 	
 	double datarate = 0.0f;
-	NFSNode src = null;
-	NFSNode dst = null;
+	public NFSNode src = null;
+	public NFSNode dst = null;
 	
 	public NFSLink(Model model, String entityName, boolean showInLog, double rate, NFSNode s, NFSNode d) {
 		super(model, entityName, showInLog);

@@ -12,8 +12,8 @@ public class NFSFlow extends Entity {
 	public double demand = 0;
 	public double datarate = 0; //in kbps
 	
-	public String dst = "";
-	public String srt = "";
+	public String dstipString = "";
+	public String srtipString = "";
 	
 	private TimeSpan lastingTime;
 	private TimeInstant lastStartPoint;
