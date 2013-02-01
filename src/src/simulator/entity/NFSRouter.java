@@ -91,10 +91,6 @@ public class NFSRouter extends NFSNode {
 		}
 	}
 	
-	public NFSLink ChooseECMPLink(String dstString, NFSLink [] links) {
-		int index = dstString.hashCode() % links.length;
-		return links[index];
-	}
 	
 	public void ReceiveFlow(NFSFlow flow) {
 		try {
@@ -115,7 +111,7 @@ public class NFSRouter extends NFSNode {
 				}
 				else{
 					//send through arbitrary outlinks
-					ChooseECMPLink(flow.dstipString, (NFSLink[]) outLinks.values().toArray());
+					nexthopNode = ChooseECMPLink(flow.dstipString, (NFSLink[]) outLinks.values().toArray()).dst;
 				}
 			}
 			else {
@@ -129,7 +125,7 @@ public class NFSRouter extends NFSNode {
 					}
 					else {
 						//send through arbitrary link
-						ChooseECMPLink(flow.dstipString, (NFSLink[]) outLinks.values().toArray());
+						nexthopNode = ChooseECMPLink(flow.dstipString, (NFSLink[]) outLinks.values().toArray()).dst;
 					}
 				}
 				else {

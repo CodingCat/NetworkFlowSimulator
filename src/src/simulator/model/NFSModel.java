@@ -3,13 +3,16 @@ package simulator.model;
 import simulator.NetworkFlowSimulator;
 import simulator.entity.topology.NFSBuilding;
 import simulator.entity.topology.NFSNetworksBackbone;
+import simulator.events.NFSStartFlowEvent;
 import desmoj.core.simulator.Model;
 
 public class NFSModel extends Model{
 	
+	public NFSStartFlowEvent startflowevent = null;
 	
 	public NFSModel(Model model, String modelName, boolean showInReport, boolean showInTrace) {
 		super(model, modelName, showInReport, showInTrace);
+		startflowevent = new NFSStartFlowEvent(this, "startflow", true);
 	}
 
 	@Override
@@ -20,7 +23,6 @@ public class NFSModel extends Model{
 	@Override
 	public void doInitialSchedules() {
 	
-		//TODO:
 	}
 
 	@Override

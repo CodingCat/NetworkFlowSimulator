@@ -1,10 +1,19 @@
 package simulator.entity.application;
 
-public class NFSApplication {
+import desmoj.core.simulator.Entity;
+import desmoj.core.simulator.Model;
+import simulator.entity.NFSHost;
+
+public abstract class NFSApplication extends Entity{
+
 	protected double datarate = 0;// in kbps
-	protected double packetsize = 0;//in bytes
+	protected NFSHost hostmachine = null;
 	
-	public NFSApplication(double dr) {
+	public NFSApplication(Model model, String entityName, boolean showInTrace, double dr, NFSHost machine) {
+		super(model, entityName, showInTrace);
 		datarate = dr;
+		hostmachine = null;
 	}
+
+	public abstract void Send();
 }

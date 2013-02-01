@@ -9,8 +9,8 @@ import desmoj.core.simulator.TimeSpan;
 
 public class NFSFlow extends Entity {
 	
-	public double demand = 0;
-	public double datarate = 0; //in kbps
+	public double demand = 0;//in MB
+	public double datarate = 0; //in MBps
 	
 	public String dstipString = "";
 	public String srtipString = "";
@@ -46,9 +46,11 @@ public class NFSFlow extends Entity {
 		throughput = ((oldtotaldataamount + recentdataamount) / lastingTime.getTimeAsDouble());  
 	}
 	
-	public void UpdateDatarate(double rate) {
+	public void SetDatarate(double rate) {
 		this.datarate = rate;
 	}
 	
-	
+	public double GetDataRate() {
+		return this.datarate;
+	}
 }
