@@ -4,7 +4,7 @@ package simulator.entity;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import simulator.entity.application.NFSFlow;
+import simulator.entity.flow.NFSFlow;
 import simulator.entity.topology.NFSLink;
 
 
@@ -92,11 +92,12 @@ public class NFSRouter extends NFSNode {
 	}
 	
 	
-	public void ReceiveFlow(NFSFlow flow) {
+	public NFSNode ReceiveFlow(NFSFlow flow) {
 		try {
 			if (routertype == null) throw new Exception("unindicated router type");
 			
 			NFSNode nexthopNode = null;
+			NFSLink outgoingPath = null;
 			String dstcrange = flow.dstipString.substring(0, flow.dstipString.lastIndexOf(".")) + ".0";
 			String localcrange = this.ipaddress.substring(0, flow.dstipString.lastIndexOf(".")) + ".0";
 			//get the building tag
@@ -107,11 +108,15 @@ public class NFSRouter extends NFSNode {
 			if (routertype.equals(RouterType.Aggererate)) {
 				if (dstcrange.equals(localcrange)) {
 					//in the same lan
-					if (lanLinks.containsKey(flow.dstipString)) nexthopNode = lanLinks.get(flow.dstipString).src;
+					if (lanLinks.containsKey(flow.dstipString)) {
+						outgoingPath = lanLinks.get(flow.dstipString);
+						nexthopNode = outgoingPath.src;
+					}
 				}
 				else{
 					//send through arbitrary outlinks
-					nexthopNode = ChooseECMPLink(flow.dstipString, (NFSLink[]) outLinks.values().toArray()).dst;
+					outgoingPath = ChooseECMPLink(flow.dstipString, (NFSLink[]) outLinks.values().toArray());
+					nexthopNode = outgoingPath.dst;
 				}
 			}
 			else {
@@ -121,11 +126,15 @@ public class NFSRouter extends NFSNode {
 					String localbuildingTag = locallater3seg.substring(0, locallater3seg.indexOf("."));
 					if (dstbuildingTag.equals(localbuildingTag)) {
 						//local query
-						if (lanLinks.containsKey(dstcrange)) nexthopNode = lanLinks.get(dstcrange).src;
+						if (lanLinks.containsKey(dstcrange)) {
+							outgoingPath = lanLinks.get(dstcrange);
+							nexthopNode = outgoingPath.src;
+						}
 					}
 					else {
 						//send through arbitrary link
-						nexthopNode = ChooseECMPLink(flow.dstipString, (NFSLink[]) outLinks.values().toArray()).dst;
+						outgoingPath = ChooseECMPLink(flow.dstipString, (NFSLink[]) outLinks.values().toArray());
+						nexthopNode = outgoingPath.dst;
 					}
 				}
 				else {
@@ -141,21 +150,26 @@ public class NFSRouter extends NFSNode {
 					}
 					if (potentialLinks.size() != 0) {
 						int selectedIdx = flow.dstipString.hashCode() % outLinks.size();
-						nexthopNode = potentialLinks.get(selectedIdx).src;
+						outgoingPath = potentialLinks.get(selectedIdx);
+						nexthopNode = outgoingPath.src;
 					}
 					else {
 						//send out
-						nexthopNode = (NFSNode) outLinks.values().toArray()[0];
+						outgoingPath = (NFSLink) outLinks.values().toArray()[0];
+						nexthopNode = outgoingPath.dst;
 					}
 				}
 			}
 			if (nexthopNode == null) {
 				throw new Exception("could not find ip: " + flow.dstipString);
 			}
+			outgoingPath.addRunningFlow(flow);
 			//TODO:schedule receiveflowevent with the target host
+			return nexthopNode;
 		}
 		catch (Exception e) {
 			e.printStackTrace();
+			return null;
 		}
 	}
 		

@@ -1,27 +1,24 @@
 package simulator.entity;
 
 import java.util.HashMap;
-import java.util.LinkedList;
 
-import simulator.entity.application.NFSFlow;
+import simulator.entity.flow.NFSFlow;
 import simulator.entity.topology.NFSLink;
-
-
 
 import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
 
 public class NFSNode extends Entity{
 	
-	protected HashMap<NFSLink, LinkedList<NFSFlow>> runningFlows = null;
+//	protected HashMap<NFSLink, LinkedList<NFSFlow>> runningFlows = null;
 	protected HashMap<String, NFSLink> outLinks = null;//nexthop address -> link
 	protected HashMap<NFSFlow, Double> flowAllocationTable = null;//flow->allocation
-	protected String ipaddress = null;
+	public String ipaddress = null;
 	
 	
 	public NFSNode(Model model, String entityName, boolean showInLog, double bandWidth, String ip) {
 		super(model, entityName, showInLog);
-		runningFlows = new HashMap<NFSLink, LinkedList<NFSFlow>>();
+	//	runningFlows = new HashMap<NFSLink, LinkedList<NFSFlow>>();
 		outLinks = new HashMap<String, NFSLink>();
 		flowAllocationTable = new HashMap<NFSFlow, Double>();
 		ipaddress = ip;
@@ -33,26 +30,28 @@ public class NFSNode extends Entity{
 	}
 	
 	public NFSLink AddNewFlow(NFSFlow flow) {
-		NFSLink link = ChooseECMPLink(flow.dstipString, (NFSLink[]) outLinks.values().toArray()); 
-	/*	if (runningFlows.containsKey(link) == false) {
-			runningFlows.put(link, new LinkedList<NFSFlow>());
-		}
-	//	runningFlows.get(link).add(flow);
-	//	link.IncRunningFlowN();
-		//set flow rate for the first time
-		flow.SetDatarate(link.GetTotalBandwidth() / link.GetRunningFlowsN());
-		//change the datarate of all other flows on this link*/
-		changeSendingRate(link);
+		NFSLink link = ChooseECMPLink(
+				(flow.srtipString + flow.dstipString), (NFSLink[]) outLinks.values().toArray());
+		link.addRunningFlow(flow);
+		flow.addBypassingLink(link);
 		return link;
 	}
 	
-	private void changeSendingRate(NFSLink link) {
+	
+	/*private void changeSendingRate(NFSLink link) {
 		LinkedList<NFSFlow> allflowsonLink = runningFlows.get(link);
 		double avrrate = link.GetTotalBandwidth() / link.GetRunningFlowsN();
 		for (NFSFlow flow : allflowsonLink) {
-			if (flow.GetDataRate() >= avrrate) flow.SetDatarate(avrrate);
+			if (flow.datarate >= avrrate) {
+				flow.expectedrate = avrrate;
+				NFSFlowRateChangeEvent ratechangeevt = new NFSFlowRateChangeEvent(
+						getModel(),
+						flow.toString() + " Rate Change",
+						true);
+				ratechangeevt.schedule(this, link, new TimeInstant(0));
+			}
 		}
-	}
+	}*/
 	
 	public double getFlowAllocation(NFSFlow flow) {
 		return flowAllocationTable.get(flow);
@@ -76,6 +75,10 @@ public class NFSNode extends Entity{
 		return this.ipaddress;
 	}
 	
+/*	public NFSFlow[] getRunningFlows(NFSLink link) {
+		return (NFSFlow[]) runningFlows.get(link).toArray();
+	}
+	*/
 	public void PrintLinks() {
 		for (NFSLink link : outLinks.values()) {
 			System.out.println(link);

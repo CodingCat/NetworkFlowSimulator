@@ -1,7 +1,12 @@
 package simulator.entity.application;
 
 import desmoj.core.simulator.Model;
+import desmoj.core.simulator.TimeInstant;
+import simulator.NetworkFlowSimulator;
 import simulator.entity.NFSHost;
+import simulator.entity.flow.NFSFlow;
+import simulator.entity.topology.NFSLink;
+import simulator.model.NFSModel;
 
 public class NFSOnOffApplication extends NFSApplication {
 
@@ -16,9 +21,11 @@ public class NFSOnOffApplication extends NFSApplication {
 	}
 	
 	@Override
-	public void Send() {
+	public void send() {
 		//TODO: start the new flow
-		NFSFlow newflow = new NFSFlow(getModel(), "flow", true);
-		hostmachine.AddNewFlow(newflow);
+		NFSFlow newflow = new NFSFlow(getModel(), "flow", true, 
+				NetworkFlowSimulator.parser.getDouble("fluidsim.application.onoff.rate", 0.5));
+		NFSLink passLink = hostmachine.AddNewFlow(newflow);
+		//schedule receive flow event
 	}
 }

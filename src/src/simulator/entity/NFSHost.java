@@ -32,6 +32,6 @@ public class NFSHost extends NFSNode{
 	}
 	
 	public void StartNewFlow() {
-		app.Send();
+		app.send();
 	}	
 }
