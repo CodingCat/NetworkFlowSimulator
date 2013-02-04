@@ -40,7 +40,8 @@ public class NFSFlowRateChangeEvent extends EventOf2Entities<NFSLink, NFSFlow> {
 				flowsCanBeImproved.toArray(improvedFlowsArray);
 				improvedRate = link.getAvailableBandwidth() / improvedFlowsArray.length;
 				for (int i = 0; i < improvedFlowsArray.length; i++) {
-					if (improvedFlowsArray[i].datarate + improvedRate <= improvedFlowsArray[i].demandrate) {
+					if (improvedFlowsArray[i].datarate + improvedRate 
+							<= improvedFlowsArray[i].demandrate) {
 						improvedFlowsArray[i].datarate += improvedRate;
 						link.setAvailableBandwidth('-', improvedRate);
 					} else {
@@ -57,9 +58,9 @@ public class NFSFlowRateChangeEvent extends EventOf2Entities<NFSLink, NFSFlow> {
 			//this is a new flow
 			//the share of others on this link might be reduced
 			NFSLink nextlink = null;
-			if (link.getAvailableBandwidth() > flow.demandrate) {
-				flow.expectedrate = flow.demandrate;
-			//	link.setAvailableBandwidth('-', flow.demandrate);
+			if (link.getAvailableBandwidth() > flow.expectedrate) {
+				//flow.expectedrate = Math.min(flow.expectedrate, flow.demandrate);
+				//do nothing
 			}
 			else {
 				NFSFlow [] involvedFlows = link.getRunningFlows();

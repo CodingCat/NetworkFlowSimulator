@@ -13,9 +13,9 @@ import desmoj.core.simulator.TimeSpan;
 
 public class NFSFlow extends Entity {
 	
-	public double demandrate = 0.0;//in MBps
-	public double datarate = 0.0; //in MBps
-	public double expectedrate = 0.0f;// in MBps 
+	public double demandrate = -1.0;//in MBps
+	public double datarate = -1.0; //in MBps
+	public double expectedrate = -1.0;// in MBps 
 	
 	public String dstipString = "";
 	public String srtipString = "";
