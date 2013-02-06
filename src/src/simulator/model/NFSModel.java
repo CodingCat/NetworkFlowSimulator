@@ -9,7 +9,7 @@ import desmoj.core.simulator.Model;
 
 public class NFSModel extends Model{
 
-	NFSTopologyController topocontroller = null;
+	public static NFSTopologyController topocontroller = null;
 
 	public NFSModel(Model model, String modelName, boolean showInReport, boolean showInTrace) {
 		super(model, modelName, showInReport, showInTrace);
