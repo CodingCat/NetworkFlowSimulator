@@ -10,7 +10,6 @@ import desmoj.core.simulator.Model;
 
 public class NFSNode extends Entity{
 	
-//	protected HashMap<NFSLink, LinkedList<NFSFlow>> runningFlows = null;
 	protected HashMap<String, NFSLink> outLinks = null;//nexthop address -> link
 	protected HashMap<NFSFlow, Double> flowAllocationTable = null;//flow->allocation
 	public String ipaddress = null;
@@ -29,6 +28,10 @@ public class NFSNode extends Entity{
 		return links[index];
 	}
 	
+	public NFSLink getOutLink(String dstip) {
+		return outLinks.get(dstip);
+	}
+	
 	public NFSLink AddNewFlow(NFSFlow flow) {
 		NFSLink link = ChooseECMPLink(
 				(flow.srtipString + flow.dstipString), (NFSLink[]) outLinks.values().toArray());
@@ -36,22 +39,6 @@ public class NFSNode extends Entity{
 		flow.addBypassingLink(link);
 		return link;
 	}
-	
-	
-	/*private void changeSendingRate(NFSLink link) {
-		LinkedList<NFSFlow> allflowsonLink = runningFlows.get(link);
-		double avrrate = link.GetTotalBandwidth() / link.GetRunningFlowsN();
-		for (NFSFlow flow : allflowsonLink) {
-			if (flow.datarate >= avrrate) {
-				flow.expectedrate = avrrate;
-				NFSFlowRateChangeEvent ratechangeevt = new NFSFlowRateChangeEvent(
-						getModel(),
-						flow.toString() + " Rate Change",
-						true);
-				ratechangeevt.schedule(this, link, new TimeInstant(0));
-			}
-		}
-	}*/
 	
 	public double getFlowAllocation(NFSFlow flow) {
 		return flowAllocationTable.get(flow);
@@ -75,10 +62,6 @@ public class NFSNode extends Entity{
 		return this.ipaddress;
 	}
 	
-/*	public NFSFlow[] getRunningFlows(NFSLink link) {
-		return (NFSFlow[]) runningFlows.get(link).toArray();
-	}
-	*/
 	public void PrintLinks() {
 		for (NFSLink link : outLinks.values()) {
 			System.out.println(link);

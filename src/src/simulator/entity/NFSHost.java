@@ -11,10 +11,10 @@ public class NFSHost extends NFSNode{
 	
 	public NFSHost(Model model, String entityName, boolean showInLog, double bandWidth, String ip, int multihominglevel) {
 		super(model, entityName, showInLog, bandWidth, ip);
-		InstallApp();
+		installApp();
 	}
 	
-	private void InstallApp() {
+	private void installApp() {
 		try {
 			//TODO: change to factory pattern to generate different types of applications
 			//build applications via reflection
@@ -31,7 +31,11 @@ public class NFSHost extends NFSNode{
 		}
 	}
 	
-	public void StartNewFlow() {
+	public void run() {
 		app.send();
 	}	
+	
+	public void close() {
+		app.close();
+	}
 }

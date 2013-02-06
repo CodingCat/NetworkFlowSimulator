@@ -9,4 +9,16 @@
 		<name>fluidsim.topology.hostsperl2sw</name>
 		<value>4</value>
 	</property>
+	<property>
+		<name>fluidsim.system.traceperiod</name>
+		<value>100</value>
+	</property>
+	<property>
+		<name>fluidsim.system.debugperiod</name>
+		<value>100</value>
+	</property>
+	<property>
+		<name>fluidsim.system.runperiod</name>
+		<value>100</value>
+	</property>
 </configuration>

@@ -16,4 +16,6 @@ public abstract class NFSApplication extends Entity{
 	}
 
 	public abstract void send();
+	
+	public abstract void close();
 }

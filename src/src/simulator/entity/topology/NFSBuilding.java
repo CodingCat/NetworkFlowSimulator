@@ -62,6 +62,10 @@ public class NFSBuilding extends Entity{
 		
 	}
 	
+	public NFSHostsContainer getHosts() {
+		return hosts;
+	}
+	
 	/**
 	 * for debug
 	 */

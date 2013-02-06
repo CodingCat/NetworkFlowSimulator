@@ -22,14 +22,15 @@ public class NFSFlowRateChangeEvent extends EventOf2Entities<NFSLink, NFSFlow> {
 	@Override
 	public void eventRoutine(NFSLink link, NFSFlow flow) {
 		if (flow.getStatus() != NFSFlowStatus.NEWSTARTED) {
-			NFSFlow [] involvedFlows = link.getRunningFlows();
-			ArrayList<NFSFlow> flowsCanBeImproved = new ArrayList<NFSFlow>();
-			NFSFlow [] improvedFlowsArray = null;
-			double improvedRate = flow.datarate;
 			if (flow.getStatus() == NFSFlowStatus.CLOSED) {
 				//this flow has been closed
 				//triggered by the close flow event
 				//rate of others might be improved
+				NFSFlow [] involvedFlows = link.getRunningFlows();
+				ArrayList<NFSFlow> flowsCanBeImproved = new ArrayList<NFSFlow>();
+				NFSFlow [] improvedFlowsArray = null;
+				double improvedRate = flow.datarate;
+				
 				link.setAvailableBandwidth('+', flow.datarate);
 				for (int i = 0; i < involvedFlows.length; i++) {
 					if (isConstrainedOnLink(involvedFlows[i], link) && 

@@ -92,7 +92,7 @@ public class NFSRouter extends NFSNode {
 	}
 	
 	
-	public NFSNode ReceiveFlow(NFSFlow flow) {
+	public NFSNode receiveFlow(NFSFlow flow) {
 		try {
 			if (routertype == null) throw new Exception("unindicated router type");
 			
@@ -163,7 +163,7 @@ public class NFSRouter extends NFSNode {
 			if (nexthopNode == null) {
 				throw new Exception("could not find ip: " + flow.dstipString);
 			}
-			outgoingPath.addRunningFlow(flow);
+			//outgoingPath.addRunningFlow(flow);
 			//TODO:schedule receiveflowevent with the target host
 			return nexthopNode;
 		}

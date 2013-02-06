@@ -15,11 +15,15 @@ public class NFSReceiveFlowEvent extends EventOf2Entities<NFSRouter, NFSFlow> {
 
 	@Override
 	public void eventRoutine(NFSRouter currentNode, NFSFlow flow) {
-		NFSNode nexthop = currentNode.ReceiveFlow(flow);
+		NFSNode nexthop = currentNode.receiveFlow(flow);
 		if (nexthop.ipaddress.equals(flow.dstipString)) {
 			//last hop
 			//schedule rate change
-			
+			NFSFlowRateChangeEvent ratechangeevent = new NFSFlowRateChangeEvent(
+					getModel(), 
+					"ratechangeevent",
+					true);
+			ratechangeevent.schedule(flow.getFirstLink(), flow, new TimeInstant(0));
 		}
 		else {
 			schedule((NFSRouter)nexthop, flow, new TimeInstant(0));

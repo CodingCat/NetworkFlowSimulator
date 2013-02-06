@@ -2,7 +2,6 @@ package simulator.entity.flow;
 
 import java.util.ArrayList;
 
-import simulator.NetworkFlowSimulator;
 import simulator.entity.NFSNode;
 import simulator.entity.topology.NFSLink;
 import desmoj.core.simulator.Entity;
@@ -25,8 +24,6 @@ public class NFSFlow extends Entity {
 	double sendoutSize = 0.0;
 	double throughput = 0.0;
 	
-	public double activeTimeUpbound = 0;//in second
-	public double idleTimeUpbound = 0;
 	
 	private ArrayList<NFSLink> path = null;
 	private int bottleneckIdx = -1;
@@ -46,8 +43,6 @@ public class NFSFlow extends Entity {
 		expectedrate = demandrate;
 		lastingTime = new TimeSpan(0);
 		lastStartPoint = new TimeInstant(0);
-		activeTimeUpbound = NetworkFlowSimulator.parser.getDouble("fluidsim.application.onoff.activeupbound", 60);
-		idleTimeUpbound = NetworkFlowSimulator.parser.getDouble("fluidsim.application.onoff.idleupbound", 60);
 		path = new ArrayList<NFSLink>();
 	}
 	
@@ -67,9 +62,6 @@ public class NFSFlow extends Entity {
 		return status;
 	}
 	
-	/*public boolean isNewFlow() {
-		return status.equals(NFSFlowStatus.NEWSTARTED);
-	}*/
 	
 	public void addBypassingLink(NFSLink link) {
 		this.path.add(link);
@@ -110,6 +102,10 @@ public class NFSFlow extends Entity {
 	
 	public int getBottleneckIdx() {
 		return this.bottleneckIdx;
+	}
+	
+	public NFSLink getFirstLink() {
+		return path.get(0);
 	}
 	
 	public NFSLink getNextLink(NFSLink currentLink) {
