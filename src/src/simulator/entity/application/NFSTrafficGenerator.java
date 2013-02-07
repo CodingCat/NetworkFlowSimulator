@@ -8,7 +8,14 @@ public abstract class NFSTrafficGenerator {
 
 	protected NFSTopologyController topocontroller = null;
 	
-	protected HashMap<String, String> trafficMapping = new HashMap<String, String>();
+	protected HashMap<String, String> trafficMapping = null;//src ip -> dst ip
 	
-	protected abstract String getTarget(String srcip);
+	public NFSTrafficGenerator(NFSTopologyController tpctrl) {
+		topocontroller = tpctrl;
+		trafficMapping = new HashMap<String, String>();
+	}
+	
+	public String getTarget(String srcip) {
+		return trafficMapping.get(srcip);
+	}
 }

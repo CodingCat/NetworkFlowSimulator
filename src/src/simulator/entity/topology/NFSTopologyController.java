@@ -21,4 +21,12 @@ public class NFSTopologyController extends Entity {
 	public NFSHostsContainer allHosts() {
 		return allhosts;
 	}
+	
+	public int getHostN() {
+		return allhosts.GetN();
+	}
+	
+	public String getHostIP(int index) {
+		return allhosts.Get(index).ipaddress;
+	}
 }

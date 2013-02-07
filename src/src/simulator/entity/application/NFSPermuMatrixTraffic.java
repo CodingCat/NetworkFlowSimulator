@@ -1,15 +1,29 @@
 package simulator.entity.application;
 
+import java.util.Random;
+
+import simulator.entity.NFSHost;
+import simulator.entity.topology.NFSTopologyController;
+
 public class NFSPermuMatrixTraffic extends NFSTrafficGenerator {
 
-	public NFSPermuMatrixTraffic() {
-		// TODO Auto-generated constructor stub
+	public NFSPermuMatrixTraffic(NFSTopologyController topocontroller) {
+		super(topocontroller);
+		buildflowmap();
 	}
 
-	@Override
-	protected String getTarget(String srcip) {
-		// TODO Auto-generated method stub
-		return null;
+	private void buildflowmap() {
+		Random rand = new Random(System.currentTimeMillis());
+		int hostN = topocontroller.getHostN();
+		int dstHostIdx = 0;
+		for (NFSHost host : topocontroller.allHosts()) {
+			dstHostIdx = rand.nextInt() % hostN;
+			String dstip = topocontroller.getHostIP(dstHostIdx);
+			while (trafficMapping.containsValue(dstip) || host.ipaddress.equals(dstip)) {
+				dstHostIdx = rand.nextInt() % hostN;
+				dstip = topocontroller.getHostIP(dstHostIdx);
+			}
+			trafficMapping.put(host.ipaddress, dstip);
+		}
 	}
-
 }

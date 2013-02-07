@@ -60,15 +60,17 @@ public class NFSLink extends Entity{
 		return this.totalBandwidth / runningflows.size();
 	}
 	
-	public void adjustFlowRates(double newflowrate) {
+	public void adjustFlowRates(NFSFlow newflow) {
 		double avrrate = totalBandwidth / runningflows.size();
 		ArrayList<NFSFlow> flowsToBeReduced = new ArrayList<NFSFlow>();
 		double amortizedCost = 0.0;
 		for (NFSFlow flow : runningflows) {
+			if (flow == newflow) continue;
 			if (flow.datarate > avrrate) flowsToBeReduced.add(flow);
 		}
-		amortizedCost = (availableBandwidth- newflowrate) / flowsToBeReduced.size();
+		amortizedCost = (newflow.datarate - availableBandwidth) / flowsToBeReduced.size();
 		for (NFSFlow flow : flowsToBeReduced) {
+			if (flow == newflow) continue;
 			flow.datarate -= amortizedCost;
 			flow.setBottleneckIdx(flow.getLinkIdx(this));
 		}

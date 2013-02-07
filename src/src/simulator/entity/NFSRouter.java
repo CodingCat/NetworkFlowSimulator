@@ -58,6 +58,11 @@ public class NFSRouter extends NFSNode {
 		}
 	}
 	
+	/**
+	 * public api for register incoming link 
+	 * @param node, the node connecting this node
+	 * @param rate, the bandwidth of the link
+	 */
 	public void registerIncomingLink(NFSNode node, double rate) {
 		if (node.getClass().equals(NFSRouter.class)) {
 			registerIncomingLink((NFSRouter)node, rate);
@@ -67,11 +72,21 @@ public class NFSRouter extends NFSNode {
 		}
 	}
 	
+	/**
+	 * this registerInComingLink is for aggregate layer, the key are the ipaddress of hosts, while the value are the link
+	 * @param node, the host connecting to the server
+	 * @param rate, the bandwidth to the router
+	 */
 	private void registerIncomingLink(NFSHost node, double rate) {
 		NFSLink link = new NFSLink(getModel(), "incoming link from " + node, true, rate, node, this);
 		lanLinks.put(node.toString(), link);
 	}
 	
+	/**
+	 * this registerInComingLink is for distribution layer, the key are the ipaddress of routers, while the value are the link
+	 * @param router, the router linking to the current router
+	 * @param rate, the bandwidth of the link
+	 */
 	private void registerIncomingLink(NFSRouter router, double rate) {
 		NFSLink link = new NFSLink(getModel(), "incoming link from " + router, true, rate, router, this);
 		String iprangekey = router.ipaddress.substring(0, router.ipaddress.lastIndexOf(".")) + ".0";
@@ -98,15 +113,15 @@ public class NFSRouter extends NFSNode {
 			
 			NFSNode nexthopNode = null;
 			NFSLink outgoingPath = null;
-			String dstcrange = flow.dstipString.substring(0, flow.dstipString.lastIndexOf(".")) + ".0";
-			String localcrange = this.ipaddress.substring(0, flow.dstipString.lastIndexOf(".")) + ".0";
+			String dstCrange = flow.dstipString.substring(0, flow.dstipString.lastIndexOf(".")) + ".0";
+			String localCrange = this.ipaddress.substring(0, flow.dstipString.lastIndexOf(".")) + ".0";
 			//get the building tag
 			//get the later 3 segment
 			String dstlater3seg = flow.dstipString.substring(flow.dstipString.indexOf(".") + 1, 
 					flow.dstipString.length());
 			String dstbuildingTag = dstlater3seg.substring(0, dstlater3seg.indexOf("."));
 			if (routertype.equals(RouterType.Aggererate)) {
-				if (dstcrange.equals(localcrange)) {
+				if (dstCrange.equals(localCrange)) {
 					//in the same lan
 					if (lanLinks.containsKey(flow.dstipString)) {
 						outgoingPath = lanLinks.get(flow.dstipString);
@@ -114,8 +129,8 @@ public class NFSRouter extends NFSNode {
 					}
 				}
 				else{
-					//send through arbitrary outlinks
-					outgoingPath = ChooseECMPLink(flow.dstipString, (NFSLink[]) outLinks.values().toArray());
+					//send through arbitrary outlinks to distribution layer
+					outgoingPath = chooseECMPLink(flow);
 					nexthopNode = outgoingPath.dst;
 				}
 			}
@@ -126,14 +141,14 @@ public class NFSRouter extends NFSNode {
 					String localbuildingTag = locallater3seg.substring(0, locallater3seg.indexOf("."));
 					if (dstbuildingTag.equals(localbuildingTag)) {
 						//local query
-						if (lanLinks.containsKey(dstcrange)) {
-							outgoingPath = lanLinks.get(dstcrange);
+						if (lanLinks.containsKey(dstCrange)) {
+							outgoingPath = lanLinks.get(dstCrange);
 							nexthopNode = outgoingPath.src;
 						}
 					}
 					else {
-						//send through arbitrary link
-						outgoingPath = ChooseECMPLink(flow.dstipString, (NFSLink[]) outLinks.values().toArray());
+						//send through arbitrary link to the core
+						outgoingPath = chooseECMPLink(flow);
 						nexthopNode = outgoingPath.dst;
 					}
 				}
@@ -155,7 +170,7 @@ public class NFSRouter extends NFSNode {
 					}
 					else {
 						//send out
-						outgoingPath = (NFSLink) outLinks.values().toArray()[0];
+						outgoingPath = (NFSLink) outLinks.get(0);
 						nexthopNode = outgoingPath.dst;
 					}
 				}
@@ -163,8 +178,9 @@ public class NFSRouter extends NFSNode {
 			if (nexthopNode == null) {
 				throw new Exception("could not find ip: " + flow.dstipString);
 			}
-			//outgoingPath.addRunningFlow(flow);
-			//TODO:schedule receiveflowevent with the target host
+			//update involved the objects
+			outgoingPath.addRunningFlow(flow);
+			flow.addPath(outgoingPath);
 			return nexthopNode;
 		}
 		catch (Exception e) {

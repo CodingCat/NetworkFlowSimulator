@@ -72,6 +72,7 @@ public class NFSFlowRateChangeEvent extends EventOf2Entities<NFSLink, NFSFlow> {
 				int flowsDeservingMoreShareN = 0;
 				for (NFSFlow maychangeflow : involvedFlows) {
 					if (maychangeflow.datarate < avrRate) {
+						//these flows may be bottlenecked in other links
 						flowsUnderShareN++;
 						availablebisecBandwidth += (avrRate - maychangeflow.datarate);
 					}

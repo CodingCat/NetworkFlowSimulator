@@ -2,6 +2,7 @@ package simulator.model;
 
 import simulator.NetworkFlowSimulator;
 import simulator.entity.NFSHost;
+import simulator.entity.application.NFSTrafficGenerator;
 import simulator.entity.topology.NFSBuilding;
 import simulator.entity.topology.NFSNetworksBackbone;
 import simulator.entity.topology.NFSTopologyController;
@@ -9,7 +10,8 @@ import desmoj.core.simulator.Model;
 
 public class NFSModel extends Model{
 
-	public static NFSTopologyController topocontroller = null;
+	private NFSTopologyController topocontroller = null;
+	public static NFSTrafficGenerator trafficcontroller= null;
 
 	public NFSModel(Model model, String modelName, boolean showInReport, boolean showInTrace) {
 		super(model, modelName, showInReport, showInTrace);
@@ -17,6 +19,23 @@ public class NFSModel extends Model{
 				getModel(),
 				"topo-controller",
 				true);
+		buildtrafficctrl();
+	}
+	
+	private void buildtrafficctrl() {
+		try {
+			Class<?> trafficCtrlClass = Class.forName(
+					NetworkFlowSimulator.parser.getString("fluidsim.model.trafficmcontroller", 
+							"simulator.entity.application.NFSPermMatrixTraffic"));
+			Class<?> [] parameterTypes = {NFSTopologyController.class};
+			java.lang.reflect.Constructor<?> Constructor = 
+					trafficCtrlClass.getConstructor(parameterTypes);
+			Object [] parameterList = {topocontroller};
+			trafficcontroller = (NFSTrafficGenerator) Constructor.newInstance(parameterList); 
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	@Override

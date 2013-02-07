@@ -2,7 +2,6 @@ package simulator.entity.flow;
 
 import java.util.ArrayList;
 
-import simulator.entity.NFSNode;
 import simulator.entity.topology.NFSLink;
 import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
@@ -16,8 +15,8 @@ public class NFSFlow extends Entity {
 	public double datarate = -1.0; //in MBps
 	public double expectedrate = -1.0;// in MBps 
 	
-	public String dstipString = "";
-	public String srtipString = "";
+	public String dstipString = null;
+	public String srcipString = null;
 	
 	private TimeSpan lastingTime;
 	private TimeInstant lastStartPoint;
@@ -46,14 +45,6 @@ public class NFSFlow extends Entity {
 		path = new ArrayList<NFSLink>();
 	}
 	
-	public double Start(NFSNode src, NFSNode dst) {
-		src.AddNewFlow(this);
-		dst.AddNewFlow(this);
-		datarate = Math.min(src.getFlowAllocation(this), dst.getFlowAllocation(this));
-		lastStartPoint = presentTime();
-		return datarate;
-	}
-	
 	public void setStatus(NFSFlowStatus s) {
 		status = s;
 	}
@@ -63,8 +54,14 @@ public class NFSFlow extends Entity {
 	}
 	
 	
-	public void addBypassingLink(NFSLink link) {
-		this.path.add(link);
+	public void addPath(NFSLink link) {
+		try {
+			if (dstipString == null) throw new Exception("invalid destination ip address");
+			this.path.add(link);
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void Free(){
@@ -114,14 +111,6 @@ public class NFSFlow extends Entity {
 		return null;
 	}
 	
-	public boolean validatePath(NFSLink [] candidatePath) {
-		if (this.path.size() != candidatePath.length) return false;
-		for (int i = 0; i < path.size(); i++) {
-			if (path.get(i).equals(candidatePath[i]) == false) return false;
-		}
-		return true;
-	}
-	
 	public void consumeBandwidth() {
 		for (NFSLink link : path) {
 			if (link.getAvailableBandwidth() >= datarate) {
@@ -129,7 +118,7 @@ public class NFSFlow extends Entity {
 			}
 			else {
 				//adjust datarate of other flows
-				link.adjustFlowRates(datarate);
+				link.adjustFlowRates(this);
 				link.setAvailableBandwidth('-', link.getAvailableBandwidth());
 			}
 		}

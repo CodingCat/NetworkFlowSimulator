@@ -14,8 +14,8 @@ public class NFSReceiveFlowEvent extends EventOf2Entities<NFSRouter, NFSFlow> {
 	}
 
 	@Override
-	public void eventRoutine(NFSRouter currentNode, NFSFlow flow) {
-		NFSNode nexthop = currentNode.receiveFlow(flow);
+	public void eventRoutine(NFSRouter router, NFSFlow flow) {
+		NFSNode nexthop = router.receiveFlow(flow);
 		if (nexthop.ipaddress.equals(flow.dstipString)) {
 			//last hop
 			//schedule rate change
@@ -23,9 +23,11 @@ public class NFSReceiveFlowEvent extends EventOf2Entities<NFSRouter, NFSFlow> {
 					getModel(), 
 					"ratechangeevent",
 					true);
+			ratechangeevent.setSchedulingPriority(1);
 			ratechangeevent.schedule(flow.getFirstLink(), flow, new TimeInstant(0));
 		}
 		else {
+			//keeping priority to be 1 
 			schedule((NFSRouter)nexthop, flow, new TimeInstant(0));
 		}
 	}
