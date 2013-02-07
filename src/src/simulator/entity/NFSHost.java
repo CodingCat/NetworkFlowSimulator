@@ -24,10 +24,10 @@ public class NFSHost extends NFSNode{
 					getModel(),
 					"OnOffApp-" + this.toString(),
 					true,
-					NetworkFlowSimulator.parser.getDouble("fluidsim.application.onoff.maxoffduration", 5), 
-					this,
 					NetworkFlowSimulator.parser.getDouble("fluidsim.application.onoff.datarate", 0.5),
-					NetworkFlowSimulator.parser.getDouble("fluidsim.application.onoff.maxonduration", 5));
+					this,
+					NetworkFlowSimulator.parser.getInt("fluidsim.application.onoff.maxonduration", 5),
+					NetworkFlowSimulator.parser.getInt("fluidsim.application.onoff.maxoffduration", 5));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

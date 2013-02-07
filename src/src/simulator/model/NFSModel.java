@@ -9,35 +9,28 @@ import simulator.entity.topology.NFSTopologyController;
 import desmoj.core.simulator.Model;
 
 public class NFSModel extends Model{
-
-	private NFSTopologyController topocontroller = null;
-	public static NFSTrafficGenerator trafficcontroller= null;
+	
+	public NFSTopologyController topocontroller = null;
+	public static NFSTrafficGenerator trafficcontroller = null;
 
 	public NFSModel(Model model, String modelName, boolean showInReport, boolean showInTrace) {
 		super(model, modelName, showInReport, showInTrace);
-		topocontroller = new NFSTopologyController(
-				getModel(),
-				"topo-controller",
-				true);
-		buildtrafficctrl();
 	}
 	
 	private void buildtrafficctrl() {
 		try {
 			Class<?> trafficCtrlClass = Class.forName(
 					NetworkFlowSimulator.parser.getString("fluidsim.model.trafficmcontroller", 
-							"simulator.entity.application.NFSPermMatrixTraffic"));
+							"simulator.entity.application.NFSPermuMatrixTraffic"));
 			Class<?> [] parameterTypes = {NFSTopologyController.class};
-			java.lang.reflect.Constructor<?> Constructor = 
+			java.lang.reflect.Constructor<?> constructor = 
 					trafficCtrlClass.getConstructor(parameterTypes);
 			Object [] parameterList = {topocontroller};
-			trafficcontroller = (NFSTrafficGenerator) Constructor.newInstance(parameterList); 
+			trafficcontroller = (NFSTrafficGenerator) constructor.newInstance(parameterList); 
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	
 	@Override
 	public String description() {
 		return "flow-based networks simulator";
@@ -56,14 +49,16 @@ public class NFSModel extends Model{
 		int hostsperl2sw = NetworkFlowSimulator.parser.getInt("fluidsim.topology.hostsperl2sw", 100);
 		int coreNum = NetworkFlowSimulator.parser.getInt("fluidsim.topology.corenum", 2);
 	
-		NFSBuilding [] buildings = new NFSBuilding[buildingNum];
-		NFSNetworksBackbone backbone = new NFSNetworksBackbone(getModel(), "networks back bone", true, coreNum);
+		topocontroller = new NFSTopologyController(this, "topo-controller", true);
 		
+		NFSBuilding [] buildings = new NFSBuilding[buildingNum];
+		NFSNetworksBackbone backbone = new NFSNetworksBackbone(getModel(), "networks backbone", true, coreNum);
 		
 		for (int i = 0 ; i < buildingNum; i++) {
 			NFSBuilding building = new NFSBuilding(getModel(), 
 					"building " + i, 
-					true, i + 1, 
+					true, 
+					i + 1, 
 					l3switchnum, 
 					l2switchnum, 
 					hostsperl2sw);
@@ -71,5 +66,7 @@ public class NFSModel extends Model{
 			topocontroller.registerHosts(buildings[i].getHosts());
 		}
 		backbone.connect(buildings);
+	
+		buildtrafficctrl();
 	}
 }

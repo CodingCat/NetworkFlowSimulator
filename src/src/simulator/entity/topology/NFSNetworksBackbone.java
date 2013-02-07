@@ -30,6 +30,9 @@ public class NFSNetworksBackbone extends Entity{
 		}
 		ipinstaller = new NFSIpv4Installer();
 		lanbuilder = new NFSSwitchBasedLAN();
+		dummynode = new NFSNode(model, "out-side", true, 
+				NetworkFlowSimulator.parser.getInt("fluidsim.topology,corebandwidth", 1000), null);
+		
 	}
 	
 
@@ -45,7 +48,7 @@ public class NFSNetworksBackbone extends Entity{
 		//TODO:assign ip address to core and distributions
 		for (int i = 0; i < coreswitches.length; i++) {
 			String base = "10." + (i + 1 + buildinglist.length) + ".1.1";
-			System.out.println("connecting distributions to " + base);
+		//	System.out.println("connecting distributions to " + base);
 			ipinstaller.assignIPAddress(base, coreswitches[i]);
 			//build lan
 			ipinstaller.assignIPAddress(base, 2, distributionSwitches, 0, distributionSwitches.GetN());

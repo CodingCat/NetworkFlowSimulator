@@ -23,6 +23,7 @@ public class NFSLink extends Entity{
 		totalBandwidth = bw;
 		src = s;
 		dst = d;
+		runningflows = new ArrayList<NFSFlow>();
 	}
 	
 	@Override

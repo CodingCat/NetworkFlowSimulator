@@ -22,7 +22,7 @@ public class NFSHostsContainer extends NFSNodesContainer implements Iterable<NFS
 
 		@Override
 		public NFSHost next() {
-			return hosts.get(index);
+			return hosts.get(index++);
 		}
 
 		@Override

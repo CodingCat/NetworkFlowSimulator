@@ -14,18 +14,37 @@ public class NFSTopologyController extends Entity {
 		allhosts = new NFSHostsContainer(model, "allhosts", true);
 	}
 	
+	/**
+	 * add the host to the topology controller so that the topocontroller can generate traffic mapping
+	 * @param newhosts. the hosts to be added in 
+	 */
 	public void registerHosts(NFSHostsContainer newhosts) {
-		for (NFSHost host : newhosts) allhosts.addHost(host);
+		for (NFSHost host : newhosts) {
+			allhosts.addHost(host);
+		}
 	}
 	
+	/**
+	 * 
+	 * @return return all hosts in the topology 
+	 */
 	public NFSHostsContainer allHosts() {
 		return allhosts;
 	}
 	
+	/**
+	 * 
+	 * @return number of hosts in the topology
+	 */
 	public int getHostN() {
 		return allhosts.GetN();
 	}
 	
+	/**
+	 * get particular host ip
+	 * @param index, index of the host in the system
+	 * @return particular host ip
+	 */
 	public String getHostIP(int index) {
 		return allhosts.Get(index).ipaddress;
 	}

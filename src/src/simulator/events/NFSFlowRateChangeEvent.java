@@ -7,7 +7,6 @@ import simulator.entity.flow.NFSFlow.NFSFlowStatus;
 import simulator.entity.topology.NFSLink;
 import desmoj.core.simulator.EventOf2Entities;
 import desmoj.core.simulator.Model;
-import desmoj.core.simulator.TimeInstant;
 
 public class NFSFlowRateChangeEvent extends EventOf2Entities<NFSLink, NFSFlow> {
 
@@ -52,7 +51,7 @@ public class NFSFlowRateChangeEvent extends EventOf2Entities<NFSLink, NFSFlow> {
 						improvedRate = link.getAvailableBandwidth() / (improvedFlowsArray.length - 1 - i);
 					}
 				}
-				schedule(flow.getNextLink(link), flow, new TimeInstant(0));
+				schedule(flow.getNextLink(link), flow, presentTime());
 			}//end of if this flow is closed
 		}
 		else {
@@ -84,7 +83,7 @@ public class NFSFlowRateChangeEvent extends EventOf2Entities<NFSLink, NFSFlow> {
 			nextlink = flow.getNextLink(link);
 			if (nextlink != null) {
 				//not the last link
-				schedule(nextlink, flow, new TimeInstant(0));
+				schedule(nextlink, flow, presentTime());
 			}
 			else{
 				//lastlink, we have determine the datarate of the new flow

@@ -7,8 +7,7 @@ import simulator.utils.NFSXmlParser;
 
 public class NetworkFlowSimulator {
 	
-	static public NFSXmlParser parser = null;
-	
+	public static NFSXmlParser parser = null;
 	
 	/**
 	 * @param args
@@ -18,6 +17,7 @@ public class NetworkFlowSimulator {
 		parser = NFSXmlParser.Instance(args[0]);
 		
 		NFSModel mainModel = new NFSModel(null, "NetworksFlowModel", true, true);
+			
 		Experiment exp = new Experiment("NetworksFlowExperiments");
 		
 		int traceperiod = parser.getInt("fluidsim.system.traceperiod", 100);

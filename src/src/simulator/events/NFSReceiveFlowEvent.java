@@ -5,7 +5,6 @@ import simulator.entity.NFSRouter;
 import simulator.entity.flow.NFSFlow;
 import desmoj.core.simulator.EventOf2Entities;
 import desmoj.core.simulator.Model;
-import desmoj.core.simulator.TimeInstant;
 
 public class NFSReceiveFlowEvent extends EventOf2Entities<NFSRouter, NFSFlow> {
 
@@ -24,11 +23,11 @@ public class NFSReceiveFlowEvent extends EventOf2Entities<NFSRouter, NFSFlow> {
 					"ratechangeevent",
 					true);
 			ratechangeevent.setSchedulingPriority(1);
-			ratechangeevent.schedule(flow.getFirstLink(), flow, new TimeInstant(0));
+			ratechangeevent.schedule(flow.getFirstLink(), flow, presentTime());
 		}
 		else {
 			//keeping priority to be 1 
-			schedule((NFSRouter)nexthop, flow, new TimeInstant(0));
+			schedule((NFSRouter)nexthop, flow, presentTime());
 		}
 	}
 

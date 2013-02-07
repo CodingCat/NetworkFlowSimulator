@@ -12,7 +12,7 @@ public abstract class NFSApplication extends Entity{
 	public NFSApplication(Model model, String entityName, boolean showInTrace, double dr, NFSHost machine) {
 		super(model, entityName, showInTrace);
 		datarate = dr;
-		hostmachine = null;
+		hostmachine = machine;
 	}
 
 	public abstract void send();

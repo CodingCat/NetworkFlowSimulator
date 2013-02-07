@@ -25,7 +25,8 @@ public class NFSNode extends Entity{
 	
 	protected NFSLink chooseECMPLink(NFSFlow flow) {
 		int index = (flow.srcipString + flow.dstipString).hashCode() % outLinks.size();
-		return outLinks.get(index);
+		//System.out.println((flow.srcipString + flow.dstipString).hashCode());
+		return outLinks.get(index > 0 ? index : -index);
 	}
 	
 	public double getFlowAllocation(NFSFlow flow) {

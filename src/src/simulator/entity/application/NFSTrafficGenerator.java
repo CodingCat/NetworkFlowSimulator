@@ -12,6 +12,10 @@ public abstract class NFSTrafficGenerator {
 	
 	public NFSTrafficGenerator(NFSTopologyController tpctrl) {
 		topocontroller = tpctrl;
+		init();
+	}
+	
+	protected void init() {
 		trafficMapping = new HashMap<String, String>();
 	}
 	
