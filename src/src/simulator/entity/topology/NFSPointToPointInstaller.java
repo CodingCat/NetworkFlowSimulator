@@ -5,11 +5,11 @@ import simulator.entity.NFSNode;
 
 public class NFSPointToPointInstaller {
 	public void assignIPAddress(String ipaddress, NFSNode node) {
-		node.AssignIPAddress(ipaddress);
+		node.assignIPAddress(ipaddress);
 	}
 	
 	public void Link(NFSNode src, NFSNode dst) {
-		src.AddNewLink(dst, 
+		src.addNewLink(dst, 
 					NetworkFlowSimulator.parser.getDouble("fluidsim.topology.p2plinkrate", 1000.0));
 		
 	}

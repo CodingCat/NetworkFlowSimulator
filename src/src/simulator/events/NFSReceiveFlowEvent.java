@@ -23,7 +23,7 @@ public class NFSReceiveFlowEvent extends EventOf2Entities<NFSRouter, NFSFlow> {
 					"ratechangeevent",
 					true);
 			ratechangeevent.setSchedulingPriority(1);
-			ratechangeevent.schedule(flow.getFirstLink(), flow, presentTime());
+			ratechangeevent.schedule(router, flow.getFirstLink(), flow, presentTime());
 		}
 		else {
 			//keeping priority to be 1 

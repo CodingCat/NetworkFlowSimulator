@@ -41,7 +41,7 @@ public class NFSHost extends NFSNode{
 	public NFSLink startNewFlow(NFSFlow flow) {
 		//select a path with ECMP link, with ECMP style
 		//supporting multihoming
-		NFSLink link = chooseECMPLink(flow);
+		NFSLink link = flowscheduler.schedule(flow);
 		//add the flow to the link
 		link.addRunningFlow(flow);
 		//add the current link to the flow path

@@ -94,10 +94,10 @@ public class NFSRouter extends NFSNode {
 	}
 	
 	@Override
-	public void AssignIPAddress(String ip) {
+	public void assignIPAddress(String ip) {
 		if (IPs.size() == 0) {
 		//	System.out.println(this.toString() + ":" + ip);
-			super.AssignIPAddress(ip);
+			super.assignIPAddress(ip);
 			IPs.add(ipaddress);
 		}
 		else {
@@ -130,7 +130,7 @@ public class NFSRouter extends NFSNode {
 				}
 				else{
 					//send through arbitrary outlinks to distribution layer
-					outgoingPath = chooseECMPLink(flow);
+					outgoingPath = flowscheduler.schedule(flow);
 					nexthopNode = outgoingPath.dst;
 				}
 			}
@@ -148,7 +148,7 @@ public class NFSRouter extends NFSNode {
 					}
 					else {
 						//send through arbitrary link to the core
-						outgoingPath = chooseECMPLink(flow);
+						outgoingPath = flowscheduler.schedule(flow);
 						nexthopNode = outgoingPath.dst;
 					}
 				}

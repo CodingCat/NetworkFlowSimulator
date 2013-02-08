@@ -13,14 +13,14 @@ public class NFSCloseFlowEvent extends EventOf2Entities<NFSHost, NFSFlow> {
 	}
 
 	@Override
-	public void eventRoutine(NFSHost dsthost, NFSFlow flow) {
+	public void eventRoutine(NFSHost srchost, NFSFlow flow) {
 		//change the rate of flows along the path
 		NFSFlowRateChangeEvent flowrateevent = new NFSFlowRateChangeEvent(
 				getModel(), 
 				"ratechange",
 				true);
 		flow.setStatus(NFSFlow.NFSFlowStatus.CLOSED);
-		flowrateevent.schedule(flow.getFirstLink(), flow, presentTime());
-		dsthost.close();
+		flowrateevent.schedule(srchost, flow.getFirstLink(), flow, presentTime());
+		srchost.close();
 	}		
 }

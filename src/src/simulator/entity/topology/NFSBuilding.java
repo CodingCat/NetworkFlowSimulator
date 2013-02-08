@@ -40,14 +40,14 @@ public class NFSBuilding extends Entity{
 		//Assign ip address to hosts and l2 switch
 		for (int i = 0; i < l2num; i++) {
 			String ip = "10." + buildingID + "." + (i + 1) + ".1";
-			l2switches.Get(i).AssignIPAddress(ip);
+			l2switches.Get(i).assignIPAddress(ip);
 			ipv4Installer.assignIPAddress(ip, 2, hosts, i * hostsperl2, (i + 1) * hostsperl2);
 		}
 		
 		//assign ip address to l3 switch and l2 switch
 		for (int i = 0; i < l3num; i++) {
 			String ip = "10." + buildingID + "." + (l2num + i + 1) + ".1";
-			l3switches.Get(i).AssignIPAddress(ip);
+			l3switches.Get(i).assignIPAddress(ip);
 			ipv4Installer.assignIPAddress(ip, 2, l2switches, 0, l2switches.GetN());
 		}
 		//build link from access to distribution switch

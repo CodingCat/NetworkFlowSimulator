@@ -27,7 +27,7 @@ public class NFSSwitchBasedLAN {
 				if (host.HasAllocatedIP() == false) {
 					throw new Exception(host + " hasn't got ipaddress");
 				}
-				host.AddNewLink(router, 
+				host.addNewLink(router, 
 						NetworkFlowSimulator.parser.getDouble("fluidsim.topology.locallinkrate", 10.0));
 				router.registerIncomingLink(host, 
 						NetworkFlowSimulator.parser.getDouble("fluidsim.topology.locallinkrate", 10.0));
@@ -54,7 +54,7 @@ public class NFSSwitchBasedLAN {
 				if (lowLevelRouter.HasAllocatedIP() == false) {
 					throw new Exception(lowLevelRouter + " hasn't got ipaddress");
 				}
-				lowLevelRouter.AddNewLink(highlayerRouter, 
+				lowLevelRouter.addNewLink(highlayerRouter, 
 						NetworkFlowSimulator.parser.getDouble("fluidsim.topology.crossrouterlinkrate", 1000.0));
 				highlayerRouter.registerIncomingLink(lowLevelRouter, 
 						NetworkFlowSimulator.parser.getDouble("fluidsim.topology.crossrouterlinkrate", 1000.0));
