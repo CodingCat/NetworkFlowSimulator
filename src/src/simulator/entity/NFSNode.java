@@ -60,9 +60,10 @@ public class NFSNode extends Entity{
 		try {
 			Class<?> flowSchedulerClass = Class.forName(
 					NetworkFlowSimulator.parser.getString("fluidsim.flow.scheduler", 
-							"simulator.entity.flow.NFSFlowScheduler"));
+							"simulator.entity.flow.NFSFlowFairScheduler"));
+			Class<?> [] parameterTypes = {ArrayList.class};
 			java.lang.reflect.Constructor<?> constructor = 
-					flowSchedulerClass.getConstructor();
+					flowSchedulerClass.getConstructor(parameterTypes);
 			Object [] parameterList = {outLinks};
 			flowscheduler = (NFSFlowScheduler) constructor.newInstance(parameterList); 
 		} catch (Exception e) {

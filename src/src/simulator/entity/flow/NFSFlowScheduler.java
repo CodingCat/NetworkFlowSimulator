@@ -1,18 +1,14 @@
 package simulator.entity.flow;
 
 import java.util.ArrayList;
-import desmoj.core.simulator.Entity;
-import desmoj.core.simulator.Model;
 
 import simulator.entity.topology.NFSLink;
 
-public abstract class NFSFlowScheduler extends Entity{
+public abstract class NFSFlowScheduler {
 	
 	protected ArrayList<NFSLink> outlinks = null;
 
-	public NFSFlowScheduler(Model model, String entityName, boolean showInReport, 
-			ArrayList<NFSLink> links) {
-		super(model, entityName, showInReport);
+	public NFSFlowScheduler(ArrayList<NFSLink> links) {
 		outlinks = links;
 	}
 
