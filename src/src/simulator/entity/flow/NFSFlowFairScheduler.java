@@ -65,7 +65,7 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 			}
 		}
 		else {
-			if (link != null) {
+			if (!link.src.ipaddress.equals(changedflow.dstipString)) {
 				//this is a new flow
 				//the share of others on this link might be reduced
 				if (link.getAvailableBandwidth() > changedflow.expectedrate) {
@@ -91,7 +91,7 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 					changedflow.expectedrate = Math.min((avrRate + amortizedBenefit), 
 							changedflow.demandrate);
 				}
-			}//end of if link != null
+			}//end of if link is not the last link
 			else {
 				//lastlink, we have determine the datarate of the new flow
 				changedflow.datarate = changedflow.expectedrate;

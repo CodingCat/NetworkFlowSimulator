@@ -18,6 +18,6 @@ public class NFSFlowRateChangeEvent extends EventOf3Entities<NFSNode, NFSLink, N
 	public void eventRoutine(NFSNode node, NFSLink link, NFSFlow changedflow) {
 		node.changeResourceAllocation(link, changedflow);
 		NFSLink nextlink = changedflow.getNextLink(link);
-		schedule(node, nextlink, changedflow, presentTime());
+		if (nextlink != null) schedule(node, nextlink, changedflow, presentTime());
 	}//end of eventRoutine
 }
