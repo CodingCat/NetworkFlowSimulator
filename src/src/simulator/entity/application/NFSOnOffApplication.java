@@ -50,6 +50,7 @@ public class NFSOnOffApplication extends NFSApplication {
 			//set the destination address
 			bindingflow.dstipString = NFSModel.trafficcontroller.getTarget(bindingflow.srcipString);
 		}
+		bindingflow.expectedrate = bindingflow.demandrate;
 		bindingflow.setStatus(NFSFlow.NFSFlowStatus.NEWSTARTED);
 		NFSLink passLink = hostmachine.startNewFlow(bindingflow);
 		//schedule receive flow event
@@ -72,6 +73,7 @@ public class NFSOnOffApplication extends NFSApplication {
 	@Override
 	public void close() {
 		Random rand = new Random(System.currentTimeMillis());
+		bindingflow.setStatus(NFSFlow.NFSFlowStatus.CLOSED);
 		NFSStartNewFlowEvent newflowevent = new NFSStartNewFlowEvent(
 				getModel(),
 				"startflow-" + bindingflow.srcipString + "-" + bindingflow.dstipString,

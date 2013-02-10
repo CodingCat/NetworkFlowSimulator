@@ -47,6 +47,10 @@ public class NFSLink extends Entity{
 		runningflows.add(flow);
 	}
 	
+	public void removeRunningFlow(NFSFlow flow) {
+		runningflows.remove(flow);
+	}
+	
 	public NFSFlow[] getRunningFlows() {
 		NFSFlow [] runningflowArray = new NFSFlow[runningflows.size()];
 		return runningflows.toArray(runningflowArray);
@@ -67,13 +71,19 @@ public class NFSLink extends Entity{
 		amortizedCost = (newflow.datarate - availableBandwidth) / flowsToBeReduced.size();
 		for (NFSFlow flow : flowsToBeReduced) {
 			if (flow == newflow) continue;
+			if (amortizedCost == 0.0) System.out.println("fuck");
 			flow.update('-', amortizedCost);
-			flow.setBottleneckIdx(flow.getLinkIdx(this));
+			sendTraceNote("change " + flow.toString() + " datarate to " + flow.datarate);
+			flow.setBottleneckLink(this);
 		}
 	}
 	
 	@Override
 	public String toString() {
-		return "link-" + src.toString() + "-" + dst.toString() + "-" +  totalBandwidth + "Mbps";
+		return "link-" + src.toString() + 
+				"-" + dst.toString() + 
+				"-" +  totalBandwidth +
+				"-" + availableBandwidth + 
+				"Mbps";
 	}
 }

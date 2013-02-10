@@ -1,6 +1,7 @@
 package simulator.entity.flow;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 import desmoj.core.simulator.Model;
 
@@ -25,10 +26,6 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 		return outlinks.get(index > 0 ? index : -index);
 	}
 	
-	private boolean isConstrainedOnLink(NFSFlow flow, NFSLink candidatelink) {
-		return flow.getBottleneckIdx() == flow.getLinkIdx(candidatelink);
-	}
-	
 	@Override
 	public void reallocateBandwidth(NFSLink link, NFSFlow changedflow) {
 		if (changedflow.getStatus() != NFSFlowStatus.NEWSTARTED) {
@@ -37,18 +34,29 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 				//triggered by the close flow event
 				//rate of others might be improved
 				if (link != null) {
+					link.removeRunningFlow(changedflow);
+					
 					NFSFlow [] involvedFlows = link.getRunningFlows();
 					ArrayList<NFSFlow> flowsCanBeImproved = new ArrayList<NFSFlow>();
 					NFSFlow [] improvedFlowsArray = null;
 					double improvedRate = changedflow.datarate;
 					
 					link.setAvailableBandwidth('+', changedflow.datarate);
+					System.out.println(involvedFlows.length);
 					for (int i = 0; i < involvedFlows.length; i++) {
-						if (isConstrainedOnLink(involvedFlows[i], link) && 
-								(involvedFlows[i].isFullyMeet() == false)) 
+						if ((involvedFlows[i].getBottleneckLink() == null || !involvedFlows[i].getBottleneckLink().equals(link))
+							&& (involvedFlows[i].isFullyMeet() == false)) 
 							flowsCanBeImproved.add(involvedFlows[i]);
+					/*	else {
+							System.out.println(involvedFlows[i] + 
+									" bottlenecks on " + involvedFlows[i].getBottleneckLink() + 
+									" current link " + link + 
+									" is fully meet " + involvedFlows[i].isFullyMeet());
+						}*/
 					}
+					sendTraceNote("flowsCanBeImproved:" + flowsCanBeImproved.size());
 					improvedFlowsArray = new NFSFlow[flowsCanBeImproved.size()];
+					Collections.sort(flowsCanBeImproved, new NFSFlowComparator());
 					flowsCanBeImproved.toArray(improvedFlowsArray);
 					improvedRate = link.getAvailableBandwidth() / improvedFlowsArray.length;
 					for (int i = 0; i < improvedFlowsArray.length; i++) {
@@ -63,6 +71,8 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 									improvedFlowsArray[i].demandrate - improvedFlowsArray[i].datarate);
 							improvedRate = link.getAvailableBandwidth() / (improvedFlowsArray.length - 1 - i);
 						}
+						sendTraceNote("set " + improvedFlowsArray[i] + 
+								" datarate to " + improvedFlowsArray[i].datarate);
 					}
 				}
 			}//end of if this flow is closed
@@ -85,6 +95,7 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 				int flowsUnderShareN = 0;
 				int flowsDeservingMoreShareN = 0;
 				for (NFSFlow maychangeflow : involvedFlows) {
+					if (maychangeflow.equals(changedflow)) continue;
 					if (maychangeflow.datarate < avrRate) {
 						// these flows may be bottlenecked in other links
 						flowsUnderShareN++;
@@ -93,10 +104,20 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 				}
 				flowsDeservingMoreShareN = involvedFlows.length
 						- flowsUnderShareN;
+				//sendTraceNote("involved flows length:" + involvedFlows.length +  
+					//	" flowsDeservingMoreShareN:" + flowsDeservingMoreShareN);
 				amortizedBenefit = availablebisecBandwidth
 						/ flowsDeservingMoreShareN;
-				changedflow.expectedrate = Math.min(
-						(avrRate + amortizedBenefit), changedflow.demandrate);
+				double allocatedrateOnthisLink = Math.min((avrRate + amortizedBenefit), changedflow.demandrate);
+				if (changedflow.expectedrate == -1.0 || (changedflow.expectedrate > allocatedrateOnthisLink)) {
+					changedflow.expectedrate = allocatedrateOnthisLink;
+					if (changedflow.expectedrate != -1.0) {
+						changedflow.setBottleneckLink(link);
+					}
+				}
+				sendTraceNote("set " + changedflow + 
+						" expected rate to " + changedflow.expectedrate + 
+						" avr rate:" + avrRate);
 			}
 		}//end of if this flow is new
 	}

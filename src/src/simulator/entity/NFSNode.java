@@ -7,7 +7,6 @@ import simulator.NetworkFlowSimulator;
 import simulator.entity.flow.NFSFlow;
 import simulator.entity.flow.NFSFlowScheduler;
 import simulator.entity.topology.NFSLink;
-import simulator.model.NFSModel;
 
 import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;

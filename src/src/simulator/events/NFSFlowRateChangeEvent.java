@@ -27,7 +27,7 @@ public class NFSFlowRateChangeEvent extends EventOf3Entities<NFSNode, NFSLink, N
 				changedflow.start();
 			}
 			else {
-				if (changedflow.getStatus().equals(NFSFlow.NFSFlowStatus.RUNNING)) {
+				if (changedflow.getStatus().equals(NFSFlow.NFSFlowStatus.CLOSED)) {
 					changedflow.close();
 				}
 			}
