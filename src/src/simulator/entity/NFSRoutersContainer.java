@@ -9,15 +9,15 @@ public class NFSRoutersContainer extends NFSNodesContainer{
 	
 	private ArrayList<NFSRouter> routers = null;
 	
-	public NFSRoutersContainer(Model model, String entityName, boolean showInReport) {
-		super(model, entityName, showInReport);
+	public NFSRoutersContainer(Model model, String entityName, boolean showInReport, String mainid) {
+		super(model, entityName, showInReport, mainid);
 		routers = new ArrayList<NFSRouter>();
 	}
 	
 	@Override
 	public void create(int n) {
 		for (int i = 0; i < n; i++) {
-			NFSRouter node = new NFSRouter(getModel(), "node " + i, 
+			NFSRouter node = new NFSRouter(getModel(), mainID + "-" + i, 
 					true, 
 					NetworkFlowSimulator.parser.getDouble("fluidsim.node.nicbandwidth", 1024.0),
 					null);

@@ -32,15 +32,15 @@ public class NFSHostsContainer extends NFSNodesContainer implements Iterable<NFS
 		
 	}
 	
-	public NFSHostsContainer(Model model, String entityName, boolean showInReport) {
-		super(model, entityName, showInReport);
+	public NFSHostsContainer(Model model, String entityName, boolean showInReport, String mainid) {
+		super(model, entityName, showInReport, mainid);
 		hosts = new ArrayList<NFSHost>();
 	}
 	
 	@Override
 	public void create(int n){
 		for (int i = 0; i < n; i++) {
-			NFSHost node = new NFSHost(getModel(), "node " + i, 
+			NFSHost node = new NFSHost(getModel(), mainID + "-" + i, 
 					true, 
 					NetworkFlowSimulator.parser.getDouble("fluidsim.node.nicbandwidth", 1000),
 					null, 

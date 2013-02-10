@@ -17,15 +17,19 @@ public class NFSBuilding extends Entity{
 	NFSRoutersContainer l2switches = null;
 	NFSRoutersContainer l3switches = null;
 	
-	public NFSBuilding(Model model, String entityname, boolean debugmodel, int bid, int l3sw, int l2sw, int hostperl2) {
+	public NFSBuilding(Model model, String entityname, boolean debugmodel, 
+			int bid, int l3sw, int l2sw, int hostperl2) {
 		super(model, entityname, debugmodel);
 		this.buildingID = bid;
 		this.l3num = l3sw;
 		this.l2num = l2sw;
 		this.hostsperl2= hostperl2;
-		hosts = new NFSHostsContainer(model, "hosts in " + entityname, debugmodel);
-		l2switches = new NFSRoutersContainer(model, "l2 switches in " + entityname, debugmodel);
-		l3switches = new NFSRoutersContainer(model, "l3 switches in " + entityname, debugmodel);
+		hosts = new NFSHostsContainer(model, "hosts in " + entityname, debugmodel, 
+				"building-" + bid + "-hosts");
+		l2switches = new NFSRoutersContainer(model, "l2 switches in " + entityname, debugmodel, 
+				"building-" + bid + "-l2router");
+		l3switches = new NFSRoutersContainer(model, "l3 switches in " + entityname, debugmodel,
+				"building-" + bid + "-l3router");
 		hosts.create(hostsperl2 * l2num);
 		l2switches.create(l2num);
 		l2switches.SetRouterType(RouterType.Aggererate);

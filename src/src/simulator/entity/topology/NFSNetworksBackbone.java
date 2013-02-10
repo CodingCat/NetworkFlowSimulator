@@ -22,7 +22,8 @@ public class NFSNetworksBackbone extends Entity{
 			int n) {
 		super(model, entityname, debugmodel);
 		coreswitches = new NFSRouter[n];
-		distributionSwitches = new NFSRoutersContainer(model, "all distribution switches", true);
+		distributionSwitches = new NFSRoutersContainer(model, "all distribution switches", true,
+				"backbone-");
 		for (int i = 0; i < n; i++) {
 			coreswitches[i] = new NFSRouter(getModel(), "core " + i, true, 
 					NetworkFlowSimulator.parser.getDouble("fluidsim.topology.corebandwidth", 1000), 

@@ -20,7 +20,7 @@ public class NFSReceiveFlowEvent extends EventOf2Entities<NFSRouter, NFSFlow> {
 			//schedule rate change
 			NFSFlowRateChangeEvent ratechangeevent = new NFSFlowRateChangeEvent(
 					getModel(), 
-					"ratechangeevent",
+					"RateChangeEventTriggeredByStartNewFlow",
 					true);
 			ratechangeevent.setSchedulingPriority(1);
 			ratechangeevent.schedule(router, flow.getFirstLink(), flow, presentTime());

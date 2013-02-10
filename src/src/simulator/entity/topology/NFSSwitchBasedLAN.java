@@ -27,9 +27,9 @@ public class NFSSwitchBasedLAN {
 				if (host.HasAllocatedIP() == false) {
 					throw new Exception(host + " hasn't got ipaddress");
 				}
-				host.addNewLink(router, 
+				NFSLink link = host.addNewLink(router, 
 						NetworkFlowSimulator.parser.getDouble("fluidsim.topology.locallinkrate", 10.0));
-				router.registerIncomingLink(host, 
+				router.registerIncomingLink(link, 
 						NetworkFlowSimulator.parser.getDouble("fluidsim.topology.locallinkrate", 10.0));
 			}
 		} catch (Exception e) {
@@ -54,9 +54,9 @@ public class NFSSwitchBasedLAN {
 				if (lowLevelRouter.HasAllocatedIP() == false) {
 					throw new Exception(lowLevelRouter + " hasn't got ipaddress");
 				}
-				lowLevelRouter.addNewLink(highlayerRouter, 
+				NFSLink newlink = lowLevelRouter.addNewLink(highlayerRouter, 
 						NetworkFlowSimulator.parser.getDouble("fluidsim.topology.crossrouterlinkrate", 1000.0));
-				highlayerRouter.registerIncomingLink(lowLevelRouter, 
+				highlayerRouter.registerIncomingLink(newlink, 
 						NetworkFlowSimulator.parser.getDouble("fluidsim.topology.crossrouterlinkrate", 1000.0));
 			}
 		} catch (Exception e) {

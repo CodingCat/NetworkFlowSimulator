@@ -14,7 +14,6 @@ public class NFSPermuMatrixTraffic extends NFSTrafficGenerator {
 	private void buildflowmap() {
 		Random rand = new Random(System.currentTimeMillis());
 		int hostN = topocontroller.getHostN();
-		System.out.println("hostN:" + hostN);
 		int dstHostIdx = 0;
 		for (NFSHost host : topocontroller.allHosts()) {
 			dstHostIdx = rand.nextInt(hostN);

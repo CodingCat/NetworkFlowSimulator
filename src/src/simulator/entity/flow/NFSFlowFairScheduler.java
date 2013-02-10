@@ -2,13 +2,16 @@ package simulator.entity.flow;
 
 import java.util.ArrayList;
 
+import desmoj.core.simulator.Model;
+
 import simulator.entity.flow.NFSFlow.NFSFlowStatus;
 import simulator.entity.topology.NFSLink;
 
 public class NFSFlowFairScheduler extends NFSFlowScheduler {
 
-	public NFSFlowFairScheduler(ArrayList<NFSLink> links) {
-		super(links);
+	public NFSFlowFairScheduler(Model model, String entityName,
+			boolean showInReport, ArrayList<NFSLink> links) {
+		super(model, entityName, showInReport, links);
 	}
 
 	@Override
@@ -17,6 +20,8 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 	 */
 	public NFSLink schedule(NFSFlow flow) {
 		int index = (flow.srcipString + flow.dstipString).hashCode() % outlinks.size();
+		this.sendTraceNote("NFSFlowFairScheduler:" + outlinks.size() + " possible links;" + 
+				" selected:" + index);
 		return outlinks.get(index > 0 ? index : -index);
 	}
 	
@@ -65,38 +70,32 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 			}
 		}
 		else {
-			if (!link.src.ipaddress.equals(changedflow.dstipString)) {
-				//this is a new flow
-				//the share of others on this link might be reduced
-				if (link.getAvailableBandwidth() > changedflow.expectedrate) {
-					//flow.expectedrate = Math.min(flow.expectedrate, flow.demandrate);
-					//do nothing
-				}
-				else {
-					NFSFlow [] involvedFlows = link.getRunningFlows();
-					double avrRate = link.getAvrRate();
-					double availablebisecBandwidth = 0.0;
-					double amortizedBenefit = 0.0;
-					int flowsUnderShareN = 0;
-					int flowsDeservingMoreShareN = 0;
-					for (NFSFlow maychangeflow : involvedFlows) {
-						if (maychangeflow.datarate < avrRate) {
-							//these flows may be bottlenecked in other links
-							flowsUnderShareN++;
-							availablebisecBandwidth += (avrRate - maychangeflow.datarate);
-						}
+			// this is a new flow
+			// the share of others on this link might be reduced
+			if (link.getAvailableBandwidth() > changedflow.expectedrate) {
+				// flow.expectedrate = Math.min(flow.expectedrate,
+				// flow.demandrate);
+				// do nothing
+			} else {
+				NFSFlow[] involvedFlows = link.getRunningFlows();
+				double avrRate = link.getAvrRate();
+				double availablebisecBandwidth = 0.0;
+				double amortizedBenefit = 0.0;
+				int flowsUnderShareN = 0;
+				int flowsDeservingMoreShareN = 0;
+				for (NFSFlow maychangeflow : involvedFlows) {
+					if (maychangeflow.datarate < avrRate) {
+						// these flows may be bottlenecked in other links
+						flowsUnderShareN++;
+						availablebisecBandwidth += (avrRate - maychangeflow.datarate);
 					}
-					flowsDeservingMoreShareN = involvedFlows.length - flowsUnderShareN;
-					amortizedBenefit = availablebisecBandwidth / flowsDeservingMoreShareN;
-					changedflow.expectedrate = Math.min((avrRate + amortizedBenefit), 
-							changedflow.demandrate);
 				}
-			}//end of if link is not the last link
-			else {
-				//lastlink, we have determine the datarate of the new flow
-				changedflow.datarate = changedflow.expectedrate;
-				changedflow.consumeBandwidth();
-				changedflow.setStatus(NFSFlowStatus.RUNNING);
+				flowsDeservingMoreShareN = involvedFlows.length
+						- flowsUnderShareN;
+				amortizedBenefit = availablebisecBandwidth
+						/ flowsDeservingMoreShareN;
+				changedflow.expectedrate = Math.min(
+						(avrRate + amortizedBenefit), changedflow.demandrate);
 			}
 		}//end of if this flow is new
 	}

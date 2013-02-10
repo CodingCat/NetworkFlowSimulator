@@ -11,7 +11,7 @@ public class NFSTopologyController extends Entity {
 	
 	public NFSTopologyController(Model model, String entityName, boolean showInTrace) {
 		super(model, entityName, showInTrace);
-		allhosts = new NFSHostsContainer(model, "allhosts", true);
+		allhosts = new NFSHostsContainer(model, "allhosts", true, "allhosts");
 	}
 	
 	/**

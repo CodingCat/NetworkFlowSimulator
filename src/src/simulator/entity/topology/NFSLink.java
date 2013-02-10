@@ -26,11 +26,6 @@ public class NFSLink extends Entity{
 		runningflows = new ArrayList<NFSFlow>();
 	}
 	
-	@Override
-	public String toString() {
-		return "src:	" + src.toString() + "	dst:	" + dst.toString() + "	bandwidth:" + availableBandwidth;
-	}
-	
 	public void setAvailableBandwidth(char op, double v) {
 		if (op == '+') {
 			availableBandwidth += v;
@@ -75,5 +70,10 @@ public class NFSLink extends Entity{
 			flow.datarate -= amortizedCost;
 			flow.setBottleneckIdx(flow.getLinkIdx(this));
 		}
+	}
+	
+	@Override
+	public String toString() {
+		return "link-" + src.toString() + "-" + dst.toString() + "-" +  totalBandwidth + "Mbps";
 	}
 }

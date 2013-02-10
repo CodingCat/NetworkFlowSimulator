@@ -63,34 +63,15 @@ public class NFSRouter extends NFSNode {
 	 * @param node, the node connecting this node
 	 * @param rate, the bandwidth of the link
 	 */
-	public void registerIncomingLink(NFSNode node, double rate) {
+	public void registerIncomingLink(NFSLink link, double rate) {
+		NFSNode node = link.src;
 		if (node.getClass().equals(NFSRouter.class)) {
-			registerIncomingLink((NFSRouter)node, rate);
+			String iprangekey = node.ipaddress.substring(0, node.ipaddress.lastIndexOf(".")) + ".0";
+			lanLinks.put(iprangekey, link);
 		}
 		if (node.getClass().equals(NFSHost.class)) {
-			registerIncomingLink((NFSHost)node, rate);
+			lanLinks.put(node.toString(), link);
 		}
-	}
-	
-	/**
-	 * this registerInComingLink is for aggregate layer, the key are the ipaddress of hosts, while the value are the link
-	 * @param node, the host connecting to the server
-	 * @param rate, the bandwidth to the router
-	 */
-	private void registerIncomingLink(NFSHost node, double rate) {
-		NFSLink link = new NFSLink(getModel(), "incoming link from " + node, true, rate, node, this);
-		lanLinks.put(node.toString(), link);
-	}
-	
-	/**
-	 * this registerInComingLink is for distribution layer, the key are the ipaddress of routers, while the value are the link
-	 * @param router, the router linking to the current router
-	 * @param rate, the bandwidth of the link
-	 */
-	private void registerIncomingLink(NFSRouter router, double rate) {
-		NFSLink link = new NFSLink(getModel(), "incoming link from " + router, true, rate, router, this);
-		String iprangekey = router.ipaddress.substring(0, router.ipaddress.lastIndexOf(".")) + ".0";
-		lanLinks.put(iprangekey, link);
 	}
 	
 	@Override
@@ -176,7 +157,8 @@ public class NFSRouter extends NFSNode {
 				}
 			}
 			if (nexthopNode == null) {
-				throw new Exception("could not find ip: " + flow.dstipString);
+				throw new Exception("could not find ip: " + flow.dstipString + 
+						" Router Type:" + this.routertype.toString());
 			}
 			//update involved the objects
 			outgoingPath.addRunningFlow(flow);

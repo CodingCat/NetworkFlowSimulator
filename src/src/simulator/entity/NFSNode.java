@@ -7,6 +7,7 @@ import simulator.NetworkFlowSimulator;
 import simulator.entity.flow.NFSFlow;
 import simulator.entity.flow.NFSFlowScheduler;
 import simulator.entity.topology.NFSLink;
+import simulator.model.NFSModel;
 
 import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
@@ -31,9 +32,16 @@ public class NFSNode extends Entity{
 		return flowAllocationTable.get(flow);
 	}
 	
-	public void addNewLink(NFSNode dst, double rate) {
+	/**
+	 * add a new link between this node and the destination node
+	 * @param dst, destination node
+	 * @param rate, the bandwidth of the link
+	 * @return new created link
+	 */
+	public NFSLink addNewLink(NFSNode dst, double rate) {
 		NFSLink link = new NFSLink(getModel(), "link-" + this + "-" + dst, true, rate, this, dst);
 		outLinks.add(link);
+		return link;
 	}
 	
 	public void assignIPAddress(String ip) {
@@ -42,11 +50,6 @@ public class NFSNode extends Entity{
 	
 	public boolean HasAllocatedIP() { 
 		return ipaddress != null;
-	}
-	 
-	@Override
-	public String toString() {
-		return this.ipaddress;
 	}
 	
 	public void changeResourceAllocation(NFSLink link, NFSFlow changedflow) {
@@ -61,10 +64,12 @@ public class NFSNode extends Entity{
 			Class<?> flowSchedulerClass = Class.forName(
 					NetworkFlowSimulator.parser.getString("fluidsim.flow.scheduler", 
 							"simulator.entity.flow.NFSFlowFairScheduler"));
-			Class<?> [] parameterTypes = {ArrayList.class};
+			Class<?> [] parameterTypes = {Model.class, String.class, boolean.class, 
+					ArrayList.class};
 			java.lang.reflect.Constructor<?> constructor = 
 					flowSchedulerClass.getConstructor(parameterTypes);
-			Object [] parameterList = {outLinks};
+			Object [] parameterList = {getModel(), "flowschedulerOn" + this.getName(), true, 
+					outLinks};
 			flowscheduler = (NFSFlowScheduler) constructor.newInstance(parameterList); 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -76,4 +81,11 @@ public class NFSNode extends Entity{
 			System.out.println(link);
 		}
 	}
+	
+	 
+	@Override
+	public String toString() {
+		return this.ipaddress;
+	}
+
 }

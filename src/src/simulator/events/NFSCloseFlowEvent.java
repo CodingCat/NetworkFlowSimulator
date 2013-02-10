@@ -17,9 +17,8 @@ public class NFSCloseFlowEvent extends EventOf2Entities<NFSHost, NFSFlow> {
 		//change the rate of flows along the path
 		NFSFlowRateChangeEvent flowrateevent = new NFSFlowRateChangeEvent(
 				getModel(), 
-				"ratechange",
+				"RateChangeEventTriggeredByCloseFlow",
 				true);
-		flow.setStatus(NFSFlow.NFSFlowStatus.CLOSED);
 		flowrateevent.schedule(srchost, flow.getFirstLink(), flow, presentTime());
 		srchost.close();
 	}		

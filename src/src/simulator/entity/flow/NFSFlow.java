@@ -64,18 +64,30 @@ public class NFSFlow extends Entity {
 		}
 	}
 	
-	public void Free(){
-		TimeSpan recentLastSpan = TimeOperations.diff(presentTime(), lastStartPoint);
-		double oldtotaldataamount = throughput * lastingTime.getTimeAsDouble();
-		double recentdataamount = datarate * recentLastSpan.getTimeAsDouble();
-		//increase the lastineTime
-		lastingTime  = TimeOperations.add(lastingTime, recentLastSpan);
-		//Calculate throughput
-		throughput = ((oldtotaldataamount + recentdataamount) / lastingTime.getTimeAsDouble());  
+	public void close() {
+		try {
+			if (!status.equals(NFSFlowStatus.RUNNING)) {
+				throw new Exception("invalid flow status, should be running when transmit to closed");
+			}
+			status = NFSFlowStatus.CLOSED;
+			expectedrate = 0;
+			path.clear();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
-	public void rateChange() {
-		sendoutSize += (TimeOperations.diff(presentTime(), lastStartPoint).getTimeAsDouble() * datarate);
+	public void start() {
+		//lastlink, we have determine the datarate of the new flow
+		datarate = expectedrate;
+		consumeBandwidth();
+		setStatus(NFSFlowStatus.RUNNING);
+	}
+	
+	public void update() {
+		sendoutSize += 
+				(TimeOperations.diff(presentTime(), lastStartPoint).getTimeAsDouble() * datarate);
 	}
 	
 	public int getLinkIdx(NFSLink link) {
