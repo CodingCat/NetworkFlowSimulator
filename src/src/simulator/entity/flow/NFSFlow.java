@@ -72,6 +72,7 @@ public class NFSFlow extends Entity {
 			status = NFSFlowStatus.CLOSED;
 			expectedrate = 0;
 			path.clear();
+			update();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -81,13 +82,15 @@ public class NFSFlow extends Entity {
 	public void start() {
 		//lastlink, we have determine the datarate of the new flow
 		datarate = expectedrate;
+		lastStartPoint = presentTime();
 		consumeBandwidth();
 		setStatus(NFSFlowStatus.RUNNING);
 	}
 	
-	public void update() {
-		sendoutSize += 
-				(TimeOperations.diff(presentTime(), lastStartPoint).getTimeAsDouble() * datarate);
+	private void update() {
+		lastingTime = TimeOperations.add(lastingTime, TimeOperations.diff(presentTime(), lastStartPoint));
+		sendoutSize += (TimeOperations.diff(presentTime(), lastStartPoint).getTimeAsDouble() * datarate);
+		throughput = sendoutSize / lastingTime.getTimeAsDouble();
 	}
 	
 	public int getLinkIdx(NFSLink link) {
