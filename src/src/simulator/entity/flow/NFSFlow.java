@@ -19,7 +19,7 @@ public class NFSFlow extends Entity {
 	public String srcipString = null;
 	
 	private TimeSpan lastingTime;
-	private TimeInstant lastStartPoint;
+	private TimeInstant lastCheckingPoint;
 	double sendoutSize = 0.0;
 	double throughput = 0.0;
 	
@@ -41,7 +41,7 @@ public class NFSFlow extends Entity {
 		demandrate = demand;
 		expectedrate = demandrate;
 		lastingTime = new TimeSpan(0);
-		lastStartPoint = new TimeInstant(0);
+		lastCheckingPoint = new TimeInstant(0);
 		path = new ArrayList<NFSLink>();
 	}
 	
@@ -82,15 +82,22 @@ public class NFSFlow extends Entity {
 	public void start() {
 		//lastlink, we have determine the datarate of the new flow
 		datarate = expectedrate;
-		lastStartPoint = presentTime();
+		lastCheckingPoint = presentTime();
 		consumeBandwidth();
 		setStatus(NFSFlowStatus.RUNNING);
 	}
 	
 	private void update() {
-		lastingTime = TimeOperations.add(lastingTime, TimeOperations.diff(presentTime(), lastStartPoint));
-		sendoutSize += (TimeOperations.diff(presentTime(), lastStartPoint).getTimeAsDouble() * datarate);
+		lastingTime = TimeOperations.add(lastingTime, TimeOperations.diff(presentTime(), lastCheckingPoint));
+		sendoutSize += (TimeOperations.diff(presentTime(), lastCheckingPoint).getTimeAsDouble() * datarate);
+		lastCheckingPoint = presentTime();
 		throughput = sendoutSize / lastingTime.getTimeAsDouble();
+	}
+	
+	public void update(char model, double newdata) {
+		update();
+		if (model == '-') datarate -= newdata;
+		if (model == '+') datarate += newdata;
 	}
 	
 	public int getLinkIdx(NFSLink link) {

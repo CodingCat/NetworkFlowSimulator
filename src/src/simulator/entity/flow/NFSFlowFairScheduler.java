@@ -54,12 +54,13 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 					for (int i = 0; i < improvedFlowsArray.length; i++) {
 						if (improvedFlowsArray[i].datarate + improvedRate 
 								<= improvedFlowsArray[i].demandrate) {
-							improvedFlowsArray[i].datarate += improvedRate;
+							improvedFlowsArray[i].update('+', improvedRate);
 							link.setAvailableBandwidth('-', improvedRate);
 						} else {
 							link.setAvailableBandwidth('-', 
 									improvedFlowsArray[i].demandrate - improvedFlowsArray[i].datarate);
-							improvedFlowsArray[i].datarate = improvedFlowsArray[i].demandrate;
+							improvedFlowsArray[i].update('+', 
+									improvedFlowsArray[i].demandrate - improvedFlowsArray[i].datarate);
 							improvedRate = link.getAvailableBandwidth() / (improvedFlowsArray.length - 1 - i);
 						}
 					}
