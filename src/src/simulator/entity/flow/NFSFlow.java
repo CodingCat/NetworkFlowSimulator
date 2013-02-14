@@ -91,6 +91,7 @@ public class NFSFlow extends Entity {
 	}
 	
 	public double demandrate = -1.0;//in MBps
+	public double inputSize = 0;//in MBps
 	public double datarate = -1.0; //in MBps
 	public double expectedrate = -1.0;// in MBps 
 	
@@ -101,6 +102,7 @@ public class NFSFlow extends Entity {
 	private TimeInstant lastCheckingPoint;
 	double sendoutSize = 0.0;
 	double throughput = 0.0;
+	double outsize = 0;
 	
 	NFSFlowStatus status;
 	NFSFlowInform flowinform = null;
@@ -125,6 +127,19 @@ public class NFSFlow extends Entity {
 		path = new ArrayList<NFSLink>();
 		flowinform = new NFSFlowInform(model, entityname, true, true);
 		flowreporter = new NFSFlowReporter(flowinform);
+	}
+	
+	public NFSFlow(Model model, String entityname, boolean showinreport, 
+			double demand, double outSize) {
+		super(model, entityname, showinreport);
+		demandrate = demand;
+		expectedrate = demandrate;
+		lastingTime = new TimeSpan(0);
+		lastCheckingPoint = new TimeInstant(0);
+		path = new ArrayList<NFSLink>();
+		flowinform = new NFSFlowInform(model, entityname, true, true);
+		flowreporter = new NFSFlowReporter(flowinform);
+		outsize = outSize;
 	}
 	
 	public void setStatus(NFSFlowStatus s) {

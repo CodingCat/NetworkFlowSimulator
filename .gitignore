@@ -2,3 +2,4 @@
 *.html
 .classpath
 .project
+*.xml
