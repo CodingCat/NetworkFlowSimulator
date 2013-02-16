@@ -28,13 +28,19 @@ public class NFSTaskBindedFlow extends NFSFlow {
 		finishTime = presentTime();
 	}
 	
-	public void schedule() {
+	/**
+	 * start the flow
+	 */
+	@Override
+	public void start() {
+		super.start();
 		closeevent = new NFSCloseTaskBindedFlowEvent(getModel(), "closeEvent-" + this.getName(),
 				true);
 		closeevent.schedule(bindedtask, this, TimeOperations.add(presentTime(),
 				new TimeSpan(demandSize / datarate)));
 	}
 	
+	@Override
 	public void update(char model, double newdata) {
 		super.update(model, newdata);
 		//reschedule the closeevent

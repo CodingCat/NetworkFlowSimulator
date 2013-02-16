@@ -23,11 +23,14 @@ public class NFSFlowRateChangeEvent extends EventOf3Entities<NFSNode, NFSLink, N
 			schedule(nextlink.dst, nextlink, changedflow, presentTime());
 		}
 		else {
+			//if we have determined expected rate of the flow
 			if (changedflow.getStatus().equals(NFSFlow.NFSFlowStatus.NEWSTARTED)) {
+				//if this flow is a new started flow
 				changedflow.start();
 			}
 			else {
 				if (changedflow.getStatus().equals(NFSFlow.NFSFlowStatus.CLOSED)) {
+					//if this flow is just closed
 					changedflow.close();
 				}
 			}

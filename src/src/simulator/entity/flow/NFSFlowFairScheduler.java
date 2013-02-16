@@ -47,12 +47,6 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 						if ((involvedFlows[i].getBottleneckLink() == null || !involvedFlows[i].getBottleneckLink().equals(link))
 							&& (involvedFlows[i].isFullyMeet() == false)) 
 							flowsCanBeImproved.add(involvedFlows[i]);
-					/*	else {
-							System.out.println(involvedFlows[i] + 
-									" bottlenecks on " + involvedFlows[i].getBottleneckLink() + 
-									" current link " + link + 
-									" is fully meet " + involvedFlows[i].isFullyMeet());
-						}*/
 					}
 					sendTraceNote("flowsCanBeImproved:" + flowsCanBeImproved.size());
 					improvedFlowsArray = new NFSFlow[flowsCanBeImproved.size()];

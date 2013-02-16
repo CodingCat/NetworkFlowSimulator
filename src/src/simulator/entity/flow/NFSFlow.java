@@ -154,6 +154,10 @@ public class NFSFlow extends Entity {
 		update();
 	}
 	
+	/**
+	 * start the new flow, be called after we have determined the datarate
+	 * of the flow
+	 */
 	public void start() {
 		//lastlink, we have determine the datarate of the new flow
 		datarate = expectedrate;
@@ -163,6 +167,9 @@ public class NFSFlow extends Entity {
 		setStatus(NFSFlowStatus.RUNNING);
 	}
 	
+	/**
+	 * update the data members of the flow
+	 */
 	private void update() {
 		lastingTime = TimeOperations.add(lastingTime, TimeOperations.diff(presentTime(), lastCheckingPoint));
 		sendoutSize += (TimeOperations.diff(presentTime(), lastCheckingPoint).getTimeAsDouble() * datarate);
@@ -173,6 +180,11 @@ public class NFSFlow extends Entity {
 		flowinform.setthroughput(throughput);
 	}
 	
+	/**
+	 * update the rate of the flow
+	 * @param model, '+' or '-'
+	 * @param newdata, value to be added or reduced with
+	 */
 	public void update(char model, double newdata) {
 		update();
 		if (model == '-') datarate -= newdata;
@@ -206,16 +218,27 @@ public class NFSFlow extends Entity {
 		return null;
 	}
 	
+	/**
+	 * consume the bandwidth on the links along with the path
+	 * only be called when the flow is new started
+	 */
 	private void consumeBandwidth() {
-		for (NFSLink link : path) {
-			if (link.getAvailableBandwidth() >= datarate) {
-				link.setAvailableBandwidth('-', datarate);
+		try {
+			if (!status.equals(NFSFlowStatus.NEWSTARTED)) {
+				throw new Exception("flow must be NEWSTARTED, but " + status.toString() + " detected");
 			}
-			else {
-				//adjust datarate of other flows
-				link.adjustFlowRates(this);
-				link.setAvailableBandwidth('-', link.getAvailableBandwidth());
+			for (NFSLink link : path) {
+				if (link.getAvailableBandwidth() >= datarate) {
+					link.setAvailableBandwidth('-', datarate);
+				} else {
+					// adjust datarate of other flows
+					link.adjustFlowRates(this);
+					link.setAvailableBandwidth('-', link.getAvailableBandwidth());
+				}
 			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 }

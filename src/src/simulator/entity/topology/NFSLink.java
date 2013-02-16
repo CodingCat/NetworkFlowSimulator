@@ -60,6 +60,10 @@ public class NFSLink extends Entity{
 		return this.totalBandwidth / runningflows.size();
 	}
 	
+	/**
+	 * adjust the rates of other flows, due to the appearance of newflow
+	 * @param newflow, the new flow
+	 */
 	public void adjustFlowRates(NFSFlow newflow) {
 		double avrrate = totalBandwidth / runningflows.size();
 		ArrayList<NFSFlow> flowsToBeReduced = new ArrayList<NFSFlow>();
