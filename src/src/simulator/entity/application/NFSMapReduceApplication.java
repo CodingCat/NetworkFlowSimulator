@@ -19,6 +19,7 @@ import desmoj.core.simulator.TimeOperations;
 public class NFSMapReduceApplication extends NFSApplication {
 	
 	
+	
 	private static class RandomArrayGenerator{
 		public static void getDoubleArray(double [] array) {
 			Random rand = new Random(System.currentTimeMillis());
@@ -35,8 +36,15 @@ public class NFSMapReduceApplication extends NFSApplication {
 		
 		TimeInstant startTime = null;
 		TimeInstant finishTime = null;
+		NFSHost tasktracker = null;
 		
-		public MapTask(Model model, String taskName, boolean showInTrace, int tid, int of, double outSize) {
+		public MapTask(Model model, 
+				String taskName, 
+				boolean showInTrace, 
+				int tid, 
+				int of, 
+				double outSize,
+				NFSHost tt) {
 			super(model, taskName, showInTrace);
 			taskID = tid;
 			outfactor = of;
@@ -51,7 +59,7 @@ public class NFSMapReduceApplication extends NFSApplication {
 					partitions[i],
 					this);//
 			startTime = presentTime();
-
+			tasktracker = tt;
 		}
 
 		int taskID = 0;
@@ -60,16 +68,17 @@ public class NFSMapReduceApplication extends NFSApplication {
 		NFSTaskBindedFlow [] flows = null;
 		
 		/**
-		 * send out the data
+		 * generate flows to send out the data
 		 */
 		public void run() {
 			String [] targets = NFSModel.trafficcontroller.getOneToManyTarget(outfactor);
 			for (int i = 0; i < flows.length; i++) {
-				flows[i].srcipString = hostmachine.ipaddress;
+				flows[i].srcipString = tasktracker.ipaddress;
+				if (targets[i].equals(flows[i].srcipString)) continue;
 				flows[i].dstipString = targets[i];
 				flows[i].expectedrate = flows[i].demandrate;
 				flows[i].setStatus(NFSFlow.NFSFlowStatus.NEWSTARTED);
-				NFSLink passLink = hostmachine.startNewFlow(flows[i]);
+				NFSLink passLink = tasktracker.startNewFlow(flows[i]);
 				//schedule receive flow event
 				NFSReceiveFlowEvent receiveflowevent = new NFSReceiveFlowEvent(
 						getModel(), 
@@ -141,11 +150,19 @@ public class NFSMapReduceApplication extends NFSApplication {
 	private void partition() {
 		//generate the partition of key space
 		double [] partitions = new double[mapnum];
+		int totalmachineNum = NFSModel.trafficcontroller.topocontroller.getHostN();
 		RandomArrayGenerator.getDoubleArray(partitions);
 		Random rand = new Random(System.currentTimeMillis());
-		for (int i = 0; i < mapnum; i++) 
-			mappers[i] = new MapTask(getModel(), getName() + "-task-" + i, 
-					true, i, rand.nextInt(reducenum), partitions[i] * shuffleSize);
+		for (int i = 0; i < mapnum; i++) { 
+			mappers[i] = new MapTask(getModel(), 
+					getName() + "-task-" + i, 
+					true, 
+					i, //task id
+					reducenum, // how many reducer will accept this mapper's results 
+					partitions[i] * shuffleSize, // data to be transferred to be through the networks from this mapper 
+					NFSModel.trafficcontroller.topocontroller.getHost(rand.nextInt(totalmachineNum))//the tasktracker
+					);
+		}
 	}
 	
 	public void finish(MapTask task) {
