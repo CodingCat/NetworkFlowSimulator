@@ -41,6 +41,15 @@ public class NFSTopologyController extends Entity {
 	}
 	
 	/**
+	 * get host 
+	 * @param i, the index of host
+	 * @return the host instance
+	 */
+	public NFSHost getHost(int i) {
+		return allhosts.Get(i);
+	}
+	
+	/**
 	 * get particular host ip
 	 * @param index, index of the host in the system
 	 * @return particular host ip

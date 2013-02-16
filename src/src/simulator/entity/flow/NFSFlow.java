@@ -98,8 +98,8 @@ public class NFSFlow extends Entity {
 	public String dstipString = null;
 	public String srcipString = null;
 	
-	private TimeSpan lastingTime;
-	private TimeInstant lastCheckingPoint;
+	protected TimeSpan lastingTime;
+	protected TimeInstant lastCheckingPoint;
 	double sendoutSize = 0.0;
 	double throughput = 0.0;
 	double outsize = 0;
@@ -127,19 +127,6 @@ public class NFSFlow extends Entity {
 		path = new ArrayList<NFSLink>();
 		flowinform = new NFSFlowInform(model, entityname, true, true);
 		flowreporter = new NFSFlowReporter(flowinform);
-	}
-	
-	public NFSFlow(Model model, String entityname, boolean showinreport, 
-			double demand, double outSize) {
-		super(model, entityname, showinreport);
-		demandrate = demand;
-		expectedrate = demandrate;
-		lastingTime = new TimeSpan(0);
-		lastCheckingPoint = new TimeInstant(0);
-		path = new ArrayList<NFSLink>();
-		flowinform = new NFSFlowInform(model, entityname, true, true);
-		flowreporter = new NFSFlowReporter(flowinform);
-		outsize = outSize;
 	}
 	
 	public void setStatus(NFSFlowStatus s) {

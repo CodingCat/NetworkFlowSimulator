@@ -2,13 +2,22 @@ package simulator.entity.application;
 
 import java.util.Random;
 
+import desmoj.core.simulator.Model;
+
 import simulator.entity.NFSHost;
 import simulator.entity.topology.NFSTopologyController;
 
 public class NFSPermuMatrixTraffic extends NFSTrafficGenerator {
 
-	public NFSPermuMatrixTraffic(NFSTopologyController topocontroller) {
-		super(topocontroller);
+	public NFSPermuMatrixTraffic(Model model, String entityName, boolean showInReport, 
+			NFSTopologyController topocontroller) {
+		super(model, entityName, showInReport, topocontroller);
+	}
+	
+	@Override
+	protected void init() {
+		super.init();
+		buildflowmap();
 	}
 	
 	private void buildflowmap() {
@@ -18,17 +27,22 @@ public class NFSPermuMatrixTraffic extends NFSTrafficGenerator {
 		for (NFSHost host : topocontroller.allHosts()) {
 			dstHostIdx = rand.nextInt(hostN);
 			String dstip = topocontroller.getHostIP(dstHostIdx);
-			while (trafficMapping.containsValue(dstip) || host.ipaddress.equals(dstip)) {
+			while (oneToOneTrafficMap.containsValue(dstip) || host.ipaddress.equals(dstip)) {
 				dstHostIdx = rand.nextInt(hostN);
 				dstip = topocontroller.getHostIP(dstHostIdx);
 			}
-			trafficMapping.put(host.ipaddress, dstip);
+			oneToOneTrafficMap.put(host.ipaddress, dstip);
 		}
 	}
-	
+
 	@Override
-	protected void init() {
-		super.init();
-		buildflowmap();
+	@Deprecated
+	public String[] getOneToManyTarget(int targetsnum) {
+		return null;
+	}
+
+	@Override
+	public void run() {
+		for (NFSHost host : topocontroller.allHosts()) host.run();
 	}
 }

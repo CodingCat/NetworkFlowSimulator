@@ -14,9 +14,10 @@ public abstract class NFSApplication extends Entity{
 		super(model, entityName, showInTrace);
 		datarate = dr;
 		hostmachine = machine;
+		init();
 	}
-
-	public abstract void send();
 	
+	protected abstract void init();
+	public abstract void start();
 	public abstract void close();
 }

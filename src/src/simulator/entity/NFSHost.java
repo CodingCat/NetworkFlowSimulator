@@ -2,7 +2,6 @@ package simulator.entity;
 
 import simulator.NetworkFlowSimulator;
 import simulator.entity.application.NFSApplication;
-import simulator.entity.application.NFSOnOffApplication;
 import simulator.entity.flow.NFSFlow;
 import simulator.entity.topology.NFSLink;
 import desmoj.core.simulator.Model;
@@ -18,18 +17,16 @@ public class NFSHost extends NFSNode{
 	
 	private void installApp() {
 		try {
-			//TODO: change to factory pattern to generate different types of applications
-			//build applications via reflection
-			this.app = new NFSOnOffApplication(
-					getModel(),
-					"OnOffApp-" + this.toString(),
-					true,
-					NetworkFlowSimulator.parser.getDouble("fluidsim.application.onoff.datarate", 0.5),
-					this,
-					NetworkFlowSimulator.parser.getInt("fluidsim.application.onoff.maxonduration", 40),
-					NetworkFlowSimulator.parser.getInt("fluidsim.application.onoff.maxoffduration", 40),
-					NetworkFlowSimulator.parser.getInt("fluidsim.application.onoff.minonduration", 20),
-					NetworkFlowSimulator.parser.getInt("fluidsim.application.onoff.minoffduration", 20));
+			Class<?> appClass = Class.forName(
+					NetworkFlowSimulator.parser.getString("fluidsim.host.applications", 
+							"simulator.entity.application.NFSOnOffApplication"));
+			Class<?> [] parameterTypes = {Model.class, String.class, boolean.class, 
+					double.class, NFSHost.class};
+			java.lang.reflect.Constructor<?> constructor = 
+					appClass.getConstructor(parameterTypes);
+			Object [] parameterList = {getModel(), "appOn" + this.getName(), true, 
+					NetworkFlowSimulator.parser.getDouble("fluidsim.application.rate", 0.5)};
+			app = (NFSApplication) constructor.newInstance(parameterList); 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -52,7 +49,7 @@ public class NFSHost extends NFSNode{
 	}
 	
 	public void run() {
-		app.send();
+		app.start();
 	}	
 	
 	public void close() {

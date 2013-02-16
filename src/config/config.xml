@@ -49,4 +49,16 @@
 		<name>fluidsim.application.onoff.minoffduration</name>
 		<value>20</value>
 	</property>
+	<property>
+		<name>fluidsim.application.mapreduce.jobnum</name>
+		<value>100</value>
+	</property>
+	<property>
+		<name>fluidsim.application.rate</name>
+		<value>10</value>
+	</property>
+	<property>
+		<name>fluidsim.host.applications</name>
+		<value>simulator.entity.application.NFSMapReduceApplication</value>
+	</property>
 </configuration>

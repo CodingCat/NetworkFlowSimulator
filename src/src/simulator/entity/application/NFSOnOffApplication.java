@@ -25,30 +25,36 @@ public class NFSOnOffApplication extends NFSApplication {
 	private NFSFlow bindingflow = null;
 	
 	public NFSOnOffApplication(Model model, String entityName,
-			boolean showInTrace, double dr, NFSHost machine, 
-			int ondurationmax, 
-			int offdurationmax,
-			int ondurationmin,
-			int offdurationmin) {
+			boolean showInTrace, 
+			double dr, 
+			NFSHost machine) {
 		super(model, entityName, showInTrace, dr, machine);
-		onDurationUpbound = ondurationmax;
-		offDurationUpbound = offdurationmax;
-		onDurationLowbound = ondurationmin;
-		offDurationLowbound = offdurationmin;
 	}
 	
+	/**
+	 * initialize the data members in this class 
+	 */
+	protected void init() {
+		onDurationUpbound = NetworkFlowSimulator.parser.getInt("fluidsim.application.onoff.maxonduration", 40);
+		offDurationUpbound = NetworkFlowSimulator.parser.getInt("fluidsim.application.onoff.maxoffduration", 40);
+		onDurationLowbound = NetworkFlowSimulator.parser.getInt("fluidsim.application.onoff.minonduration", 20);
+		offDurationLowbound = NetworkFlowSimulator.parser.getInt("fluidsim.application.onoff.minoffduration", 20);
+
+	}
+	
+	
 	@Override
-	public void send() {
+	public void start() {
 		if (bindingflow == null) {
 			bindingflow = new NFSFlow(
 					getModel(), 
-					"flow-" + hostmachine.ipaddress + "-" + NFSModel.trafficcontroller.getTarget(hostmachine.ipaddress), 
+					"flow-" + hostmachine.ipaddress + "-" + NFSModel.trafficcontroller.getOneToOneTarget(hostmachine.ipaddress), 
 					true, 
 					NetworkFlowSimulator.parser.getDouble("fluidsim.application.onoff.rate", 0.5));
 			//set the source address
 			bindingflow.srcipString = hostmachine.ipaddress;
 			//set the destination address
-			bindingflow.dstipString = NFSModel.trafficcontroller.getTarget(bindingflow.srcipString);
+			bindingflow.dstipString = NFSModel.trafficcontroller.getOneToOneTarget(bindingflow.srcipString);
 		}
 		bindingflow.expectedrate = bindingflow.demandrate;
 		bindingflow.setStatus(NFSFlow.NFSFlowStatus.NEWSTARTED);

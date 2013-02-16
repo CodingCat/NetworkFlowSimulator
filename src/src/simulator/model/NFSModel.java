@@ -1,7 +1,6 @@
 package simulator.model;
 
 import simulator.NetworkFlowSimulator;
-import simulator.entity.NFSHost;
 import simulator.entity.application.NFSTrafficGenerator;
 import simulator.entity.topology.NFSBuilding;
 import simulator.entity.topology.NFSNetworksBackbone;
@@ -38,7 +37,7 @@ public class NFSModel extends Model{
 
 	@Override
 	public void doInitialSchedules() {
-		for (NFSHost host : topocontroller.allHosts()) host.run();
+		trafficcontroller.run();
 	}
 
 	@Override

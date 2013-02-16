@@ -8,7 +8,7 @@ import simulator.utils.NFSXmlParser;
 public class NetworkFlowSimulator {
 	
 	public static NFSXmlParser parser = null;
-	
+	public static NFSModel mainModel = null;
 	/**
 	 * @param args
 	 * args[0] - the path of config.xml
@@ -16,7 +16,7 @@ public class NetworkFlowSimulator {
 	public static void main(String[] args) {
 		parser = NFSXmlParser.Instance(args[0]);
 		
-		NFSModel mainModel = new NFSModel(null, "NetworksFlowModel", true, true);
+		mainModel = new NFSModel(null, "NetworksFlowModel", true, true);
 			
 		Experiment exp = new Experiment("NetworksFlowExperiments");
 		
