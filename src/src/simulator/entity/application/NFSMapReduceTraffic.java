@@ -1,5 +1,6 @@
 package simulator.entity.application;
 
+import java.util.HashSet;
 import java.util.Random;
 
 import desmoj.core.dist.DiscreteDistPoisson;
@@ -47,20 +48,21 @@ public class NFSMapReduceTraffic extends NFSTrafficGenerator {
 	 * start mapreduce jobs
 	 */
 	public void run() {
-		//TODO: check when tehe job number is much larger than machines number, there will be any problem?
+		// TODO: check when tehe job number is much larger than machines number,
+		// there will be any problem?
 		int jobnum = NetworkFlowSimulator.parser.getInt(
-				"fluidsim.application.mapreduce.jobnum", 
-				100);
+				"fluidsim.application.mapreduce.jobnum", 100);
 		int totalmachines = topocontroller.getHostN();
 		Random rand = new Random(System.currentTimeMillis());
 		for (int i = 0; i < jobnum; i++) {
 			NFSHost host = topocontroller.getHost(rand.nextInt(totalmachines));
 			NFSStartNewFlowEvent startevent = new NFSStartNewFlowEvent(
-					NetworkFlowSimulator.mainModel,
-					"startMapRJobOn" + host.ipaddress,
-					true);
-			startevent.schedule(host, 
-					TimeOperations.add(presentTime(), new TimeSpan(arrivaldist.sample())));
+					NetworkFlowSimulator.mainModel, "startMapRJobOn"
+							+ host.ipaddress, true);
+			startevent.schedule(
+					host,
+					TimeOperations.add(presentTime(),
+							new TimeSpan(arrivaldist.sample())));
 		}
 	}
 }

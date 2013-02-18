@@ -55,7 +55,7 @@
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.jobnum</name>
-		<value>1</value>
+		<value>10</value>
 	</property>
 	<property>
 		<name>fluidsim.application.rate</name>
