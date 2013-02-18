@@ -79,10 +79,10 @@ public class NFSRouter extends NFSNode {
 		NFSNode node = link.src;
 		if (node.getClass().equals(NFSRouter.class)) {
 			String iprangekey = node.ipaddress.substring(0, node.ipaddress.lastIndexOf(".")) + ".0";
-			//System.out.println();
 			lanLinks.put(iprangekey, link);
 		}
 		if (node.getClass().equals(NFSHost.class)) {
+			System.out.println("register incoming link:" + node.toString());
 			lanLinks.put(node.toString(), link);
 		}
 	}
@@ -108,15 +108,18 @@ public class NFSRouter extends NFSNode {
 			NFSNode nexthopNode = null;
 			NFSLink outgoingPath = null;
 			String dstCrange = flow.dstipString.substring(0, flow.dstipString.lastIndexOf(".")) + ".0";
-			String localCrange = this.ipaddress.substring(0, flow.dstipString.lastIndexOf(".")) + ".0";
+			String localCrange = this.ipaddress.substring(0, this.ipaddress.lastIndexOf(".")) + ".0";
 			//get the building tag
 			//get the later 3 segment
 			String dstlater3seg = flow.dstipString.substring(flow.dstipString.indexOf(".") + 1, 
 					flow.dstipString.length());
 			String dstbuildingTag = dstlater3seg.substring(0, dstlater3seg.indexOf("."));
 			if (routertype.equals(RouterType.Edge)) {
-				if (dstCrange.equals(localCrange)) {
+				if (dstCrange.equals(localCrange)) 
+				{	
 					//in the same lan
+					System.out.println(flow.srcipString + "->" + flow.dstipString);
+					System.out.println("local range:" + localCrange + " dstrange:" + dstCrange);
 					if (lanLinks.containsKey(flow.dstipString)) {
 						outgoingPath = lanLinks.get(flow.dstipString);
 						nexthopNode = outgoingPath.src;
@@ -170,8 +173,13 @@ public class NFSRouter extends NFSNode {
 				}
 			}
 			if (nexthopNode == null) {
+				String pathStr = "";
+				for (int i = 0; i < flow.getPaths().size(); i++) {
+					pathStr += (flow.getPaths().get(i).getName() + " ");
+				}
 				throw new Exception("could not find ip: " + flow.dstipString + 
-						" Router Type:" + this.routertype.toString());
+						" Router Type:" + this.routertype.toString() + " Router IP:" +
+						this.ipaddress + " " + pathStr);
 			}
 			//update involved the objects
 			outgoingPath.addRunningFlow(flow);

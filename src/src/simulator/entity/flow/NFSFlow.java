@@ -198,6 +198,10 @@ public class NFSFlow extends Entity {
 		return path.indexOf(link);
 	}
 	
+	public final ArrayList<NFSLink> getPaths() {
+		return path;
+	}
+	
 	public boolean isFullyMeet() {
 		double t = (status.equals(NFSFlowStatus.NEWSTARTED)) ? expectedrate : datarate; 
 		return demandrate == t;

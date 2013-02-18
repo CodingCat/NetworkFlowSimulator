@@ -111,7 +111,6 @@ public class NFSMapReduceApplication extends NFSApplication {
 	private int reducenum = 0;
 	private int finishtasks = 0;
 	private MapTask [] mappers = null;
-	static double expansionFactor = 0;
 	static ContDistNormal inputdist = null;
 
 	TimeInstant startTime = null;
@@ -131,9 +130,6 @@ public class NFSMapReduceApplication extends NFSApplication {
 			double stdevInputSize = NetworkFlowSimulator.parser.getDouble(
 					"fluidsim.application.mapreduce.inputsize.stdev", 
 					10);
-			expansionFactor = NetworkFlowSimulator.parser.getDouble(
-					"fluidsim.application.mapreduce.inputsize.expansionfactor", 
-					1.2);
 			inputdist = new ContDistNormal(getModel(),
 					"mapreduce-input-norm-dist",
 					meanInputSize,
@@ -142,7 +138,7 @@ public class NFSMapReduceApplication extends NFSApplication {
 					true);
 		}
 		inputSize = inputdist.sample();
-		shuffleSize = inputSize * expansionFactor;
+		shuffleSize = inputSize;
 		mapnum = (int) Math.ceil(inputSize / 64);
 		reducenum = (int) Math.ceil (mapnum * 0.9);
 		startTime = presentTime();
