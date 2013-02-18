@@ -23,6 +23,9 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 		int index = (flow.srcipString + flow.dstipString).hashCode() % outlinks.size();
 		this.sendTraceNote("NFSFlowFairScheduler:" + outlinks.size() + " possible links;" + 
 				" selected:" + index);
+		if (outlinks.size() > 1 && index != 0) {
+			System.out.println("ecmp is enabled");
+		}
 		return outlinks.get(index > 0 ? index : -index);
 	}
 	

@@ -118,8 +118,8 @@ public class NFSRouter extends NFSNode {
 				if (dstCrange.equals(localCrange)) 
 				{	
 					//in the same lan
-					System.out.println(flow.srcipString + "->" + flow.dstipString);
-					System.out.println("local range:" + localCrange + " dstrange:" + dstCrange);
+			//		System.out.println(flow.srcipString + "->" + flow.dstipString);
+				//	System.out.println("local range:" + localCrange + " dstrange:" + dstCrange);
 					if (lanLinks.containsKey(flow.dstipString)) {
 						outgoingPath = lanLinks.get(flow.dstipString);
 						nexthopNode = outgoingPath.src;

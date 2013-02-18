@@ -3,6 +3,7 @@ package simulator.entity.flow;
 import java.util.ArrayList;
 
 import simulator.entity.topology.NFSLink;
+import simulator.model.NFSModel;
 import desmoj.core.report.Reporter;
 import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
@@ -13,7 +14,7 @@ import desmoj.core.simulator.TimeSpan;
 
 public class NFSFlow extends Entity {
 	
-	class NFSFlowInform extends Reportable {
+	class NFSFlowInfo extends Reportable {
 
 		private String flowIDInReport;
 		private double lastingtimeInReport;
@@ -21,7 +22,7 @@ public class NFSFlow extends Entity {
 		private double throughputInReport;
 		
 		
-		public NFSFlowInform(Model model, String name, boolean showInReport, boolean showInTrace) {
+		public NFSFlowInfo(Model model, String name, boolean showInReport, boolean showInTrace) {
 			super(model, name, showInReport, showInTrace);
 			flowIDInReport = name;
 		}
@@ -80,11 +81,11 @@ public class NFSFlow extends Entity {
 
 		@Override
 		public String[] getEntries() {
-			if (source instanceof NFSFlowInform) {
-				entries[0] = ((NFSFlowInform) source).getName();
-				entries[1] = Double.toString(((NFSFlowInform) source).getlastingtime());
-				entries[2] = Double.toString(((NFSFlowInform) source).getsendsize());
-				entries[3] = Double.toString(((NFSFlowInform) source).getthroughput());
+			if (source instanceof NFSFlowInfo) {
+				entries[0] = ((NFSFlowInfo) source).getName();
+				entries[1] = Double.toString(((NFSFlowInfo) source).getlastingtime());
+				entries[2] = Double.toString(((NFSFlowInfo) source).getsendsize());
+				entries[3] = Double.toString(((NFSFlowInfo) source).getthroughput());
 			}
 			return entries;
 		}
@@ -105,7 +106,7 @@ public class NFSFlow extends Entity {
 	double outsize = 0;
 	
 	NFSFlowStatus status;
-	NFSFlowInform flowinform = null;
+	NFSFlowInfo flowinform = null;
 	NFSFlowReporter flowreporter = null;
 	
 	private ArrayList<NFSLink> path = null;
@@ -125,7 +126,7 @@ public class NFSFlow extends Entity {
 		lastingTime = new TimeSpan(0);
 		lastCheckingPoint = new TimeInstant(0);
 		path = new ArrayList<NFSLink>();
-		flowinform = new NFSFlowInform(model, entityname, true, true);
+		flowinform = new NFSFlowInfo(model, entityname, NFSModel.showNFSFlow, true);
 		flowreporter = new NFSFlowReporter(flowinform);
 	}
 	

@@ -9,6 +9,10 @@ import desmoj.core.simulator.Model;
 
 public class NFSModel extends Model{
 	
+	//control flags
+	public static boolean showNFSFlow = false;
+	public static boolean showTaskBindedFlow = false;
+	
 	public NFSTopologyController topocontroller = null;
 	public static NFSTrafficGenerator trafficcontroller = null;
 	
