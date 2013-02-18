@@ -29,12 +29,13 @@ public class NFSOnOffApplication extends NFSApplication {
 			double dr, 
 			NFSHost machine) {
 		super(model, entityName, showInTrace, dr, machine);
+		initialize();
 	}
 	
 	/**
 	 * initialize the data members in this class 
 	 */
-	protected void init() {
+	protected void initialize() {
 		onDurationUpbound = NetworkFlowSimulator.parser.getInt("fluidsim.application.onoff.maxonduration", 40);
 		offDurationUpbound = NetworkFlowSimulator.parser.getInt("fluidsim.application.onoff.maxoffduration", 40);
 		onDurationLowbound = NetworkFlowSimulator.parser.getInt("fluidsim.application.onoff.minonduration", 20);
@@ -64,7 +65,7 @@ public class NFSOnOffApplication extends NFSApplication {
 				getModel(), 
 				"receiveflow-" + bindingflow.srcipString + "-" + bindingflow.dstipString, true);
 		receiveflowevent.setSchedulingPriority(1);
-		receiveflowevent.schedule((NFSRouter) passLink.dst, bindingflow, presentTime());
+		receiveflowevent.schedule(hostmachine, (NFSRouter) passLink.dst, bindingflow, presentTime());
 
 		Random rand = new Random(System.currentTimeMillis());
 		//schedule close event 

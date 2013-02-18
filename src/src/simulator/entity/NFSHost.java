@@ -18,14 +18,15 @@ public class NFSHost extends NFSNode{
 	private void installApp() {
 		try {
 			Class<?> appClass = Class.forName(
-					NetworkFlowSimulator.parser.getString("fluidsim.host.applications", 
+					NetworkFlowSimulator.parser.getString("fluidsim.host.application", 
 							"simulator.entity.application.NFSOnOffApplication"));
 			Class<?> [] parameterTypes = {Model.class, String.class, boolean.class, 
 					double.class, NFSHost.class};
 			java.lang.reflect.Constructor<?> constructor = 
 					appClass.getConstructor(parameterTypes);
 			Object [] parameterList = {getModel(), "appOn" + this.getName(), true, 
-					NetworkFlowSimulator.parser.getDouble("fluidsim.application.rate", 0.5)};
+					NetworkFlowSimulator.parser.getDouble("fluidsim.application.rate", 0.5),
+					this};
 			app = (NFSApplication) constructor.newInstance(parameterList); 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -42,7 +43,7 @@ public class NFSHost extends NFSNode{
 		//supporting multihoming
 		NFSLink link = flowscheduler.schedule(flow);
 		//add the flow to the link
-		link.addRunningFlow(flow);
+	//	link.addRunningFlow(flow);
 		//add the current link to the flow path
 		flow.addPath(link);
 		return link;

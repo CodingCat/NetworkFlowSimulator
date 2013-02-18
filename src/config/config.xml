@@ -3,11 +3,7 @@
 <configuration>
 	<property>
 		<name>fluidsim.topology.locallinkrate</name>
-		<value>0.8</value>
-	</property>
-	<property>
-		<name>fluidsim.topology.hostsperl2sw</name>
-		<value>2</value>
+		<value>100</value>
 	</property>
 	<property>
 		<name>fluidsim.system.traceperiod</name>
@@ -27,10 +23,18 @@
 	</property>
 	<property>
 		<name>fluidsim.topology.l3switchnum</name>
-		<value>1</value>
+		<value>4</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.l2switchnum</name>
+		<value>2</value>
+	</property>
+	<property>
+		<name>fluidsim.topology.hostsperl2sw</name>
+		<value>2</value>
+	</property>
+	<property>
+		<name>fluidsim.topology.corenum</name>
 		<value>1</value>
 	</property>
 	<property>
@@ -58,7 +62,23 @@
 		<value>10</value>
 	</property>
 	<property>
-		<name>fluidsim.host.applications</name>
+		<name>fluidsim.host.application</name>
 		<value>simulator.entity.application.NFSMapReduceApplication</value>
+	</property>
+	<property>
+		<name>fluidsim.model.trafficcontroller</name>
+		<value>simulator.entity.application.NFSMapReduceTraffic</value>
+	</property>
+	<property>
+		<name>fluidsim.application.mapreduce.jobnum</name>
+		<value>1</value>
+	</property>
+	<property>
+		<name>fluidsim.application.mapreduce.inputsize.mean</name>
+		<value>1024</value>
+	</property>
+	<property>
+		<name>fluidsim.application.mapreduce.inputsize.stdev</name>
+		<value>0</value>
 	</property>
 </configuration>

@@ -11,7 +11,7 @@ public class NFSModel extends Model{
 	
 	public NFSTopologyController topocontroller = null;
 	public static NFSTrafficGenerator trafficcontroller = null;
-
+	
 	public NFSModel(Model model, String modelName, boolean showInReport, boolean showInTrace) {
 		super(model, modelName, showInReport, showInTrace);
 	}
@@ -19,12 +19,13 @@ public class NFSModel extends Model{
 	private void buildtrafficctrl() {
 		try {
 			Class<?> trafficCtrlClass = Class.forName(
-					NetworkFlowSimulator.parser.getString("fluidsim.model.trafficmcontroller", 
+					NetworkFlowSimulator.parser.getString("fluidsim.model.trafficcontroller", 
 							"simulator.entity.application.NFSPermuMatrixTraffic"));
-			Class<?> [] parameterTypes = {NFSTopologyController.class};
+			Class<?> [] parameterTypes = {Model.class, String.class, boolean.class, 
+					NFSTopologyController.class};
 			java.lang.reflect.Constructor<?> constructor = 
 					trafficCtrlClass.getConstructor(parameterTypes);
-			Object [] parameterList = {topocontroller};
+			Object [] parameterList = {this, "traffic-controller", true, topocontroller};
 			trafficcontroller = (NFSTrafficGenerator) constructor.newInstance(parameterList); 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -47,7 +48,7 @@ public class NFSModel extends Model{
 		int l2switchnum = NetworkFlowSimulator.parser.getInt("fluidsim.topology.l2switchnum", 4);
 		int hostsperl2sw = NetworkFlowSimulator.parser.getInt("fluidsim.topology.hostsperl2sw", 100);
 		int coreNum = NetworkFlowSimulator.parser.getInt("fluidsim.topology.corenum", 2);
-	
+		
 		topocontroller = new NFSTopologyController(this, "topo-controller", true);
 		
 		NFSBuilding [] buildings = new NFSBuilding[buildingNum];

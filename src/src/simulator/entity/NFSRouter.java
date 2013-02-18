@@ -17,9 +17,17 @@ public class NFSRouter extends NFSNode {
 	private HashMap<String, NFSLink> lanLinks = null;//the connected host ip address -> links
 	private ArrayList<String> IPs;
 	static public enum RouterType { 
-		Aggererate,
-		Distribution,
-		Core;
+		Edge(0), Distribution(1), Core(2);
+		
+		private final int type;
+
+		private RouterType(int value) {
+			this.type = value;
+		}
+
+		public int getType() {
+			return type;
+		}
 	};
 	private RouterType routertype = null;
 	
@@ -40,8 +48,12 @@ public class NFSRouter extends NFSNode {
 		routertype = type;
 	}
 	
-	public void SetRouterType(RouterType type) {
+	public void setRouterType(RouterType type) {
 		routertype = type;
+	}
+	
+	public RouterType getRouterType() {
+		return routertype;
 	}
 	
 	/**
@@ -67,6 +79,7 @@ public class NFSRouter extends NFSNode {
 		NFSNode node = link.src;
 		if (node.getClass().equals(NFSRouter.class)) {
 			String iprangekey = node.ipaddress.substring(0, node.ipaddress.lastIndexOf(".")) + ".0";
+			//System.out.println();
 			lanLinks.put(iprangekey, link);
 		}
 		if (node.getClass().equals(NFSHost.class)) {
@@ -101,7 +114,7 @@ public class NFSRouter extends NFSNode {
 			String dstlater3seg = flow.dstipString.substring(flow.dstipString.indexOf(".") + 1, 
 					flow.dstipString.length());
 			String dstbuildingTag = dstlater3seg.substring(0, dstlater3seg.indexOf("."));
-			if (routertype.equals(RouterType.Aggererate)) {
+			if (routertype.equals(RouterType.Edge)) {
 				if (dstCrange.equals(localCrange)) {
 					//in the same lan
 					if (lanLinks.containsKey(flow.dstipString)) {
@@ -171,6 +184,15 @@ public class NFSRouter extends NFSNode {
 		}
 	}
 		
+	/**
+	 * get the lan link by the link source ip
+	 * @param srcip, the source ip
+	 * @return, return the link object
+	 */
+	public NFSLink getLanLink(String srcip) {
+		return lanLinks.get(srcip);
+	}
+	
 	@Override
 	public void PrintLinks() {
 		System.out.println("Allocated IPs");

@@ -21,13 +21,16 @@ public class NFSMapReduceApplication extends NFSApplication {
 	
 	
 	private static class RandomArrayGenerator{
+		/**
+		 * generate a random array with double values
+		 * @param array
+		 */
 		public static void getDoubleArray(double [] array) {
 			Random rand = new Random(System.currentTimeMillis());
-			double sum = 0.0;
 			for (int i = 0; i < array.length; i++) {
-				if (i == array.length - 1) array[i] = 1 - sum;
-				else array[i] = rand.nextDouble() % (1 - sum);
-				sum += array[i];
+				double p = rand.nextDouble();
+				while (p < 0.0001) p = rand.nextDouble();
+				array[i] = p;
 			}
 		}
 	}
@@ -37,6 +40,11 @@ public class NFSMapReduceApplication extends NFSApplication {
 		TimeInstant startTime = null;
 		TimeInstant finishTime = null;
 		NFSHost tasktracker = null;
+
+		int taskID = 0;
+		int outfactor = 0;
+		int closedflowN = 0;
+		NFSTaskBindedFlow [] flows = null;
 		
 		public MapTask(Model model, 
 				String taskName, 
@@ -49,32 +57,27 @@ public class NFSMapReduceApplication extends NFSApplication {
 			taskID = tid;
 			outfactor = of;
 			flows = new NFSTaskBindedFlow[outfactor];
-			double [] partitions = new double [outfactor];
-			RandomArrayGenerator.getDoubleArray(partitions);
-			for (int i = 0; i < outfactor; i++) flows[i] = new NFSTaskBindedFlow(
-					getModel(), 
-					getName(), 
-					true, 
-					NetworkFlowSimulator.parser.getDouble("fluidsim.application.mapreduce.rate", 10),
-					partitions[i],
-					this);//
 			startTime = presentTime();
 			tasktracker = tt;
 		}
 
-		int taskID = 0;
-		int outfactor = 0;
-		int closedflowN = 0;
-		NFSTaskBindedFlow [] flows = null;
 		
 		/**
 		 * generate flows to send out the data
 		 */
 		public void run() {
+			double [] partitions = new double [outfactor];
+			RandomArrayGenerator.getDoubleArray(partitions);
 			String [] targets = NFSModel.trafficcontroller.getOneToManyTarget(outfactor);
 			for (int i = 0; i < flows.length; i++) {
+				if (targets[i].equals(tasktracker.ipaddress)) continue;//map and reducer are in the same host
+				flows[i] = new NFSTaskBindedFlow(getModel(), 
+						"flows-" + tasktracker.ipaddress + "-" + targets[i],
+						true,
+						NetworkFlowSimulator.parser.getDouble("fluidsim.application.mapreduce.rate", 10),
+						partitions[i],
+						this);
 				flows[i].srcipString = tasktracker.ipaddress;
-				if (targets[i].equals(flows[i].srcipString)) continue;
 				flows[i].dstipString = targets[i];
 				flows[i].expectedrate = flows[i].demandrate;
 				flows[i].setStatus(NFSFlow.NFSFlowStatus.NEWSTARTED);
@@ -84,7 +87,7 @@ public class NFSMapReduceApplication extends NFSApplication {
 						getModel(), 
 						"receiveflow-" + flows[i].srcipString + "-" + flows[i].dstipString, true);
 				receiveflowevent.setSchedulingPriority(1);
-				receiveflowevent.schedule((NFSRouter) passLink.dst, flows[i], presentTime());
+				receiveflowevent.schedule(tasktracker, (NFSRouter) passLink.dst, flows[i], presentTime());
 			}
 		}
 		
@@ -100,14 +103,14 @@ public class NFSMapReduceApplication extends NFSApplication {
 		public double getResponseTime() {
 			return TimeOperations.diff(finishTime, startTime).getTimeAsDouble();
 		}
-	}
+	}//end of maptask
 	
-	double inputSize = 0.0;
-	double shuffleSize = 0.0;
-	int mapnum = 0;
-	int reducenum = 0;
-	int finishtasks = 0;
-	MapTask [] mappers = null;
+	private double inputSize = 0.0;
+	private double shuffleSize = 0.0;
+	private int mapnum = 0;
+	private int reducenum = 0;
+	private int finishtasks = 0;
+	private MapTask [] mappers = null;
 	static double expansionFactor = 0;
 	static ContDistNormal inputdist = null;
 
@@ -117,19 +120,19 @@ public class NFSMapReduceApplication extends NFSApplication {
 	public NFSMapReduceApplication(Model model, String entityName,
 			boolean showInTrace, double dr, NFSHost machine) {
 		super(model, entityName, showInTrace, dr, machine);
+		initialize();
 	}
 	
-	@Override
-	protected void init() {
+	protected void initialize() {
 		if (inputdist == null) {
 			double meanInputSize = NetworkFlowSimulator.parser.getDouble(
 					"fluidsim.application.mapreduce.inputsize.mean", 
-					100);
+					256);
 			double stdevInputSize = NetworkFlowSimulator.parser.getDouble(
 					"fluidsim.application.mapreduce.inputsize.stdev", 
-					100);
+					10);
 			expansionFactor = NetworkFlowSimulator.parser.getDouble(
-					"fluidsim.application.mapreduce.inputsize.stdev", 
+					"fluidsim.application.mapreduce.inputsize.expansionfactor", 
 					1.2);
 			inputdist = new ContDistNormal(getModel(),
 					"mapreduce-input-norm-dist",
@@ -141,13 +144,15 @@ public class NFSMapReduceApplication extends NFSApplication {
 		inputSize = inputdist.sample();
 		shuffleSize = inputSize * expansionFactor;
 		mapnum = (int) Math.ceil(inputSize / 64);
-		reducenum = (int) (mapnum * 0.9);
+		reducenum = (int) Math.ceil (mapnum * 0.9);
 		startTime = presentTime();
 		mappers = new MapTask[mapnum];
-		partition();
 	}
 	
-	private void partition() {
+	/**
+	 * deliver tasks to machines in datacenter
+	 */
+	private void distribute() {
 		//generate the partition of key space
 		double [] partitions = new double[mapnum];
 		int totalmachineNum = NFSModel.trafficcontroller.topocontroller.getHostN();
@@ -163,6 +168,7 @@ public class NFSMapReduceApplication extends NFSApplication {
 					NFSModel.trafficcontroller.topocontroller.getHost(rand.nextInt(totalmachineNum))//the tasktracker
 					);
 		}
+		System.out.println("Map Number:" + mappers.length + " reduce number:" + reducenum);
 	}
 	
 	public void finish(MapTask task) {
@@ -177,6 +183,7 @@ public class NFSMapReduceApplication extends NFSApplication {
 	
 	@Override
 	public void start() {
+		distribute();
 		for (int i = 0; i < mappers.length; i++) mappers[i].run();
 	}
 
@@ -184,5 +191,4 @@ public class NFSMapReduceApplication extends NFSApplication {
 	public void close() {
 	
 	}
-
 }

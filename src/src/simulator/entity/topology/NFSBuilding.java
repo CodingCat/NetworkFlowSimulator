@@ -32,7 +32,7 @@ public class NFSBuilding extends Entity{
 				"building-" + bid + "-l3router");
 		hosts.create(hostsperl2 * l2num);
 		l2switches.create(l2num);
-		l2switches.SetRouterType(RouterType.Aggererate);
+		l2switches.SetRouterType(RouterType.Edge);
 		l3switches.create(l3num);
 		l3switches.SetRouterType(RouterType.Distribution);
 		build();

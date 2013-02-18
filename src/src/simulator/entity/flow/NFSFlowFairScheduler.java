@@ -40,9 +40,7 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 					ArrayList<NFSFlow> flowsCanBeImproved = new ArrayList<NFSFlow>();
 					NFSFlow [] improvedFlowsArray = null;
 					double improvedRate = changedflow.datarate;
-					
 					link.setAvailableBandwidth('+', changedflow.datarate);
-					System.out.println(involvedFlows.length);
 					for (int i = 0; i < involvedFlows.length; i++) {
 						if ((involvedFlows[i].getBottleneckLink() == null || !involvedFlows[i].getBottleneckLink().equals(link))
 							&& (involvedFlows[i].isFullyMeet() == false)) 
@@ -50,11 +48,12 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 					}
 					sendTraceNote("flowsCanBeImproved:" + flowsCanBeImproved.size());
 					improvedFlowsArray = new NFSFlow[flowsCanBeImproved.size()];
-					Collections.sort(flowsCanBeImproved, new NFSFlowComparator());
+					Collections.sort(flowsCanBeImproved, demandcomparator);
 					flowsCanBeImproved.toArray(improvedFlowsArray);
 					improvedRate = link.getAvailableBandwidth() / improvedFlowsArray.length;
+					sendTraceNote("improvedRate: " + improvedRate);
 					for (int i = 0; i < improvedFlowsArray.length; i++) {
-						if (improvedFlowsArray[i].datarate + improvedRate 
+						if (improvedFlowsArray[i].datarate + improvedRate + 0.01 
 								<= improvedFlowsArray[i].demandrate) {
 							improvedFlowsArray[i].update('+', improvedRate);
 							link.setAvailableBandwidth('-', improvedRate);
@@ -77,7 +76,7 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 		else {
 			// this is a new flow
 			// the share of others on this link might be reduced
-			if (link.getAvailableBandwidth() > changedflow.expectedrate) {
+			if (link.getAvailableBandwidth() >= changedflow.expectedrate) {
 				// flow.expectedrate = Math.min(flow.expectedrate,
 				// flow.demandrate);
 				// do nothing
@@ -85,27 +84,24 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 				NFSFlow[] involvedFlows = link.getRunningFlows();
 				double avrRate = link.getAvrRate();
 				double availablebisecBandwidth = 0.0;
-				double amortizedBenefit = 0.0;
-				int flowsUnderShareN = 0;
-				int flowsDeservingMoreShareN = 0;
+				String involvedflowsstr = "";
 				for (NFSFlow maychangeflow : involvedFlows) {
+					involvedflowsstr += (maychangeflow.toString() + " ");
 					if (maychangeflow.equals(changedflow)) continue;
-					if (maychangeflow.datarate < avrRate) {
+					if (maychangeflow.datarate < avrRate && maychangeflow.datarate != -1.0) {
 						// these flows may be bottlenecked in other links
-						flowsUnderShareN++;
 						availablebisecBandwidth += (avrRate - maychangeflow.datarate);
 					}
 				}
-				flowsDeservingMoreShareN = involvedFlows.length
-						- flowsUnderShareN;
-				//sendTraceNote("involved flows length:" + involvedFlows.length +  
-					//	" flowsDeservingMoreShareN:" + flowsDeservingMoreShareN);
-				amortizedBenefit = availablebisecBandwidth
-						/ flowsDeservingMoreShareN;
-				double allocatedrateOnthisLink = Math.min((avrRate + amortizedBenefit), changedflow.demandrate);
-				if (changedflow.expectedrate == -1.0 || (changedflow.expectedrate > allocatedrateOnthisLink)) {
+				sendTraceNote("involved flows: " + involvedflowsstr);
+				double allocatedrateOnthisLink = Math.min((avrRate + availablebisecBandwidth), changedflow.demandrate);
+				if (changedflow.expectedrate == -1.0) {
+					//first link
 					changedflow.expectedrate = allocatedrateOnthisLink;
-					if (changedflow.expectedrate != -1.0) {
+				}
+				else {
+					if (changedflow.expectedrate > allocatedrateOnthisLink) {
+						changedflow.expectedrate = allocatedrateOnthisLink;
 						changedflow.setBottleneckLink(link);
 					}
 				}

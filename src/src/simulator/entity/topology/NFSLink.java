@@ -1,9 +1,11 @@
 package simulator.entity.topology;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 import simulator.entity.NFSNode;
 import simulator.entity.flow.NFSFlow;
+import simulator.entity.flow.NFSFlowFairScheduler;
 import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
 
@@ -44,7 +46,7 @@ public class NFSLink extends Entity{
 	}
 		
 	public void addRunningFlow(NFSFlow flow) {
-		runningflows.add(flow);
+		if (!runningflows.contains(flow)) runningflows.add(flow);
 	}
 	
 	public void removeRunningFlow(NFSFlow flow) {
@@ -66,19 +68,25 @@ public class NFSLink extends Entity{
 	 */
 	public void adjustFlowRates(NFSFlow newflow) {
 		double avrrate = totalBandwidth / runningflows.size();
+		System.out.println(getName() + " totalBandwidth:" + totalBandwidth + " runningflows:" + runningflows.size() + 
+				" avrrate" + avrrate + " newflow rate:" + newflow.datarate);
+		System.out.println("Free BW:" + this.getAvailableBandwidth());
 		ArrayList<NFSFlow> flowsToBeReduced = new ArrayList<NFSFlow>();
-		double amortizedCost = 0.0;
+		double sumRates = 0.0;
 		for (NFSFlow flow : runningflows) {
 			if (flow == newflow) continue;
-			if (flow.datarate > avrrate) flowsToBeReduced.add(flow);
+			flowsToBeReduced.add(flow);
+			sumRates += flow.datarate;
 		}
-		amortizedCost = (newflow.datarate - availableBandwidth) / flowsToBeReduced.size();
-		for (NFSFlow flow : flowsToBeReduced) {
-			if (flow == newflow) continue;
-			if (amortizedCost == 0.0) System.out.println("fuck");
-			flow.update('-', amortizedCost);
-			sendTraceNote("change " + flow.toString() + " datarate to " + flow.datarate);
-			flow.setBottleneckLink(this);
+		this.availableBandwidth = totalBandwidth - sumRates;
+		if (flowsToBeReduced.size() != 0) { 
+			double totalCost = newflow.datarate - availableBandwidth;
+			Collections.sort(flowsToBeReduced, 
+					Collections.reverseOrder(NFSFlowFairScheduler.ratecomparator));
+			for (NFSFlow flow : flowsToBeReduced) {
+				flow.update('-', totalCost * (flow.datarate / sumRates));
+				flow.setBottleneckLink(this);
+			}
 		}
 	}
 	

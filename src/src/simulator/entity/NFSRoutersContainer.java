@@ -26,7 +26,7 @@ public class NFSRoutersContainer extends NFSNodesContainer{
 	}
 	
 	public void SetRouterType(NFSRouter.RouterType type) {
-		for (NFSRouter router : routers) router.SetRouterType(type);
+		for (NFSRouter router : routers) router.setRouterType(type);
 	}
 
 	public int GetN() {

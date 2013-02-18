@@ -160,6 +160,7 @@ public class NFSFlow extends Entity {
 	 */
 	public void start() {
 		//lastlink, we have determine the datarate of the new flow
+		sendTraceNote(getName() + " is starting");
 		datarate = expectedrate;
 		sendTraceNote("determine " + getName() + " datarate as " + datarate);
 		lastCheckingPoint = presentTime();
@@ -187,8 +188,10 @@ public class NFSFlow extends Entity {
 	 */
 	public void update(char model, double newdata) {
 		update();
+		String tracerecord = "change flow " + getName() + " rate from " + datarate;
 		if (model == '-') datarate -= newdata;
 		if (model == '+') datarate += newdata;
+		sendTraceNote(tracerecord + " to " + datarate + " in update(char model, double newdata)");
 	}
 	
 	public int getLinkIdx(NFSLink link) {
@@ -227,6 +230,7 @@ public class NFSFlow extends Entity {
 			if (!status.equals(NFSFlowStatus.NEWSTARTED)) {
 				throw new Exception("flow must be NEWSTARTED, but " + status.toString() + " detected");
 			}
+			sendTraceNote("path length:" + path.size());
 			for (NFSLink link : path) {
 				if (link.getAvailableBandwidth() >= datarate) {
 					link.setAvailableBandwidth('-', datarate);
@@ -235,7 +239,13 @@ public class NFSFlow extends Entity {
 					link.adjustFlowRates(this);
 					link.setAvailableBandwidth('-', link.getAvailableBandwidth());
 				}
+				String flowratesStr = "Flow Rates on Link " + link.getName();
+				for (NFSFlow flow : link.getRunningFlows()) {
+					flowratesStr += (flow.getName() + ":" + flow.datarate + " ");
+				}
+				sendTraceNote(flowratesStr);
 			}
+			sendTraceNote("existing from consumeBandwidth()");
 		}
 		catch (Exception e) {
 			e.printStackTrace();

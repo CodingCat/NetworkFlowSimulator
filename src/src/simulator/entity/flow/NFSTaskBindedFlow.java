@@ -26,6 +26,7 @@ public class NFSTaskBindedFlow extends NFSFlow {
 	
 	public void close() {
 		finishTime = presentTime();
+		sendTraceNote(getName()  + " closed");
 	}
 	
 	/**
@@ -36,6 +37,7 @@ public class NFSTaskBindedFlow extends NFSFlow {
 		super.start();
 		closeevent = new NFSCloseTaskBindedFlowEvent(getModel(), "closeEvent-" + this.getName(),
 				true);
+		sendTraceNote("start a new flow, with demand:" + demandSize + " MB and rate:" + datarate);
 		closeevent.schedule(bindedtask, this, TimeOperations.add(presentTime(),
 				new TimeSpan(demandSize / datarate)));
 	}
@@ -44,13 +46,19 @@ public class NFSTaskBindedFlow extends NFSFlow {
 	public void update(char model, double newdata) {
 		super.update(model, newdata);
 		//reschedule the closeevent
-		if (demandSize <= sendoutSize) {
-			closeevent.schedule(bindedtask, this, presentTime());
-		} else {
-			closeevent.cancel();
-			TimeInstant newfinishTime = TimeOperations.add(presentTime(),
-					new TimeSpan((demandSize - sendoutSize) / datarate));
-			closeevent.schedule(bindedtask, this, newfinishTime);
+		try {
+			if (demandSize <= sendoutSize) {
+				closeevent.schedule(bindedtask, this, presentTime());
+			} else {
+				closeevent.cancel();
+				TimeInstant newfinishTime = TimeOperations.add(presentTime(),
+						new TimeSpan((demandSize - sendoutSize) / datarate));
+				closeevent.schedule(bindedtask, this, newfinishTime);
+			}
+		}
+		catch (Exception e) {
+			System.out.println(datarate + ":" + demandSize + ":" + sendoutSize);
+			e.printStackTrace();
 		}
 	}
 	
