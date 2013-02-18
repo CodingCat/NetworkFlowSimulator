@@ -1,6 +1,6 @@
 package simulator.entity.flow;
 
-import simulator.entity.application.NFSMapReduceApplication;
+import simulator.entity.application.NFSMapReduceJob;
 import simulator.events.NFSCloseTaskBindedFlowEvent;
 import desmoj.core.simulator.Model;
 import desmoj.core.simulator.TimeInstant;
@@ -9,7 +9,7 @@ import desmoj.core.simulator.TimeSpan;
 
 public class NFSTaskBindedFlow extends NFSFlow {
 
-	NFSMapReduceApplication.MapTask bindedtask = null;
+	NFSMapReduceJob.MapTask bindedtask = null;
 	double demandSize = 0;//in MB
 	TimeInstant startTime = null;
 	TimeInstant finishTime = null;
@@ -17,7 +17,7 @@ public class NFSTaskBindedFlow extends NFSFlow {
 	
 	
 	public NFSTaskBindedFlow(Model model, String entityname,
-			boolean showinreport, double demand, double outSize, NFSMapReduceApplication.MapTask task) {
+			boolean showinreport, double demand, double outSize, NFSMapReduceJob.MapTask task) {
 		super(model, entityname, showinreport, demand);
 		demandSize = outSize;
 		bindedtask = task;

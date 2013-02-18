@@ -1,6 +1,5 @@
 package simulator.entity.application;
 
-import java.util.HashSet;
 import java.util.Random;
 
 import desmoj.core.dist.DiscreteDistPoisson;
