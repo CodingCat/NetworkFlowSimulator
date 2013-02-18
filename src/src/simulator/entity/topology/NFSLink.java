@@ -67,10 +67,6 @@ public class NFSLink extends Entity{
 	 * @param newflow, the new flow
 	 */
 	public void adjustFlowRates(NFSFlow newflow) {
-		double avrrate = totalBandwidth / runningflows.size();
-		System.out.println(getName() + " totalBandwidth:" + totalBandwidth + " runningflows:" + runningflows.size() + 
-				" avrrate" + avrrate + " newflow rate:" + newflow.datarate);
-		System.out.println("Free BW:" + this.getAvailableBandwidth());
 		ArrayList<NFSFlow> flowsToBeReduced = new ArrayList<NFSFlow>();
 		double sumRates = 0.0;
 		for (NFSFlow flow : runningflows) {
