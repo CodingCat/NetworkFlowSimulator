@@ -83,4 +83,8 @@ public class NFSTaskBindedFlow extends NFSFlow {
 		return TimeOperations.diff(finishTime, startTime).getTimeAsDouble();
 	}
 	
+	public double getDemandSize() {
+		return demandSize;
+	}
+	
 }

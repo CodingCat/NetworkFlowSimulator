@@ -102,7 +102,7 @@ public class NFSMapTask extends Entity {
 	NFSMapReduceJob parentJob = null;
 	private NFSReduceTask [] receivers = null;
 	
-	NFSMapTaskInfo taskinfo = null;
+	private NFSMapTaskInfo taskinfo = null;
 	NFSMapTaskReporter taskreporter = null;
 	
 	public NFSMapTask(Model model, String taskName, boolean showInTrace,
