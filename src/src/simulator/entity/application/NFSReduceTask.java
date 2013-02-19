@@ -30,8 +30,8 @@ public class NFSReduceTask extends Entity {
 	 * register the map task's name as receiver
 	 * @param maptaskName, the name of the map task
 	 */
-	public void addReceiver(String maptaskName) {
-		if (!senders.contains(maptaskName)) senders.contains(maptaskName);
+	public void addSender(String maptaskName) {
+		if (!senders.contains(maptaskName)) senders.add(maptaskName);
 	}
 	
 	/**
@@ -49,23 +49,18 @@ public class NFSReduceTask extends Entity {
 	public void finishflow(NFSTaskBindedFlow finishedflow) {
 		try {
 			String senderName = finishedflow.getSenderName();
-			if (!senders.contains(senderName)) throw new Exception("wrong partition");
+			if (!senders.contains(senderName)) {
+				throw new Exception("wrong partition, tasktracker ip:" + tasktracker.ipaddress + 
+						" flow target:" + finishedflow.dstipString);
+			}
 			finishedmappers.add(senderName);
-			if (finishedmappers.size() == senders.size()) finish(finishedflow);
+			if (finishedmappers.size() == senders.size()) endtime = presentTime();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	/**
-	 * called in finishflow, 
-	 * @param finishflow, new finished flow
-	 */
-	private void finish(NFSTaskBindedFlow finishflow) {
-		endtime = presentTime();
-	}
-	
 	/**
 	 * get the response time of this reducer
 	 * @return

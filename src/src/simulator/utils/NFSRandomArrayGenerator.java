@@ -20,7 +20,10 @@ public class NFSRandomArrayGenerator {
 			if (i == array.length) array[i] = 1- sum;
 			else {
 				double p = rand.nextDouble();
-				while (Math.abs(avr - p) < inputskew) p = rand.nextDouble();
+				while (Math.abs(avr - p) < inputskew) {
+					System.out.println("generating partition");
+					p = rand.nextDouble();
+				}
 				array[i] = p;
 				sum += p;
 			}

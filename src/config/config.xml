@@ -2,20 +2,20 @@
 <!DOCTYPE configuration SYSTEM "fluid.dtd" >
 <configuration>
 	<property>
-		<name>fluidsim.topology.locallinkrate</name>
-		<value>100</value>
-	</property>
-	<property>
 		<name>fluidsim.system.traceperiod</name>
 		<value>100</value>
 	</property>
 	<property>
 		<name>fluidsim.system.debugperiod</name>
-		<value>100</value>
+		<value>1000</value>
 	</property>
 	<property>
-		<name>fluidsim.system.runperiod</name>
-		<value>100</value>
+		<name>fluidsim.system.runlength</name>
+		<value>1000</value>
+	</property>
+	<property>
+		<name>fluidsim.topology.locallinkrate</name>
+		<value>1000</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.buildingnum</name>
@@ -55,7 +55,7 @@
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.jobnum</name>
-		<value>10</value>
+		<value>1</value>
 	</property>
 	<property>
 		<name>fluidsim.application.rate</name>

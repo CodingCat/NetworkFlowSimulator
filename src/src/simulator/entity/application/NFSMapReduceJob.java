@@ -8,7 +8,6 @@ import simulator.utils.NFSRandomArrayGenerator;
 import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
 import desmoj.core.simulator.TimeInstant;
-import desmoj.core.simulator.TimeOperations;
 
 public class NFSMapReduceJob extends Entity {
 	
@@ -16,7 +15,6 @@ public class NFSMapReduceJob extends Entity {
 	private double shuffleSize = 0.0;
 	private int mapnum = 0;
 	private int reducenum = 0;
-	private int finishtasks = 0;
 	private NFSMapTask [] mappers = null;
 	private NFSReduceTask [] reducers = null;
 	
@@ -81,17 +79,10 @@ public class NFSMapReduceJob extends Entity {
 	
 	public void run() {
 		distribute();
-		for (int i = 0; i < mappers.length; i++) mappers[i].run();
+		Random rand = new Random(System.currentTimeMillis());
+		for (int i = 0; i < mappers.length; i++) mappers[i].run(rand);
+		System.out.println("start a new job, map num:" + mappers.length + "  reduce num:" + 
+				reducenum);
+		
 	}
-	
-	public void finish(NFSMapTask task) {
-		if (++finishtasks == mappers.length) {
-			finishTime = presentTime();
-		}
-	}
-
-	public double getResponseTime() {
-		return TimeOperations.diff(finishTime, startTime).getTimeAsDouble();
-	}
-
 }

@@ -16,7 +16,6 @@ public class NFSFlow extends Entity {
 	
 	class NFSFlowInfo extends Reportable {
 
-		private String flowIDInReport;
 		private double lastingtimeInReport;
 		private double sendsizeInReport;
 		private double throughputInReport;
@@ -24,7 +23,6 @@ public class NFSFlow extends Entity {
 		
 		public NFSFlowInfo(Model model, String name, boolean showInReport, boolean showInTrace) {
 			super(model, name, showInReport, showInTrace);
-			flowIDInReport = name;
 		}
 		
 		public Reporter createReporter() {
@@ -57,7 +55,7 @@ public class NFSFlow extends Entity {
 		
 		@Override
 		public String toString() {
-			return "flowID:" + flowIDInReport + 
+			return "flowID:" + getName() + 
 					" lastingTime:" + lastingtimeInReport + 
 					" sendsize:" + sendsizeInReport + 
 					" throughput:" + throughputInReport;
@@ -68,7 +66,7 @@ public class NFSFlow extends Entity {
 
 		public NFSFlowReporter(Reportable infoSource) {
 			super(infoSource);
-			numColumns = 5;
+			numColumns = 4;
 			columns = new String[numColumns];
 			columns[0] = "FlowID";
 			columns[1] = "LastingTime";
