@@ -35,6 +35,14 @@ public class NFSReduceTask extends Entity {
 	}
 	
 	/**
+	 * get the tasktracker's ip
+	 * @return , ipaddress
+	 */
+	public String getTaskTrackerIP() {
+		return tasktracker.ipaddress;
+	}
+	
+	/**
 	 * finish a flow
 	 * @param finishedflow, just finished flow
 	 */

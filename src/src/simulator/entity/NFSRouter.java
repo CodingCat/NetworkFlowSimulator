@@ -82,7 +82,7 @@ public class NFSRouter extends NFSNode {
 			lanLinks.put(iprangekey, link);
 		}
 		if (node.getClass().equals(NFSHost.class)) {
-			System.out.println("register incoming link:" + node.toString());
+		//	System.out.println("register incoming link:" + node.toString());
 			lanLinks.put(node.toString(), link);
 		}
 	}

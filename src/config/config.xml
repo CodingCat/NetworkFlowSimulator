@@ -71,10 +71,14 @@
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.mean</name>
-		<value>512</value>
+		<value>1024</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.stdev</name>
 		<value>0</value>
+	</property>
+	<property>
+		<name>fluidsim.application.mapreduce.expansionfactor</name>
+		<value>1.2</value>
 	</property>
 </configuration>

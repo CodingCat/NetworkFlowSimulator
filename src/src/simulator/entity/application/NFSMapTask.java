@@ -29,7 +29,7 @@ public class NFSMapTask extends Entity {
 	private double resultsize = 0.0;
 	NFSTaskBindedFlow [] flows = null;
 	NFSMapReduceJob parentJob = null;
-	
+	private NFSReduceTask [] receivers = null;
 	
 	public NFSMapTask(Model model, String taskName, boolean showInTrace,
 			int tid, double size, NFSHost tt, NFSMapReduceJob pJob) {
@@ -50,28 +50,32 @@ public class NFSMapTask extends Entity {
 		int reducenum = parentJob.reduceNum();
 		receiverNum = rand.nextInt(reducenum + 1);
 		HashSet<String> selectedIPs = new HashSet<String>();
-		String [] receiverIPs = new String[receiverNum];
 		flows = new NFSTaskBindedFlow[receiverNum];
 		outputdist = new double[receiverNum];
+		receivers = new NFSReduceTask[receiverNum];
 		NFSRandomArrayGenerator.getDoubleArray(outputdist);
-		for (int i = 0; i < receiverIPs.length; i++) {
-			String ip = parentJob.getReducerLocation(rand.nextInt(reducenum));
+		NFSReduceTask recvcandidate = null;
+		for (int i = 0; i < receivers.length; i++) {
+			recvcandidate = parentJob.getReducer(rand.nextInt(reducenum));
+			String ip = recvcandidate.getTaskTrackerIP();
 			while (selectedIPs.contains(ip)) {
-				ip = parentJob.getReducerLocation(rand.nextInt(reducenum));
+				recvcandidate = parentJob.getReducer(rand.nextInt(reducenum));
+				ip = recvcandidate.getTaskTrackerIP();
 			}
-			receiverIPs[i] = ip;
+			receivers[i] = recvcandidate;
 			selectedIPs.add(ip);
 		}
 		for (int i = 0; i < receiverNum; i++) {
-			if (receiverIPs[i].equals(tasktracker.ipaddress)) continue;//map and reducer are in the same host
+			if (receivers[i].equals(tasktracker)) continue;//map and reducer are in the same host
 			flows[i] = new NFSTaskBindedFlow(getModel(), 
-					"flows-" + tasktracker.ipaddress + "-" + receiverIPs[i],
+					"flows-" + tasktracker.ipaddress + "-" + receivers[i].getTaskTrackerIP(),
 					true,
 					NetworkFlowSimulator.parser.getDouble("fluidsim.application.mapreduce.rate", 10),
 					outputdist[i] * resultsize,
-					this);
+					this, 
+					receivers[i]);
 			flows[i].srcipString = tasktracker.ipaddress;
-			flows[i].dstipString = receiverIPs[i];
+			flows[i].dstipString = receivers[i].getTaskTrackerIP();
 			flows[i].expectedrate = flows[i].demandrate;
 			flows[i].setStatus(NFSFlow.NFSFlowStatus.NEWSTARTED);
 			NFSLink passLink = tasktracker.startNewFlow(flows[i]);
@@ -89,7 +93,6 @@ public class NFSMapTask extends Entity {
 		closedflowN++;
 		if (closedflowN == flows.length) {
 			finishTime = presentTime();
-		//	finish(this);
 		}
 	}
 	

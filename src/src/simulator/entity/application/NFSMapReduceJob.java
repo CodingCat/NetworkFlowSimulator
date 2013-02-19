@@ -2,6 +2,7 @@ package simulator.entity.application;
 
 import java.util.Random;
 
+import simulator.NetworkFlowSimulator;
 import simulator.model.NFSModel;
 import simulator.utils.NFSRandomArrayGenerator;
 import desmoj.core.simulator.Entity;
@@ -29,7 +30,8 @@ public class NFSMapReduceJob extends Entity {
 	} 
 
 	protected void initialize() {
-		shuffleSize = inputSize;
+		shuffleSize = inputSize * NetworkFlowSimulator.parser.getDouble(
+				"fluidsim.application.mapreduce.expansionfactor", 1.0);
 		mapnum = (int) Math.ceil(inputSize / 64);
 		reducenum = (int) Math.ceil (mapnum * 0.9);
 		startTime = presentTime();
@@ -46,6 +48,7 @@ public class NFSMapReduceJob extends Entity {
 		int totalmachineNum = NFSModel.trafficcontroller.topocontroller.getHostN();
 		NFSRandomArrayGenerator.getDoubleArray(partitions);
 		Random rand = new Random(System.currentTimeMillis());
+		//start map tasks
 		for (int i = 0; i < mapnum; i++) { 
 			mappers[i] = new NFSMapTask(getModel(), 
 					getName() + "-m-" + i, 
@@ -55,7 +58,7 @@ public class NFSMapReduceJob extends Entity {
 					NFSModel.trafficcontroller.topocontroller.getHost(rand.nextInt(totalmachineNum)),//the tasktracker
 					this);
 		}
-		
+		//start reduce tasks
 		for (int i = 0; i < reducenum; i++) {
 			reducers[i] = new NFSReduceTask(getModel(),
 					getName() + "-r-" + i,
@@ -72,16 +75,14 @@ public class NFSMapReduceJob extends Entity {
 		return mapnum;
 	}
 	
-	public String getReducerLocation(int i) {
-		return reducers[i].getTaskTrackerLocation();
+	public NFSReduceTask getReducer(int i) {
+		return reducers[i];
 	}
 	
 	public void run() {
 		distribute();
 		for (int i = 0; i < mappers.length; i++) mappers[i].run();
 	}
-	
-	
 	
 	public void finish(NFSMapTask task) {
 		if (++finishtasks == mappers.length) {
