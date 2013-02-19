@@ -16,7 +16,8 @@ public class NFSMapReduceJob extends Entity {
 	private int mapnum = 0;
 	private int reducenum = 0;
 	private int finishtasks = 0;
-	private NFSMapReduceTask [] mappers = null;
+	private NFSMapTask [] mappers = null;
+	private NFSReduceTask [] reducers = null;
 	
 	TimeInstant startTime = null;
 	TimeInstant finishTime = null;
@@ -32,7 +33,8 @@ public class NFSMapReduceJob extends Entity {
 		mapnum = (int) Math.ceil(inputSize / 64);
 		reducenum = (int) Math.ceil (mapnum * 0.9);
 		startTime = presentTime();
-		mappers = new NFSMapReduceTask[mapnum];
+		mappers = new NFSMapTask[mapnum];
+		reducers = new NFSReduceTask[reducenum];
 	}
 	
 	/**
@@ -45,17 +47,34 @@ public class NFSMapReduceJob extends Entity {
 		NFSRandomArrayGenerator.getDoubleArray(partitions);
 		Random rand = new Random(System.currentTimeMillis());
 		for (int i = 0; i < mapnum; i++) { 
-			mappers[i] = new NFSMapReduceTask(getModel(), 
-					getName() + "-task-" + i, 
+			mappers[i] = new NFSMapTask(getModel(), 
+					getName() + "-m-" + i, 
 					true, 
 					i, //task id
-					reducenum, // how many reducer will accept this mapper's results 
 					partitions[i] * shuffleSize, // data to be transferred to be through the networks from this mapper 
-					NFSModel.trafficcontroller.topocontroller.getHost(rand.nextInt(totalmachineNum))//the tasktracker
-					);
+					NFSModel.trafficcontroller.topocontroller.getHost(rand.nextInt(totalmachineNum)),//the tasktracker
+					this);
+		}
+		
+		for (int i = 0; i < reducenum; i++) {
+			reducers[i] = new NFSReduceTask(getModel(),
+					getName() + "-r-" + i,
+					true, 
+					NFSModel.trafficcontroller.topocontroller.getHost(rand.nextInt(totalmachineNum)));
 		}
 	}
-
+	
+	public int reduceNum() {
+		return reducenum;
+	}
+	
+	public int mapNum() {
+		return mapnum;
+	}
+	
+	public String getReducerLocation(int i) {
+		return reducers[i].getTaskTrackerLocation();
+	}
 	
 	public void run() {
 		distribute();
@@ -64,7 +83,7 @@ public class NFSMapReduceJob extends Entity {
 	
 	
 	
-	public void finish(NFSMapReduceTask task) {
+	public void finish(NFSMapTask task) {
 		if (++finishtasks == mappers.length) {
 			finishTime = presentTime();
 		}

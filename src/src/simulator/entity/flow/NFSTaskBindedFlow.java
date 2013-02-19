@@ -1,6 +1,6 @@
 package simulator.entity.flow;
 
-import simulator.entity.application.NFSMapReduceTask;
+import simulator.entity.application.NFSMapTask;
 import simulator.events.NFSCloseTaskBindedFlowEvent;
 import desmoj.core.simulator.Model;
 import desmoj.core.simulator.TimeInstant;
@@ -9,7 +9,7 @@ import desmoj.core.simulator.TimeSpan;
 
 public class NFSTaskBindedFlow extends NFSFlow {
 	
-	private NFSMapReduceTask bindedtask = null;
+	private NFSMapTask bindedtask = null;
 	private double demandSize = 0;//in MB
 	private TimeInstant startTime = null;
 	private TimeInstant finishTime = null;
@@ -17,7 +17,7 @@ public class NFSTaskBindedFlow extends NFSFlow {
 	
 	
 	public NFSTaskBindedFlow(Model model, String entityname,
-			boolean showinreport, double demand, double outSize, NFSMapReduceTask task) {
+			boolean showinreport, double demand, double outSize, NFSMapTask task) {
 		super(model, entityname, showinreport, demand);
 		demandSize = outSize;
 		bindedtask = task;
@@ -27,6 +27,14 @@ public class NFSTaskBindedFlow extends NFSFlow {
 	public void close() {
 		finishTime = presentTime();
 		sendTraceNote(getName()  + " closed");
+	}
+	
+	/**
+	 * get the name of the sender of this flow
+	 * @return the name
+	 */
+	public String getSenderName() {
+		return bindedtask.getName();
 	}
 	
 	/**
