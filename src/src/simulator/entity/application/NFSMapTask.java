@@ -145,7 +145,7 @@ public class NFSMapTask extends Entity {
 		}
 		for (int i = 0; i < receiverNum; i++) {
 			if (receivers[i].getTaskTrackerIP().equals(tasktracker.ipaddress)) {
-				System.out.println(getName() + " starts local tasks");
+			//	System.out.println(getName() + " starts local tasks");
 				continue;//map and reducer are in the same host
 			}
 			flows[i] = new NFSTaskBindedFlow(getModel(), 
@@ -158,7 +158,7 @@ public class NFSMapTask extends Entity {
 			flows[i].srcipString = tasktracker.ipaddress;
 			flows[i].dstipString = receivers[i].getTaskTrackerIP();
 			flows[i].expectedrate = flows[i].demandrate;
-			System.out.println(getName() + " starts flow " + flows[i].getName());
+		//	System.out.println(getName() + " starts flow " + flows[i].getName());
 			flows[i].setStatus(NFSFlow.NFSFlowStatus.NEWSTARTED);
 			NFSLink passLink = tasktracker.startNewFlow(flows[i]);
 			//schedule receive flow event
@@ -171,7 +171,7 @@ public class NFSMapTask extends Entity {
 	}
 	
 	public void finishflow() {
-		System.out.println(getName() + " finishes a flow");
+		//System.out.println(getName() + " finishes a flow");
 		closedflowN++;
 		if (closedflowN == flows.length) {
 			finishTime = presentTime();
