@@ -25,26 +25,6 @@ public class NFSParAgrMaster extends Entity {
 				boolean showInReport, boolean showInTrace) {
 			super(model, name, showInReport, showInTrace);
 		}
-
-		public Reporter createReporter() {
-			return new NFSParAgrMasterReporter(this);
-		}
-
-		public double getIdealThroughput() {
-			return idealthroughput;
-		}
-
-		public void setIdealThroughput(double v) {
-			idealthroughput = v;
-		}
-
-		public double getActualThroughput() {
-			return actualthroughput;
-		}
-
-		public void setSendingFlowNum(double v) {
-			actualthroughput = v;
-		}
 	}
 
 	class NFSParAgrMasterReporter extends Reporter {

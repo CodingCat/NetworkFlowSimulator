@@ -24,34 +24,6 @@ public class NFSReduceTask extends Entity {
 				boolean showInTrace) {
 			super(model, name, showInReport, showInTrace);
 		}
-		
-		public Reporter createReporter() {
-			return new NFSReduceTaskReporter(this);
-		}
-		
-		public double getResponseTime() {
-			return responseTime;
-		}
-		
-		public void setResponseTime(double res) {
-			responseTime = res;
-		}
-		
-		public long getReceiveFlowNum() {
-			return receiveFlowNum;
-		}
-		
-		public void setReceiveFlowNum(long flownum) {
-			receiveFlowNum = flownum;
-		}
-		
-		public double getShuffleSize() {
-			return shuffleSize;
-		}
-		
-		public void setShuffleSize(double ssize) {
-			shuffleSize = ssize;
-		}
 	}
 	
 	class NFSReduceTaskReporter extends Reporter {
@@ -73,9 +45,9 @@ public class NFSReduceTask extends Entity {
 		public String[] getEntries() {
 			if (source instanceof NFSReduceTaskInfo) {
 				entries[0] = ((NFSReduceTaskInfo) source).getName();
-				entries[1] = Double.toString(((NFSReduceTaskInfo) source).getResponseTime());
-				entries[2] = Double.toString(((NFSReduceTaskInfo) source).getReceiveFlowNum());
-				entries[3] = Double.toString(((NFSReduceTaskInfo) source).getShuffleSize());
+				entries[1] = Double.toString(((NFSReduceTaskInfo) source).responseTime);
+				entries[2] = Double.toString(((NFSReduceTaskInfo) source).receiveFlowNum);
+				entries[3] = Double.toString(((NFSReduceTaskInfo) source).shuffleSize);
 			}
 			return entries;
 		}
@@ -133,9 +105,9 @@ public class NFSReduceTask extends Entity {
 			shufflesize += finishedflow.getDemandSize();
 			if (finishedmappers.size() == senders.size()) {
 				endtime = presentTime();
-				taskinfo.setReceiveFlowNum(senders.size());
-				taskinfo.setResponseTime(TimeOperations.diff(endtime, starttime).getTimeAsDouble());
-				taskinfo.setShuffleSize(shufflesize);
+				taskinfo.receiveFlowNum = senders.size();
+				taskinfo.responseTime = TimeOperations.diff(endtime, starttime).getTimeAsDouble();
+				taskinfo.shuffleSize = shufflesize;
 			}
 		}
 		catch (Exception e) {

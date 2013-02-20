@@ -31,34 +31,6 @@ public class NFSMapTask extends Entity {
 				boolean showInTrace) {
 			super(model, name, showInReport, showInTrace);
 		}
-		
-		public Reporter createReporter() {
-			return new NFSMapTaskReporter(this);
-		}
-		
-		public double getResponseTime() {
-			return responseTime;
-		}
-		
-		public void setResponseTime(double res) {
-			responseTime = res;
-		}
-		
-		public long getSendingFlowNum() {
-			return sendingFlowNum;
-		}
-		
-		public void setSendingFlowNum(long flownum) {
-			sendingFlowNum = flownum;
-		}
-		
-		public double getShuffleSize() {
-			return shuffleSize;
-		}
-		
-		public void setShuffleSize(double ssize) {
-			shuffleSize = ssize;
-		}
 	}
 	
 	class NFSMapTaskReporter extends Reporter {
@@ -80,9 +52,9 @@ public class NFSMapTask extends Entity {
 		public String[] getEntries() {
 			if (source instanceof NFSMapTaskInfo) {
 				entries[0] = ((NFSMapTaskInfo) source).getName();
-				entries[1] = Double.toString(((NFSMapTaskInfo) source).getResponseTime());
-				entries[2] = Double.toString(((NFSMapTaskInfo) source).getSendingFlowNum());
-				entries[3] = Double.toString(((NFSMapTaskInfo) source).getShuffleSize());
+				entries[1] = Double.toString(((NFSMapTaskInfo) source).responseTime);
+				entries[2] = Double.toString(((NFSMapTaskInfo) source).sendingFlowNum);
+				entries[3] = Double.toString(((NFSMapTaskInfo) source).shuffleSize);
 			}
 			return entries;
 		}
@@ -114,7 +86,7 @@ public class NFSMapTask extends Entity {
 		shufflesize = size;
 		taskinfo = new NFSMapTaskInfo(model, taskName, NFSModel.showMapTask, true);
 		taskreporter = new NFSMapTaskReporter(taskinfo);
-		taskinfo.setShuffleSize(shufflesize);
+		taskinfo.shuffleSize = shufflesize;
 	}
 
 	
@@ -125,7 +97,7 @@ public class NFSMapTask extends Entity {
 		startTime = presentTime();
 		int reducenum = parentJob.reduceNum();
 		receiverNum = rand.nextInt(reducenum + 1);
-		taskinfo.setSendingFlowNum(receiverNum);
+		taskinfo.sendingFlowNum = receiverNum;
 		HashSet<String> selectedReceivers = new HashSet<String>();
 		flows = new NFSTaskBindedFlow[receiverNum];
 		outputdist = new double[receiverNum];
@@ -175,8 +147,7 @@ public class NFSMapTask extends Entity {
 		closedflowN++;
 		if (closedflowN == flows.length) {
 			finishTime = presentTime();
-			taskinfo.setResponseTime(
-					TimeOperations.diff(finishTime, startTime).getTimeAsDouble());
+			taskinfo.responseTime = TimeOperations.diff(finishTime, startTime).getTimeAsDouble();
 		}
 	}
 }
