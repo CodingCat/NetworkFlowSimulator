@@ -38,6 +38,10 @@
 		<value>4</value>
 	</property>
 	<property>
+		<name>fluidsim.application.onoff.controlflag</name>
+		<value>false</value>
+	</property>
+	<property>
 		<name>fluidsim.application.onoff.maxonduration</name>
 		<value>40</value>
 	</property>
@@ -54,20 +58,28 @@
 		<value>20</value>
 	</property>
 	<property>
-		<name>fluidsim.application.mapreduce.jobnum</name>
-		<value>1</value>
-	</property>
-	<property>
 		<name>fluidsim.application.rate</name>
 		<value>10</value>
 	</property>
 	<property>
-		<name>fluidsim.host.application</name>
+		<name>fluidsim.host.applications</name>
 		<value>simulator.entity.application.NFSMapReduceApplication</value>
+	</property>
+		<property>
+		<name>fluidsim.host.appRates</name>
+		<value>10,0.5</value>
 	</property>
 	<property>
 		<name>fluidsim.model.trafficcontroller</name>
 		<value>simulator.entity.application.NFSMapReduceTraffic</value>
+	</property>
+	<property>
+		<name>fluidsim.application.pa.jobnum</name>
+		<value>0</value>
+	</property>
+	<property>
+		<name>fluidsim.application.mapreduce.jobnum</name>
+		<value>10</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.mean</name>

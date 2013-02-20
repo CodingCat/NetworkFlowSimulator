@@ -34,6 +34,7 @@ public class NFSParAgrMaster extends Entity {
 				"fluidsim.application.pa.master.deadline", 0.3);
 		outfactor = NetworkFlowSimulator.parser.getInt(
 				"fluidsim.application.pa.master.outfactor", 5);
+		leaders = new NFSParAgrLeader[outfactor];
 		tracker = host;
 	}
 	

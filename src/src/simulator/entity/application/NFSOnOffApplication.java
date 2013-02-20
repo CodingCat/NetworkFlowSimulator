@@ -10,10 +10,11 @@ import simulator.entity.NFSHost;
 import simulator.entity.NFSRouter;
 import simulator.entity.flow.NFSFlow;
 import simulator.entity.topology.NFSLink;
-import simulator.events.NFSCloseFlowEvent;
+import simulator.events.NFSCloseOnOffFlowEvent;
 import simulator.events.NFSReceiveFlowEvent;
 import simulator.events.NFSStartNewFlowEvent;
 import simulator.model.NFSModel;
+import simulator.utils.NFSIntegerEntity;
 
 public class NFSOnOffApplication extends NFSApplication {
 
@@ -49,13 +50,13 @@ public class NFSOnOffApplication extends NFSApplication {
 		if (bindingflow == null) {
 			bindingflow = new NFSFlow(
 					getModel(), 
-					"flow-" + hostmachine.ipaddress + "-" + NFSModel.trafficcontroller.getOneToOneTarget(hostmachine.ipaddress), 
+					"flow-" + hostmachine.ipaddress + "-" + NFSModel.trafficcontroller.getPermuMatrixTarget(hostmachine.ipaddress), 
 					true, 
 					NetworkFlowSimulator.parser.getDouble("fluidsim.application.onoff.rate", 0.5));
 			//set the source address
 			bindingflow.srcipString = hostmachine.ipaddress;
 			//set the destination address
-			bindingflow.dstipString = NFSModel.trafficcontroller.getOneToOneTarget(bindingflow.srcipString);
+			bindingflow.dstipString = NFSModel.trafficcontroller.getPermuMatrixTarget(bindingflow.srcipString);
 		}
 		bindingflow.expectedrate = bindingflow.demandrate;
 		bindingflow.setStatus(NFSFlow.NFSFlowStatus.NEWSTARTED);
@@ -69,7 +70,7 @@ public class NFSOnOffApplication extends NFSApplication {
 
 		Random rand = new Random(System.currentTimeMillis());
 		//schedule close event 
-		NFSCloseFlowEvent closeevent = new NFSCloseFlowEvent(getModel(), 
+		NFSCloseOnOffFlowEvent closeevent = new NFSCloseOnOffFlowEvent(getModel(), 
 				"closeflow-" + bindingflow.srcipString + "-" + bindingflow.dstipString, true);
 		closeevent.schedule(hostmachine, bindingflow, 
 				TimeOperations.add(presentTime(), 
@@ -86,6 +87,7 @@ public class NFSOnOffApplication extends NFSApplication {
 				"startflow-" + bindingflow.srcipString + "-" + bindingflow.dstipString,
 				true);
 		newflowevent.schedule(this.hostmachine, 
+				new NFSIntegerEntity(getModel(), "onoffintentity", false, 0),
 				TimeOperations.add(presentTime(), 
 						new TimeSpan(rand.nextInt(offDurationLowbound + 1) + offDurationUpbound - offDurationLowbound)));
 	}

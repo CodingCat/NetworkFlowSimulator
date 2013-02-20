@@ -21,22 +21,7 @@ public class NFSModel extends Model{
 	public NFSModel(Model model, String modelName, boolean showInReport, boolean showInTrace) {
 		super(model, modelName, showInReport, showInTrace);
 	}
-	
-	private void buildtrafficctrl() {
-		try {
-			Class<?> trafficCtrlClass = Class.forName(
-					NetworkFlowSimulator.parser.getString("fluidsim.model.trafficcontroller", 
-							"simulator.entity.application.NFSPermuMatrixTraffic"));
-			Class<?> [] parameterTypes = {Model.class, String.class, boolean.class, 
-					NFSTopologyController.class};
-			java.lang.reflect.Constructor<?> constructor = 
-					trafficCtrlClass.getConstructor(parameterTypes);
-			Object [] parameterList = {this, "traffic-controller", true, topocontroller};
-			trafficcontroller = (NFSTrafficGenerator) constructor.newInstance(parameterList); 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+
 	@Override
 	public String description() {
 		return "flow-based networks simulator";
@@ -73,6 +58,6 @@ public class NFSModel extends Model{
 		}
 		backbone.connect(buildings);
 	
-		buildtrafficctrl();
+		trafficcontroller = new NFSTrafficGenerator(getModel(), "trafficcontroller", true, topocontroller);
 	}
 }

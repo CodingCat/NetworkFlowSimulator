@@ -2,7 +2,7 @@ package simulator.entity.flow;
 
 import simulator.entity.application.NFSMapTask;
 import simulator.entity.application.NFSReduceTask;
-import simulator.events.NFSCloseTaskBindedFlowEvent;
+import simulator.events.NFSCloseMapReduceFlowEvent;
 import desmoj.core.simulator.Model;
 import desmoj.core.simulator.TimeInstant;
 import desmoj.core.simulator.TimeOperations;
@@ -15,7 +15,7 @@ public class NFSTaskBindedFlow extends NFSFlow {
 	private double demandSize = 0;//in MB
 	private TimeInstant startTime = null;
 	private TimeInstant finishTime = null;
-	private NFSCloseTaskBindedFlowEvent closeevent = null;
+	private NFSCloseMapReduceFlowEvent closeevent = null;
 	
 	
 	public NFSTaskBindedFlow(Model model, String entityname, boolean showinreport, 
@@ -45,7 +45,7 @@ public class NFSTaskBindedFlow extends NFSFlow {
 	public void start() {
 		super.start();
 		startTime = presentTime();
-		closeevent = new NFSCloseTaskBindedFlowEvent(getModel(), "closeEvent-" + this.getName(),
+		closeevent = new NFSCloseMapReduceFlowEvent(getModel(), "closeEvent-" + this.getName(),
 				true);
 		sendTraceNote("start a new flow, with demand:" + demandSize + " MB and rate:" + datarate);
 		closeevent.schedule(this, TimeOperations.add(presentTime(),

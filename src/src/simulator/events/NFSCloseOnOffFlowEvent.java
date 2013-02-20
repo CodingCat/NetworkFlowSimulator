@@ -6,9 +6,9 @@ import simulator.entity.flow.NFSFlow;
 import desmoj.core.simulator.EventOf2Entities;
 import desmoj.core.simulator.Model;
 
-public class NFSCloseFlowEvent extends EventOf2Entities<NFSHost, NFSFlow> {
+public class NFSCloseOnOffFlowEvent extends EventOf2Entities<NFSHost, NFSFlow> {
 
-	public NFSCloseFlowEvent(Model model, String eventName, boolean showInReport) {
+	public NFSCloseOnOffFlowEvent(Model model, String eventName, boolean showInReport) {
 		super(model, eventName, showInReport);
 	}
 
@@ -20,6 +20,6 @@ public class NFSCloseFlowEvent extends EventOf2Entities<NFSHost, NFSFlow> {
 				"RateChangeEventTriggeredByCloseFlow",
 				true);
 		flowrateevent.schedule(srchost, flow.getFirstLink(), flow, presentTime());
-		srchost.close();
+		srchost.close(0);
 	}		
 }

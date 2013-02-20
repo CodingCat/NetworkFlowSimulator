@@ -31,7 +31,7 @@ public class NFSParAgrLeader extends Entity {
 	}
 	
 	public void run() {
-		String [] receiverIPs = NFSModel.trafficcontroller.getOneToManyTarget(outfactor);
+		String [] receiverIPs = NFSModel.trafficcontroller.getRandomTargets(outfactor);
 		for (int i = 0; i < outfactor; i++) {
 			if (receiverIPs[i].equals(tasktracker.ipaddress)) continue;
 			flows[i] = new NFSPAFlow(getModel(),
