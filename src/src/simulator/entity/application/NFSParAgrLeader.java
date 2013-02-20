@@ -55,11 +55,16 @@ public class NFSParAgrLeader extends Entity {
 	}
 	
 	public void finish(NFSPAFlow finishflow) {
-		if (finishflow.isInTime()) countinsize += finishflow.getSize();
+		if (finishflow.isInTime()) countinsize += finishflow.getDemandSize();
 	}
 	
+	public double getDemandSize() {
+		double sum = 0;
+		for (NFSPAFlow flow : flows) sum += flow.getDemandSize();
+		return sum;
+	}
 	
-	public double getSize() {
+	public double getCountSize() {
 		return countinsize;
 	}
 }

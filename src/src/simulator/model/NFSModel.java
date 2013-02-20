@@ -14,6 +14,7 @@ public class NFSModel extends Model{
 	public static boolean showTaskBindedFlow = false;
 	public static boolean showMapTask = true;
 	public static boolean showReduceTask = true;
+	public static boolean showPATask = true;
 	
 	public NFSTopologyController topocontroller = null;
 	public static NFSTrafficGenerator trafficcontroller = null;
