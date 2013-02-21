@@ -20,7 +20,7 @@ public class NFSTaskBindedFlow extends NFSFlow {
 	
 	public NFSTaskBindedFlow(Model model, String entityname, boolean showinreport, 
 			double demand, double outSize, NFSMapTask mtask, NFSReduceTask rtask) {
-		super(model, entityname, showinreport, demand);
+		super(model, entityname, showinreport, demand, NFSFlowType.BACKGROUND);
 		demandSize = outSize;
 		mapper = mtask;
 		reducer = rtask;

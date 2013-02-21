@@ -10,10 +10,6 @@ import simulator.entity.topology.NFSLink;
 
 public class NFSFlowSchedulingAlgorithm {
 
-	public NFSFlowSchedulingAlgorithm() {
-		// TODO Auto-generated constructor stub
-	}
-	
 	void MaxMinAllocate(NFSLink link, NFSFlow changingflow) {
 		if (changingflow.getStatus().equals(NFSFlowStatus.NEWSTARTED)) {
 			if (link.getAvailableBandwidth() >= changingflow.datarate) {
@@ -75,7 +71,7 @@ public class NFSFlowSchedulingAlgorithm {
 					}
 				}
 			}
-		}
+		}//end of it's a closing flow
 	}
 	
 	public static void allocate(NFSLink link, NFSFlow changingflow) {

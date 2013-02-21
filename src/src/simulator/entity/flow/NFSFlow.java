@@ -20,7 +20,6 @@ public class NFSFlow extends Entity {
 		private double sendsizeInReport;
 		private double throughputInReport;
 		
-		
 		public NFSFlowInfo(Model model, String name, boolean showInReport, boolean showInTrace) {
 			super(model, name, showInReport, showInTrace);
 		}
@@ -89,6 +88,19 @@ public class NFSFlow extends Entity {
 		}
 	}
 	
+	public enum NFSFlowStatus {
+		NEWSTARTED,
+		RUNNING,
+		CLOSED
+	}
+	
+	protected enum NFSFlowType {
+		QUERY,
+		MESSAGE,
+		BACKGROUND
+	};
+	
+	
 	public double demandrate = -1.0;//in MBps
 	public double inputSize = 0;//in MBps
 	public double datarate = -1.0; //in MBps
@@ -109,15 +121,10 @@ public class NFSFlow extends Entity {
 	
 	private ArrayList<NFSLink> path = null;
 	private NFSLink bottlenecklink = null;
-	
-	public enum NFSFlowStatus {
-		NEWSTARTED,
-		RUNNING,
-		CLOSED
-	}
+	NFSFlowType flowtype = null;
 	
 	public NFSFlow(Model model, String entityname, boolean showinreport, 
-			double demand) {
+			double demand, NFSFlowType type) {
 		super(model, entityname, showinreport);
 		demandrate = demand;
 		expectedrate = demandrate;
@@ -126,6 +133,7 @@ public class NFSFlow extends Entity {
 		path = new ArrayList<NFSLink>();
 		flowinform = new NFSFlowInfo(model, entityname, NFSModel.showNFSFlow, true);
 		flowreporter = new NFSFlowReporter(flowinform);
+		flowtype = type;
 	}
 	
 	public void setStatus(NFSFlowStatus s) {

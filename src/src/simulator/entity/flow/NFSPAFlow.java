@@ -21,7 +21,7 @@ public class NFSPAFlow extends NFSFlow {
 	
 	public NFSPAFlow(Model model, String entityname, boolean showinreport,
 			double demand, NFSParAgrLeader source) {
-		super(model, entityname, showinreport, demand);
+		super(model, entityname, showinreport, demand, NFSFlowType.QUERY);
 		flowsource = source;
 		init();
 	}

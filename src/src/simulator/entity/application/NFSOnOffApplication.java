@@ -52,7 +52,8 @@ public class NFSOnOffApplication extends NFSApplication {
 					getModel(), 
 					"flow-" + hostmachine.ipaddress + "-" + NFSModel.trafficcontroller.getPermuMatrixTarget(hostmachine.ipaddress), 
 					true, 
-					NetworkFlowSimulator.parser.getDouble("fluidsim.application.onoff.rate", 0.5));
+					NetworkFlowSimulator.parser.getDouble("fluidsim.application.onoff.rate", 0.5),
+					null);
 			//set the source address
 			bindingflow.srcipString = hostmachine.ipaddress;
 			//set the destination address
