@@ -235,13 +235,14 @@ public class NFSFlow extends Entity {
 			}
 			sendTraceNote("path length:" + path.size());
 			for (NFSLink link : path) {
-				if (link.getAvailableBandwidth() >= datarate) {
+				/*if (link.getAvailableBandwidth() >= datarate) {
 					link.setAvailableBandwidth('-', datarate);
 				} else {
 					// adjust datarate of other flows
 					link.adjustFlowRates(this);
 					link.setAvailableBandwidth('-', link.getAvailableBandwidth());
-				}
+				}*/
+				NFSFlowSchedulingAlgorithm.allocate(link, this);
 				String flowratesStr = "Flow Rates on Link " + link.getName();
 				for (NFSFlow flow : link.getRunningFlows()) {
 					flowratesStr += (flow.getName() + ":" + flow.datarate + " ");
