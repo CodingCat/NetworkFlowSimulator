@@ -89,7 +89,7 @@ public class NFSTrafficGenerator extends Entity {
 							+ host.ipaddress, true);
 			startevent.schedule(
 					host,
-					new NFSIntegerEntity(getModel(), "mapintentity", false, 1),
+					new NFSIntegerEntity(getModel(), "map-intentity", false, 1),
 					TimeOperations.add(presentTime(),
 							new TimeSpan(mrarrivaldist.sample())));
 		}

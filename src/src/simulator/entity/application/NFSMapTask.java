@@ -31,6 +31,10 @@ public class NFSMapTask extends Entity {
 				boolean showInTrace) {
 			super(model, name, showInReport, showInTrace);
 		}
+
+		public NFSMapTaskReporter createReporter() {
+			return new NFSMapTaskReporter(this);
+		}
 	}
 	
 	class NFSMapTaskReporter extends Reporter {
@@ -47,6 +51,7 @@ public class NFSMapTask extends Entity {
 			groupID = 871029;
 			entries = new String[numColumns];
 		}
+		
 
 		@Override
 		public String[] getEntries() {

@@ -3,7 +3,7 @@
 <configuration>
 	<property>
 		<name>fluidsim.system.traceperiod</name>
-		<value>100</value>
+		<value>1000</value>
 	</property>
 	<property>
 		<name>fluidsim.system.debugperiod</name>

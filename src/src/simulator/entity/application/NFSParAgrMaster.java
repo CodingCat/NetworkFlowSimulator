@@ -25,6 +25,10 @@ public class NFSParAgrMaster extends Entity {
 				boolean showInReport, boolean showInTrace) {
 			super(model, name, showInReport, showInTrace);
 		}
+		
+		public NFSParAgrMasterReporter createReporter() {
+			return new NFSParAgrMasterReporter(this);
+		}
 	}
 
 	class NFSParAgrMasterReporter extends Reporter {

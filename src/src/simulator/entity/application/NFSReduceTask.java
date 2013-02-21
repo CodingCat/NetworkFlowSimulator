@@ -24,6 +24,10 @@ public class NFSReduceTask extends Entity {
 				boolean showInTrace) {
 			super(model, name, showInReport, showInTrace);
 		}
+		
+		public NFSReduceTaskReporter createReporter() {
+			return new NFSReduceTaskReporter(this);
+		}
 	}
 	
 	class NFSReduceTaskReporter extends Reporter {
@@ -37,7 +41,7 @@ public class NFSReduceTask extends Entity {
 			columns[2] = "ReceiveFlowsNum";
 			columns[3] = "ShuffleSize";
 			groupHeading = "ReduceTasks";
-			groupID = 881029;
+			groupID = 801029;
 			entries = new String[numColumns];
 		}
 
