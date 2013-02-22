@@ -3,6 +3,7 @@ package simulator.entity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 
 import simulator.entity.flow.NFSFlow;
 import simulator.entity.topology.NFSLink;
@@ -118,8 +119,6 @@ public class NFSRouter extends NFSNode {
 				if (dstCrange.equals(localCrange)) 
 				{	
 					//in the same lan
-			//		System.out.println(flow.srcipString + "->" + flow.dstipString);
-				//	System.out.println("local range:" + localCrange + " dstrange:" + dstCrange);
 					if (lanLinks.containsKey(flow.dstipString)) {
 						outgoingPath = lanLinks.get(flow.dstipString);
 						nexthopNode = outgoingPath.src;
@@ -199,6 +198,10 @@ public class NFSRouter extends NFSNode {
 	 */
 	public NFSLink getLanLink(String srcip) {
 		return lanLinks.get(srcip);
+	}
+	
+	public Set<String> getPods() {
+		return lanLinks.keySet();
 	}
 	
 	@Override

@@ -10,10 +10,45 @@ import simulator.entity.topology.NFSLink;
 
 public class NFSFlowSchedulingAlgorithm {
 
+	void AppAwareAllocate(NFSLink link, NFSFlow changingflow) { 
+		if (changingflow.getStatus().equals(NFSFlowStatus.NEWSTARTED)) {
+			if (link.getAvailableBandwidth() >= changingflow.expectedrate) {
+				link.setAvailableBandwidth('-', changingflow.expectedrate);
+			}
+			else {
+				ArrayList<NFSFlow> flowsToBeReduced = new ArrayList<NFSFlow>();
+				NFSFlow[] runningflows = link.getRunningFlows();
+				double sumRates = 0.0;
+				for (NFSFlow flow : runningflows) {
+					if (flow == changingflow || flow.isLatencySensitive()) continue;
+					flowsToBeReduced.add(flow);
+					sumRates += flow.datarate;
+				}
+				if (sumRates != 0.0 && sumRates >= changingflow.expectedrate) {
+					if (flowsToBeReduced.size() != 0) {
+						double totalCost = changingflow.expectedrate - link.getAvailableBandwidth();
+						Collections.sort(flowsToBeReduced, Collections
+								.reverseOrder(NFSFlowFairScheduler.ratecomparator));
+						for (NFSFlow flow : flowsToBeReduced) {
+							flow.update('-', totalCost * (flow.datarate / sumRates));
+							flow.setBottleneckLink(link);
+						}
+					}
+				}
+				else {
+				
+				}
+			}
+			//finally determine the datarate of the new flow
+			changingflow.datarate = changingflow.expectedrate;
+		}//end of it's a new flow
+		
+	}
+	
 	void MaxMinAllocate(NFSLink link, NFSFlow changingflow) {
 		if (changingflow.getStatus().equals(NFSFlowStatus.NEWSTARTED)) {
-			if (link.getAvailableBandwidth() >= changingflow.datarate) {
-				link.setAvailableBandwidth('-', changingflow.datarate);
+			if (link.getAvailableBandwidth() >= changingflow.expectedrate) {
+				link.setAvailableBandwidth('-', changingflow.expectedrate);
 			}
 			else {
 				ArrayList<NFSFlow> flowsToBeReduced = new ArrayList<NFSFlow>();
@@ -24,17 +59,24 @@ public class NFSFlowSchedulingAlgorithm {
 					flowsToBeReduced.add(flow);
 					sumRates += flow.datarate;
 				}
+				/*double a = link.getAvailableBandwidth();
 				link.setAvailableBandwidth(link.getTotalBandwidth() - sumRates);
+				if (link.getAvailableBandwidth() != a) {
+					System.out.println("FUCK" + a + ":" + link.getAvailableBandwidth());
+				}*/
 				if (flowsToBeReduced.size() != 0) {
-					double totalCost = changingflow.datarate - link.getAvailableBandwidth();
+					double totalCost = changingflow.expectedrate - link.getAvailableBandwidth();
 					Collections.sort(flowsToBeReduced, Collections
 							.reverseOrder(NFSFlowFairScheduler.ratecomparator));
 					for (NFSFlow flow : flowsToBeReduced) {
 						flow.update('-', totalCost * (flow.datarate / sumRates));
 						flow.setBottleneckLink(link);
 					}
+					link.setAvailableBandwidth(0.0);
 				}
 			}
+			//finally determine the datarate of the new flow
+			changingflow.datarate = changingflow.expectedrate;
 		}//end of it's a new flow
 		if (changingflow.getStatus().equals(NFSFlowStatus.CLOSED)) {
 			//this flow has been closed

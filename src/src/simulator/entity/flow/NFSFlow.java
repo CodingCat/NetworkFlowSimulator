@@ -168,7 +168,7 @@ public class NFSFlow extends Entity {
 	public void start() {
 		//lastlink, we have determine the datarate of the new flow
 		sendTraceNote(getName() + " is starting");
-		datarate = expectedrate;
+		//datarate = expectedrate;
 		sendTraceNote("determine " + getName() + " datarate as " + datarate);
 		lastCheckingPoint = presentTime();
 		consumeBandwidth();
@@ -226,6 +226,14 @@ public class NFSFlow extends Entity {
 		return path.get(0);
 	}
 	
+	public void clearLinks() {
+		path.clear();
+	}
+	
+	public boolean isLatencySensitive() {
+		return !(flowtype.equals(NFSFlowType.BACKGROUND));
+	}
+	
 	public NFSLink getNextLink(NFSLink currentLink) {
 		int nextlinkidx = path.indexOf(currentLink) + 1;
 		if (nextlinkidx < path.size()) return path.get(nextlinkidx);
@@ -243,13 +251,6 @@ public class NFSFlow extends Entity {
 			}
 			sendTraceNote("path length:" + path.size());
 			for (NFSLink link : path) {
-				/*if (link.getAvailableBandwidth() >= datarate) {
-					link.setAvailableBandwidth('-', datarate);
-				} else {
-					// adjust datarate of other flows
-					link.adjustFlowRates(this);
-					link.setAvailableBandwidth('-', link.getAvailableBandwidth());
-				}*/
 				NFSFlowSchedulingAlgorithm.allocate(link, this);
 				String flowratesStr = "Flow Rates on Link " + link.getName();
 				for (NFSFlow flow : link.getRunningFlows()) {
