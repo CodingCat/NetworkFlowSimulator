@@ -7,8 +7,11 @@ import simulator.NetworkFlowSimulator;
 import simulator.entity.NFSHost;
 import simulator.entity.NFSRouter;
 import simulator.entity.flow.NFSFlow;
+import simulator.entity.flow.NFSOFController;
+import simulator.entity.flow.NFSOpenFlowMessage;
 import simulator.entity.flow.NFSTaskBindedFlow;
 import simulator.entity.topology.NFSLink;
+import simulator.events.NFSOpenFlowSubscribeEvent;
 import simulator.events.NFSReceiveFlowEvent;
 import simulator.model.NFSModel;
 import simulator.utils.NFSRandomArrayGenerator;
@@ -18,6 +21,7 @@ import desmoj.core.simulator.Model;
 import desmoj.core.simulator.Reportable;
 import desmoj.core.simulator.TimeInstant;
 import desmoj.core.simulator.TimeOperations;
+import desmoj.core.simulator.TimeSpan;
 
 public class NFSMapTask extends Entity {
 	
@@ -65,6 +69,7 @@ public class NFSMapTask extends Entity {
 		}
 	}
 	
+	protected boolean openflowonoff = false;
 	
 	TimeInstant startTime = null;
 	TimeInstant finishTime = null;
@@ -92,8 +97,11 @@ public class NFSMapTask extends Entity {
 		taskinfo = new NFSMapTaskInfo(model, taskName, NFSModel.showMapTask, true);
 		taskreporter = new NFSMapTaskReporter(taskinfo);
 		taskinfo.shuffleSize = shufflesize;
+		openflowonoff = NetworkFlowSimulator.parser.getBoolean(
+				"fluidsim.openflow.onoff", false);
 	}
 
+	
 	
 	/**
 	 * generate flows to send out the data
@@ -135,15 +143,21 @@ public class NFSMapTask extends Entity {
 			flows[i].srcipString = tasktracker.ipaddress;
 			flows[i].dstipString = receivers[i].getTaskTrackerIP();
 			flows[i].expectedrate = flows[i].demandrate;
-		//	System.out.println(getName() + " starts flow " + flows[i].getName());
 			flows[i].setStatus(NFSFlow.NFSFlowStatus.NEWSTARTED);
-			NFSLink passLink = tasktracker.startNewFlow(flows[i]);
-			//schedule receive flow event
-			NFSReceiveFlowEvent receiveflowevent = new NFSReceiveFlowEvent(
-					getModel(), 
-					"receiveflow-" + flows[i].srcipString + "-" + flows[i].dstipString, true);
-			receiveflowevent.setSchedulingPriority(1);
-			receiveflowevent.schedule(tasktracker, (NFSRouter) passLink.dst, flows[i], presentTime());
+			if (openflowonoff == false) {
+				//in regular model
+				NFSLink passLink = tasktracker.startNewFlow(flows[i]);
+				//schedule receive flow event
+				NFSReceiveFlowEvent receiveflowevent = new NFSReceiveFlowEvent(
+						getModel(), 
+						"receiveflow-" + flows[i].srcipString + "-" + flows[i].dstipString, true);
+				receiveflowevent.setSchedulingPriority(1);
+				receiveflowevent.schedule(tasktracker, (NFSRouter) passLink.dst, flows[i], presentTime());
+			}
+			else {
+				NFSOpenFlowSubscribeEvent subevent = new NFSOpenFlowSubscribeEvent(getModel(), tasktracker.getName() + flows[i].getName() + "subEvent", true);
+				subevent.schedule(tasktracker, flows[i], presentTime());
+			}
 		}
 	}
 	
