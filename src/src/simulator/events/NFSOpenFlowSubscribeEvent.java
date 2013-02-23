@@ -27,30 +27,16 @@ public class NFSOpenFlowSubscribeEvent extends EventOf2Entities<NFSHost, NFSFlow
 	
 	}
 	
-	private NFSOpenFlowMessage subscribe(NFSHost tasktracker, NFSFlow flow) {
-		NFSOpenFlowMessage msg = controller.schedule(tasktracker.getOutlink(), flow);
-		if (msg == null) {
-			if ((subscribecnt++) < subscribebound) {
-				NFSOpenFlowSubscribeEvent subevent = new NFSOpenFlowSubscribeEvent(
-						getModel(), getName() + "SubscribeEvent-" + flow.getName(), true);
-				subevent.schedule(tasktracker, flow, 
-						TimeOperations.add(presentTime(), new TimeSpan(pauseDuration)));
-			}
-		}
-		return msg;
-	}
-
 	@Override
 	public void eventRoutine(NFSHost host, NFSFlow flow) {
 		//in openflow model
-		NFSOpenFlowMessage msg = subscribe(host, flow);
+		NFSOpenFlowMessage msg = controller.schedule(host.getOutlink(), flow);
 		if (msg != null) {
 			//start the flow
 			flow.start();
 		}
 		else {
-			//re-subscribe bandwidth from the controller
-			if (subscribecnt++ < subscribebound) {
+			if ((subscribecnt++) < subscribebound) {
 				schedule(host, flow, TimeOperations.add(presentTime(), new TimeSpan(pauseDuration)));
 			}
 		}

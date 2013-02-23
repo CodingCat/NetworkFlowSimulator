@@ -8,8 +8,10 @@ import java.util.HashMap;
 import simulator.NetworkFlowSimulator;
 import simulator.entity.NFSRouter;
 import simulator.entity.NFSRouter.RouterType;
+import simulator.entity.application.NFSMapReduceJob;
 import simulator.entity.topology.NFSLink;
-import simulator.model.NFSModel;
+import simulator.utils.NFSDoubleCalculator;
+import simulator.utils.NFSOFJobAllocationMap;
 import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
 
@@ -43,75 +45,108 @@ public class NFSOFController extends Entity {
 	private static NFSOFController _instance = null;
 	
 	private HashMap<NFSRouter, ArrayList<NFSLink>> globalmap = null;
+	private HashMap<NFSLink, NFSOFJobAllocationMap> linkappmap = null; 
+	
 	private double latencyPercentage = 0.0;
 	private double throughputPercentage = 0.0;
 	
 	private NFSOFController(Model model, String entityName, boolean showInTrace) {
 		super(model, entityName, showInTrace);
 		globalmap = new HashMap<NFSRouter, ArrayList<NFSLink>>();
+		linkappmap = new HashMap<NFSLink, NFSOFJobAllocationMap>();
 		latencyPercentage = NetworkFlowSimulator.parser.getDouble(
 				"fluidsim.openflow.latencypercentage", 0.5);
 		throughputPercentage = 1 - latencyPercentage;
 	}
 	
-	public double allocaterate(NFSLink link, NFSFlow flow) {
+	public double allocaterate(NFSLink link, NFSFlow newflow) {
 		double allocatedrate = 0.0;
-		if (link.getAvailableBandwidth() > flow.expectedrate) {
-			double allocation = Math.min(flow.expectedrate, link.getAvailableBandwidth());
-			if (flow.expectedrate > allocation) {
-				flow.expectedrate = allocation;
-				flow.setBottleneckLink(link);
+		if (link.getAvailableBandwidth() > newflow.expectedrate) {
+			double allocation = Math.min(newflow.expectedrate, link.getAvailableBandwidth());
+			if (newflow.expectedrate > allocation) {
+				newflow.expectedrate = allocation;
+				newflow.setBottleneckLink(link);
 			}
 		}
 		else {
 			//spare capacity cannot meet the flow's expected rate
-			if (flow.isLatencySensitive()) {
+			double sumRateExistingLatencyFlows = 0.0;
+			double sumRateExistingThroughputFlows = 0.0;
+			for (NFSFlow flow : link.getRunningFlows()) {
+				if (flow.isLatencySensitive()) {
+					sumRateExistingLatencyFlows = NFSDoubleCalculator.sum(sumRateExistingLatencyFlows, flow.datarate);
+				}
+				else {
+					sumRateExistingThroughputFlows = NFSDoubleCalculator.sum(sumRateExistingThroughputFlows, flow.datarate);
+				}
+			}
+			if (newflow.isLatencySensitive()) {
 				// TODO:
+				double sumRateLatencyFlows = NFSDoubleCalculator.sum(sumRateExistingLatencyFlows, newflow.expectedrate);
 				// 1. check if sensitive service has achieved their
 				// threshold
-				// 2. if yes, drop the flow (return 0.0)
-				// 3. if no
-				// 3.1 if (total bandwidth of throughput service minus
-				// throughput
-				// percentage * total bandwidth ) is smaller than
-				// (the demand of flow - link.availableBW), drop the flow
-				// (return 0.0)
-				// 3.2 totalCost = (the demand of flow - link.availableBW)
-				// reduce rate of throughput flows,
-				// reduce amount = total cost * flow.datarate / (throughput
-				// percentage * total bandwidth)
-				// assign the allocation
+				if (NFSDoubleCalculator.div(sumRateLatencyFlows, link.getTotalBandwidth()) >= latencyPercentage) {
+					// 2. if yes, drop the flow (return 0.0)
+					return 0.0;
+				}
+				else {
+					// 3. if no
+					// 3.1 if (total bandwidth of throughput service minus
+					// throughput percentage * total bandwidth ) is smaller than
+					// (the demand of flow - link.availableBW), drop the flow
+					// (return 0.0)
+					if (NFSDoubleCalculator.sub(sumRateExistingThroughputFlows, throughputPercentage * link.getTotalBandwidth()) < 
+							newflow.expectedrate - link.getAvailableBandwidth())  {
+						return 0.0;
+					}
+					else {
+						// 3.2 totalCost = (the demand of flow - link.availableBW)
+						// reduce rate of throughput flows,
+						// reduce amount = total cost * flow.datarate / (throughput percentage * total bandwidth)
+						// assign the allocation
+						//keep the expected rate, do nothing
+					}
+				}
 			} else {
-				// TODO:
 				// if this flow is a best-effort flow
 				// available bandwidth(ab) = totalbandwidth - all sensitiveflow datarate
-				// job's allocation (ja) = ab * (job's priority / sum of priorities)
+				// job's allocation (ja) = ab * (job's weight)
 				// flow's allocation(fa) = ja * (flow's size / total input size)
 				// if (fa < flow.expectedrate) flow.expectedrate = fa;
-			}
+				NFSTaskBindedFlow taskflow = (NFSTaskBindedFlow) newflow;
+				NFSMapReduceJob job = taskflow.getSender().getJob();
+				double ab = NFSDoubleCalculator.sub(link.getTotalBandwidth(), sumRateExistingLatencyFlows);
+				double jw = linkappmap.get(link).getPossibleJobAllocation(job.getPriority());
+				double ja = NFSDoubleCalculator.mul(ab, jw);
+				double fa = NFSDoubleCalculator.mul(ja, linkappmap.get(link).getPossibleFlowWeight(taskflow.inputSize - taskflow.sendoutSize));
+				if (fa < newflow.expectedrate) {
+					newflow.expectedrate = fa;
+					newflow.setBottleneckLink(link);
+				}
+			}//end of throughput flow
 		}
 		return allocatedrate;
 	}
 	
-	private NFSOpenFlowMessage decide(ArrayList<NFSLink> outlinks, NFSFlow flow) {
+	private NFSOpenFlowMessage decide(ArrayList<NFSLink> candidatelinks, NFSFlow flow) {
 		NFSLink selectedlink = null;
 		double rate = 0.0;
 		//select the least congested link 
-		Collections.sort(outlinks, new NFSLinkComparator(flow.expectedrate));
-		for (NFSLink link : outlinks) {
+		Collections.sort(candidatelinks, new NFSLinkComparator(flow.expectedrate));
+		for (NFSLink link : candidatelinks) {
 			selectedlink = link;
 			rate = allocaterate(selectedlink, flow);
 			if (rate != 0) break;
-			flow.addPath(link);
 		}
 		if (rate == 0) return null;
+		flow.addPath(selectedlink);
 		return new NFSOpenFlowMessage(selectedlink, rate);
 	}
 	
 	private NFSOpenFlowMessage decide(NFSLink link, NFSFlow flow) {
 		double rate = allocaterate(link, flow);
 		if (rate == 0) return null;
-		return new NFSOpenFlowMessage(link, 0);
+		return new NFSOpenFlowMessage(link, rate);
 	}
 	
 	/**
@@ -182,9 +217,31 @@ public class NFSOFController extends Entity {
 					}
 				}
 			}
+			flow.addPath(resultmsg.getAllocatedLink());//add path
 			if (resultmsg.getAllocatedLink().src.ipaddress.equals(flow.dstipString)) break;
 		}//end of loop
+		if (resultmsg != null) {
+			if (!flow.isLatencySensitive()) {
+				NFSTaskBindedFlow taskbindedflow = (NFSTaskBindedFlow) flow;
+				NFSMapReduceJob job = taskbindedflow.getSender().getJob();
+				for (NFSLink link : flow.getPaths()) {
+					linkappmap.get(link).registerNewJob(job);
+					linkappmap.get(link).registerNewFlow(job.getName(), taskbindedflow);
+				}
+			}
+		}
+		else {
+			flow.clearLinks();
+		}
 		return resultmsg;
+	}
+	
+	public void registerNewJob(NFSLink link, NFSMapReduceJob newjob) {
+		linkappmap.get(link).registerNewJob(newjob);
+	}
+	
+	public void registerNewFlow(NFSLink link, String jobname, NFSTaskBindedFlow newflow) {
+		linkappmap.get(link).registerNewFlow(jobname, newflow);
 	}
 	
 	public static NFSOFController _Instance(Model model) {

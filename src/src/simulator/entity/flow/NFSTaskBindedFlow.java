@@ -38,6 +38,10 @@ public class NFSTaskBindedFlow extends NFSFlow {
 		return reducer;
 	}
 	
+	public NFSMapTask getSender() {
+		return mapper;
+	}
+	
 	/**
 	 * start the flow
 	 */

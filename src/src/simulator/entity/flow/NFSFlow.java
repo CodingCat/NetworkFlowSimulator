@@ -226,6 +226,10 @@ public class NFSFlow extends Entity {
 		return path.get(0);
 	}
 	
+	public double getleftsize() {
+		return inputSize - sendoutSize;
+	}
+	
 	public void clearLinks() {
 		path.clear();
 	}

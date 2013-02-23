@@ -15,6 +15,7 @@ public class NFSMapReduceJob extends Entity {
 	private double shuffleSize = 0.0;
 	private int mapnum = 0;
 	private int reducenum = 0;
+	private int priority = 1;
 	private NFSMapTask [] mappers = null;
 	private NFSReduceTask [] reducers = null;
 	
@@ -75,6 +76,10 @@ public class NFSMapReduceJob extends Entity {
 	
 	public NFSReduceTask getReducer(int i) {
 		return reducers[i];
+	}
+	
+	public int getPriority() {
+		return priority;
 	}
 	
 	public void run() {

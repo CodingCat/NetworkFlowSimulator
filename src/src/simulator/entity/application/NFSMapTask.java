@@ -7,8 +7,6 @@ import simulator.NetworkFlowSimulator;
 import simulator.entity.NFSHost;
 import simulator.entity.NFSRouter;
 import simulator.entity.flow.NFSFlow;
-import simulator.entity.flow.NFSOFController;
-import simulator.entity.flow.NFSOpenFlowMessage;
 import simulator.entity.flow.NFSTaskBindedFlow;
 import simulator.entity.topology.NFSLink;
 import simulator.events.NFSOpenFlowSubscribeEvent;
@@ -21,7 +19,6 @@ import desmoj.core.simulator.Model;
 import desmoj.core.simulator.Reportable;
 import desmoj.core.simulator.TimeInstant;
 import desmoj.core.simulator.TimeOperations;
-import desmoj.core.simulator.TimeSpan;
 
 public class NFSMapTask extends Entity {
 	
@@ -100,7 +97,11 @@ public class NFSMapTask extends Entity {
 		openflowonoff = NetworkFlowSimulator.parser.getBoolean(
 				"fluidsim.openflow.onoff", false);
 	}
-
+	
+	
+	public NFSMapReduceJob getJob() {
+		return parentJob;
+	}
 	
 	
 	/**
