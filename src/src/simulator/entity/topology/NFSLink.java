@@ -42,17 +42,24 @@ public class NFSLink extends Entity{
 	
 	public double getAvailableBandwidth() {
 		double sum = 0.0;
-		//NFSFlow newflow = null;
-		for (NFSFlow flow : runningflows) {
-			if (flow.datarate != -1) {
-			//	newflow = flow;
-				continue;
+		try {
+			//NFSFlow newflow = null;
+			for (NFSFlow flow : runningflows) {
+				if (flow.datarate == -1) continue;
+				sum = NFSDoubleCalculator.sum(sum, flow.datarate);
 			}
-			sum = NFSDoubleCalculator.sum(sum, flow.datarate);
+			if (sum > totalBandwidth) {
+				System.out.println("Shit!!!");
+				String str = "";
+				for (int i = 0; i < runningflows.size(); i++) {
+					str += (runningflows.get(i).getName() + "-" + runningflows.get(i).datarate + "\n");
+				}
+				throw new Exception(str);
+			}
 		}
-		if (sum > totalBandwidth) {
-			System.out.println("Shit!!!");
-		//	if (newflow != null) System.out.println("in start phase");
+		catch (Exception e) {
+			e.printStackTrace();
+			//System.exit(-1);
 		}
 		return NFSDoubleCalculator.sub(totalBandwidth, sum);
 	}
@@ -75,7 +82,7 @@ public class NFSLink extends Entity{
 	}
 	
 	public double getAvrRate() {
-		return this.totalBandwidth / runningflows.size();
+		return NFSDoubleCalculator.div(this.totalBandwidth, (double)runningflows.size());
 	}
 	
 	@Override

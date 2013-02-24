@@ -256,6 +256,7 @@ public class NFSFlow extends Entity {
 			}
 			sendTraceNote("path length:" + path.size());
 			for (NFSLink link : path) {
+				sendTraceNote(getName() + " proposing rate:" + expectedrate);
 				NFSFlowSchedulingAlgorithm.allocate(link, this);
 				String flowratesStr = "Flow Rates on Link " + link.getName();
 				for (NFSFlow flow : link.getRunningFlows()) {

@@ -54,33 +54,63 @@ public class NFSFlowSchedulingAlgorithm {
 			else {
 				ArrayList<NFSFlow> flowsToBeReduced = new ArrayList<NFSFlow>();
 				NFSFlow[] runningflows = link.getRunningFlows();
+				double avrRate = link.getAvrRate();
 				double sumRates = 0.0;
 				for (NFSFlow flow : runningflows) {
 					if (flow == changingflow) continue;
-					flowsToBeReduced.add(flow);
-					sumRates = NFSDoubleCalculator.sum(flow.datarate, sumRates);
-				}
-				if (changingflow.expectedrate > sumRates) System.out.println("No enough space");
-				if (flowsToBeReduced.size() != 0) {
-					double totalCost = NFSDoubleCalculator.sub(changingflow.expectedrate, 
-							link.getAvailableBandwidth());
-					if (totalCost < 0) System.out.println("totalCost < 0");
-					Collections.sort(flowsToBeReduced, 
-							Collections.reverseOrder(NFSFlowFairScheduler.ratecomparator));
-					for (NFSFlow flow : flowsToBeReduced) {
-						flow.update('-', totalCost * (flow.datarate / sumRates));
-						flow.setBottleneckLink(link);
+					if (flow.datarate > avrRate) {
+						flowsToBeReduced.add(flow);
+						sumRates = NFSDoubleCalculator.sum(flow.datarate, sumRates);
 					}
-					link.setAvailableBandwidth(0.0);
+				}
+				if (changingflow.expectedrate > sumRates) {
+					System.out.println("No enough space, expected rate:" + changingflow.expectedrate + 
+							" sumRates:" + sumRates);
+				}
+				if (flowsToBeReduced.size() != 0) {
+					if (changingflow.expectedrate >= avrRate) {
+						for (NFSFlow flow : flowsToBeReduced) {
+							flow.update('-', NFSDoubleCalculator.sub(flow.datarate, changingflow.expectedrate));
+						}
+					}
+					else {
+						double totalCost = NFSDoubleCalculator.sub(changingflow.expectedrate, 
+								link.getAvailableBandwidth());
+						if (flowsToBeReduced.size() > 1) {
+							while (totalCost > 0) {
+								double diff = NFSDoubleCalculator.sub(
+										flowsToBeReduced.get(0).datarate, 
+										NFSDoubleCalculator.sub(flowsToBeReduced.get(1).datarate, 0.001));
+								if (diff >= totalCost) {
+									flowsToBeReduced.get(0).datarate = NFSDoubleCalculator.sub(
+											flowsToBeReduced.get(0).datarate, totalCost);
+									totalCost = 0.0;
+								}
+								else {
+									flowsToBeReduced.get(0).datarate = NFSDoubleCalculator.sub(
+											flowsToBeReduced.get(0).datarate, diff);
+									totalCost = NFSDoubleCalculator.sub(totalCost, diff);
+								}
+								Collections.sort(flowsToBeReduced, 
+										Collections.reverseOrder(NFSFlowFairScheduler.ratecomparator));
+						//		System.out.println("remaining cost:" + totalCost);
+							}
+						}
+						else {
+							flowsToBeReduced.get(0).datarate = 
+									NFSDoubleCalculator.sub(flowsToBeReduced.get(0).datarate, totalCost);
+						}
+					}
 				}
 			}
 			//finally determine the datarate of the new flow
 		//	changingflow.datarate = changingflow.expectedrate;
 		}//end of it's a new flow
-		if (changingflow.getStatus().equals(NFSFlowStatus.CLOSED)) {
+		if (changingflow.getStatus() == (NFSFlowStatus.CLOSED)) {
 			//this flow has been closed
 			//triggered by the close flow event
 			//rate of others might be improved
+			System.out.println("Closing flow");
 			if (link != null) {
 				link.removeRunningFlow(changingflow);
 				
@@ -100,20 +130,22 @@ public class NFSFlowSchedulingAlgorithm {
 				Collections.sort(flowsCanBeImproved, NFSFlowScheduler.demandcomparator);
 				flowsCanBeImproved.toArray(improvedFlowsArray);
 				if (improvedFlowsArray.length != 0) {
-					improvedRate = NFSDoubleCalculator.div(link.getAvailableBandwidth(), (double)improvedFlowsArray.length);
+					double amortizedImprovedRate = NFSDoubleCalculator.div(improvedRate, (double)improvedFlowsArray.length);
 					if (improvedRate < 0) {
 						System.out.println("negative improvedRate: " + improvedRate);
 					}
 					for (int i = 0; i < improvedFlowsArray.length; i++) {
-						if (NFSDoubleCalculator.sum(improvedFlowsArray[i].datarate, improvedRate) 
+						if (NFSDoubleCalculator.sum(improvedFlowsArray[i].datarate, amortizedImprovedRate) 
 								<= improvedFlowsArray[i].demandrate) {
-							improvedFlowsArray[i].update('+', improvedRate);
-							//link.setAvailableBandwidth('-', improvedRate);
+							improvedFlowsArray[i].update('+', amortizedImprovedRate);
+							improvedRate = NFSDoubleCalculator.sub(improvedRate, amortizedImprovedRate);
 						} else {
-							improvedFlowsArray[i].update('+', 
-									improvedFlowsArray[i].demandrate - improvedFlowsArray[i].datarate);
+							double gap = NFSDoubleCalculator.sub(improvedFlowsArray[i].demandrate, 
+									improvedFlowsArray[i].datarate);
+							improvedFlowsArray[i].update('+', gap);
+							improvedRate = NFSDoubleCalculator.sub(improvedRate, gap);
 							if (improvedFlowsArray.length - 1 - i != 0)
-								improvedRate = NFSDoubleCalculator.div(link.getAvailableBandwidth(),
+								amortizedImprovedRate = NFSDoubleCalculator.div(improvedRate,
 										(double) improvedFlowsArray.length - 1 - i);
 						}
 					}

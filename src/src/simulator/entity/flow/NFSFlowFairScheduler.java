@@ -36,34 +36,41 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 		else {
 			// this is a new flow
 			// the share of others on this link might be reduced
+			//changedflow.expectedrate = Math.min(changedflow.expectedrate, link.getAvrRate());
 			if (link.getAvailableBandwidth() < changedflow.expectedrate) {
 				NFSFlow[] involvedFlows = link.getRunningFlows();
 				double avrRate = link.getAvrRate();
-				double availablebisecBandwidth = 0.0;
+				double unusedbandwidth = 0.0;//link.getAvailableBandwidth();
 				String involvedflowsstr = "";
+				int goodguysnum = 0;
 				for (NFSFlow maychangeflow : involvedFlows) {
-					involvedflowsstr += (maychangeflow.toString() + " ");
+					involvedflowsstr += (maychangeflow.toString() + "-" + maychangeflow.datarate);
 					if (maychangeflow.equals(changedflow)) continue;
-					if (maychangeflow.datarate < avrRate && maychangeflow.datarate != -1.0) {
+					if (maychangeflow.datarate < avrRate) {
 						// these flows may be bottlenecked in other links
 						double a = NFSDoubleCalculator.sub(avrRate, maychangeflow.datarate);
-						availablebisecBandwidth =  NFSDoubleCalculator.sum(availablebisecBandwidth, a);
+						unusedbandwidth =  NFSDoubleCalculator.sum(unusedbandwidth, a);
+						goodguysnum++;
 					}
 				}
 				sendTraceNote("involved flows: " + involvedflowsstr);
-				double allocatedrateOnthisLink = Math.min((avrRate + availablebisecBandwidth), changedflow.demandrate);
+				int greedyflowsnum = involvedFlows.length - goodguysnum;  
+				double allocatedrateOnthisLink = Math.min(
+						NFSDoubleCalculator.sum(avrRate, 
+								NFSDoubleCalculator.div(unusedbandwidth, (double)(greedyflowsnum))), 
+						changedflow.demandrate);
+				sendTraceNote("local allocation:" + allocatedrateOnthisLink);
 				if (changedflow.expectedrate > allocatedrateOnthisLink) {
 					changedflow.expectedrate = allocatedrateOnthisLink;
 					changedflow.setBottleneckLink(link);
-				} 
-				else {
-					System.out.println(changedflow.getStatus());
 				}
 				sendTraceNote("set " + changedflow + 
 						" expected rate to " + changedflow.expectedrate + 
 						" avr rate:" + avrRate);
 			}
 			else {
+				sendTraceNote("link avai bandwidth:" + link.getAvailableBandwidth() 
+						+ " flow expected rate:" + changedflow.expectedrate);
 				changedflow.setBottleneckLink(link);
 			}
 		}//end of if this flow is new

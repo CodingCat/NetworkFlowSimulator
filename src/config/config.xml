@@ -18,20 +18,24 @@
 		<value>1000</value>
 	</property>
 	<property>
+		<name>fluidsim.topology.crossrouterlinkrate</name>
+		<value>1000</value>
+	</property>
+	<property>
 		<name>fluidsim.topology.buildingnum</name>
 		<value>1</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.l3switchnum</name>
-		<value>4</value>
+		<value>2</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.l2switchnum</name>
-		<value>8</value>
+		<value>4</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.hostsperl2sw</name>
-		<value>10</value>
+		<value>40</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.corenum</name>
@@ -83,7 +87,7 @@
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.jobnum</name>
-		<value>10</value>
+		<value>1</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.mean</name>
