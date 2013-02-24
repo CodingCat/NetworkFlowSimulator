@@ -6,6 +6,7 @@ import java.util.Comparator;
 import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
 
+import simulator.entity.flow.NFSFlow.NFSFlowStatus;
 import simulator.entity.topology.NFSLink;
 
 public abstract class NFSFlowScheduler extends Entity{
@@ -25,8 +26,8 @@ public abstract class NFSFlowScheduler extends Entity{
 
 		@Override
 		public int compare(NFSFlow flow1, NFSFlow flow2) {
-			double datarate1 = flow1.datarate;
-			double datarate2 = flow2.datarate;
+			double datarate1 = flow1.status.equals(NFSFlowStatus.NEWSTARTED) ? flow1.expectedrate : flow1.datarate;
+			double datarate2 = flow2.status.equals(NFSFlowStatus.NEWSTARTED) ? flow2.expectedrate : flow2.datarate;
 			return datarate1 > datarate2 ? 1 : (datarate1 == datarate2 ? 0 : -1);
 		}
 	}

@@ -1,6 +1,7 @@
 package simulator.entity.flow;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 import desmoj.core.simulator.Model;
 
@@ -38,35 +39,35 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 			// the share of others on this link might be reduced
 			//changedflow.expectedrate = Math.min(changedflow.expectedrate, link.getAvrRate());
 			if (link.getAvailableBandwidth() < changedflow.expectedrate) {
-				NFSFlow[] involvedFlows = link.getRunningFlows();
+				@SuppressWarnings("unchecked")
+				ArrayList<NFSFlow> demandingflows = (ArrayList<NFSFlow>) link.getRunningFlows().clone();
+				double remainingBandwidth = link.getTotalBandwidth();
 				double avrRate = link.getAvrRate();
-				double unusedbandwidth = 0.0;//link.getAvailableBandwidth();
-				String involvedflowsstr = "";
-				int goodguysnum = 0;
-				for (NFSFlow maychangeflow : involvedFlows) {
-					involvedflowsstr += (maychangeflow.toString() + "-" + maychangeflow.datarate);
-					if (maychangeflow.equals(changedflow)) continue;
-					if (maychangeflow.datarate < avrRate) {
-						// these flows may be bottlenecked in other links
-						double a = NFSDoubleCalculator.sub(avrRate, maychangeflow.datarate);
-						unusedbandwidth =  NFSDoubleCalculator.sum(unusedbandwidth, a);
-						goodguysnum++;
+				Collections.sort(demandingflows, NFSFlowScheduler.ratecomparator);
+				while (demandingflows.size() != 0 && remainingBandwidth != 0) {
+					sendTraceNote(demandingflows.size() + " demanding flows, avrRate:" + avrRate);
+					double demand = 0.0;
+					NFSFlow flow = demandingflows.get(0);
+					if (flow.status.equals(NFSFlowStatus.NEWSTARTED)) {
+						demand = flow.expectedrate;
+					} else {
+						demand = flow.datarate;
 					}
+					if (demand < avrRate) {
+						remainingBandwidth = NFSDoubleCalculator.sub(remainingBandwidth, demand);
+					}
+					else {
+						if (flow.status.equals(NFSFlowStatus.NEWSTARTED)) {
+							String outstr = "change " + flow.getName() + " rate from " + flow.expectedrate + " to ";
+							flow.expectedrate = avrRate;
+							sendTraceNote(outstr + flow.expectedrate);
+						}
+						remainingBandwidth = NFSDoubleCalculator.sub(remainingBandwidth, avrRate);
+					}
+					demandingflows.remove(0);
+					if (demandingflows.size() != 0)
+						avrRate = NFSDoubleCalculator.div(remainingBandwidth, demandingflows.size());
 				}
-				sendTraceNote("involved flows: " + involvedflowsstr);
-				int greedyflowsnum = involvedFlows.length - goodguysnum;  
-				double allocatedrateOnthisLink = Math.min(
-						NFSDoubleCalculator.sum(avrRate, 
-								NFSDoubleCalculator.div(unusedbandwidth, (double)(greedyflowsnum))), 
-						changedflow.demandrate);
-				sendTraceNote("local allocation:" + allocatedrateOnthisLink);
-				if (changedflow.expectedrate > allocatedrateOnthisLink) {
-					changedflow.expectedrate = allocatedrateOnthisLink;
-					changedflow.setBottleneckLink(link);
-				}
-				sendTraceNote("set " + changedflow + 
-						" expected rate to " + changedflow.expectedrate + 
-						" avr rate:" + avrRate);
 			}
 			else {
 				sendTraceNote("link avai bandwidth:" + link.getAvailableBandwidth() 

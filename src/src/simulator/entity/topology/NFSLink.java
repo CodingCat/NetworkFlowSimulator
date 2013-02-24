@@ -49,7 +49,6 @@ public class NFSLink extends Entity{
 				sum = NFSDoubleCalculator.sum(sum, flow.datarate);
 			}
 			if (sum > totalBandwidth) {
-				System.out.println("Shit!!!");
 				String str = "";
 				for (int i = 0; i < runningflows.size(); i++) {
 					str += (runningflows.get(i).getName() + "-" + runningflows.get(i).datarate + "\n");
@@ -76,9 +75,8 @@ public class NFSLink extends Entity{
 		runningflows.remove(flow);
 	}
 	
-	public NFSFlow[] getRunningFlows() {
-		NFSFlow [] runningflowArray = new NFSFlow[runningflows.size()];
-		return runningflows.toArray(runningflowArray);
+	public ArrayList<NFSFlow> getRunningFlows() {
+		return runningflows;
 	}
 	
 	public double getAvrRate() {

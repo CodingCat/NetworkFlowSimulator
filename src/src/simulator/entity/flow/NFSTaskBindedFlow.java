@@ -24,6 +24,8 @@ public class NFSTaskBindedFlow extends NFSFlow {
 		demandSize = outSize;
 		mapper = mtask;
 		reducer = rtask;
+		closeevent = new NFSCloseMapReduceFlowEvent(getModel(), "closeEvent-" + this.getName(),
+				true);
 	}
 	
 	/**
@@ -49,8 +51,6 @@ public class NFSTaskBindedFlow extends NFSFlow {
 	public void start() {
 		super.start();
 		startTime = presentTime();
-		closeevent = new NFSCloseMapReduceFlowEvent(getModel(), "closeEvent-" + this.getName(),
-				true);
 		sendTraceNote("start a new flow, with demand:" + demandSize + " MB and rate:" + datarate);
 		closeevent.schedule(this, TimeOperations.add(presentTime(),
 				new TimeSpan(demandSize / datarate)));
@@ -71,7 +71,6 @@ public class NFSTaskBindedFlow extends NFSFlow {
 			if (demandSize <= sendoutSize) {
 				closeevent.schedule(this, presentTime());
 			} else {
-				//System.out.println("rescheduling close event");
 				closeevent.cancel();
 				TimeInstant newfinishTime = TimeOperations.add(presentTime(),
 						new TimeSpan((demandSize - sendoutSize) / datarate));

@@ -35,7 +35,7 @@ public class NFSOFController extends Entity {
 			ret = sparecap1 > sparecap2 ? 1 : (sparecap1 == sparecap2 ? 0 : -1);
 			if (ret == 0 || Math.max(sparecap1, sparecap2) < 0) {
 				//compare number of flows
-				ret = l1.getRunningFlows().length - l2.getRunningFlows().length;
+				ret = l1.getRunningFlows().size() - l2.getRunningFlows().size();
 			}
 			return ret;
 		}

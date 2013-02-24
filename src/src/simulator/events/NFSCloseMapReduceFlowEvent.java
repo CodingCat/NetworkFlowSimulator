@@ -18,7 +18,7 @@ public class NFSCloseMapReduceFlowEvent extends
 
 	@Override
 	public void eventRoutine(NFSTaskBindedFlow finishedflow) {
-		sendTraceNote(finishedflow.getName() + " finishes");
+		sendTraceNote(finishedflow.getName() + "-" + finishedflow.datarate + " finishes");
 		finishedflow.finish();
 		NFSFlowRateChangeEvent flowrateevent = new NFSFlowRateChangeEvent(
 				getModel(),
