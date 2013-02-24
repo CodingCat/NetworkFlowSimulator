@@ -1,6 +1,7 @@
 package simulator.entity.flow;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 import simulator.entity.topology.NFSLink;
 import simulator.model.NFSModel;
@@ -92,7 +93,8 @@ public class NFSFlow extends Entity {
 	public enum NFSFlowStatus {
 		NEWSTARTED,
 		RUNNING,
-		CLOSED
+		CLOSED,
+		ADJUSTING
 	}
 	
 	protected enum NFSFlowType {
@@ -158,7 +160,10 @@ public class NFSFlow extends Entity {
 	
 	public void close() {
 		expectedrate = 0;
-		path.clear();
+		//path.clear();
+		/*for (int i = 0; i < path.size(); i++) {
+			path.get(i).removeRunningFlow(this);
+		}*/
 		update();
 	}
 	
@@ -223,6 +228,19 @@ public class NFSFlow extends Entity {
 		return bottlenecklink;
 	}
 	
+	@SuppressWarnings("unchecked")
+	public boolean iswithsamepath(NFSFlow flow) {
+		ArrayList<NFSLink> path1 = (ArrayList<NFSLink>) flow.getPaths().clone();
+		ArrayList<NFSLink> path2 = (ArrayList<NFSLink>) path.clone();
+		Collections.sort(path1, NFSLink.linkcomparator);
+		Collections.sort(path2, NFSLink.linkcomparator);
+		if (path1.size() != path2.size()) return false;
+		for (int i = 0; i < path1.size(); i++) {
+			if (!path1.get(i).equals(path2.get(i))) return false;
+		}
+		return true;
+	}
+	
 	public NFSLink getFirstLink() {
 		return path.get(0);
 	}
@@ -245,14 +263,21 @@ public class NFSFlow extends Entity {
 		return null;
 	}
 	
+	public void adjust(double rate) {
+		setStatus(NFSFlowStatus.ADJUSTING);
+		expectedrate = rate;
+		consumeBandwidth();
+		setStatus(NFSFlowStatus.RUNNING);
+	}
+	
 	/**
 	 * consume the bandwidth on the links along with the path
 	 * only be called when the flow is new started
 	 */
 	private void consumeBandwidth() {
 		try {
-			if (!status.equals(NFSFlowStatus.NEWSTARTED)) {
-				throw new Exception("flow must be NEWSTARTED, but " + status.toString() + " detected");
+			if (!status.equals(NFSFlowStatus.NEWSTARTED) && !status.equals(NFSFlowStatus.ADJUSTING)) {
+				throw new Exception("flow must be NEWSTARTED || ADJUSTING, but " + status.toString() + " detected");
 			}
 			sendTraceNote("path length:" + path.size());
 			for (NFSLink link : path) {

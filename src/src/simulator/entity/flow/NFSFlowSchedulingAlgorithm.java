@@ -12,7 +12,8 @@ import simulator.utils.NFSDoubleCalculator;
 public class NFSFlowSchedulingAlgorithm {
 
 	void MaxMinAllocate(NFSLink link, NFSFlow changingflow) {
-		if (changingflow.getStatus().equals(NFSFlowStatus.NEWSTARTED)) {
+		if (changingflow.getStatus().equals(NFSFlowStatus.NEWSTARTED) || 
+				changingflow.getStatus().equals(NFSFlowStatus.ADJUSTING)) {
 			@SuppressWarnings("unchecked")
 			ArrayList<NFSFlow> demandingflows = (ArrayList<NFSFlow>) link
 					.getRunningFlows().clone();
@@ -27,6 +28,7 @@ public class NFSFlowSchedulingAlgorithm {
 					remainingBandwidth = NFSDoubleCalculator.sub(remainingBandwidth, demand);
 				} else {
 					flow.update('-', NFSDoubleCalculator.sub(flow.datarate, avrRate));
+					flow.setBottleneckLink(link);
 					remainingBandwidth = NFSDoubleCalculator.sub(remainingBandwidth, avrRate);
 				}
 				demandingflows.remove(0);
@@ -38,7 +40,25 @@ public class NFSFlowSchedulingAlgorithm {
 			//this flow has been closed
 			//triggered by the close flow event
 			//rate of others might be improved
-			System.out.println("Closing flow");
+			link.removeRunningFlow(changingflow);
+			ArrayList<NFSFlow> improvingflows = new ArrayList<NFSFlow>();
+			double totalfreedbw = changingflow.datarate;
+			for (NFSFlow eleflow : link.getRunningFlows()) {
+				if (eleflow.getBottleneckLink().equals(link) && !eleflow.isFullyMeet()) {
+					improvingflows.add(eleflow);
+				}
+			}
+			while (improvingflows.size() > 0 && totalfreedbw > 0) {
+				double oldrate = improvingflows.get(0).datarate;
+				double amortizedbw = NFSDoubleCalculator.div(
+						totalfreedbw, (double) improvingflows.size());
+				improvingflows.get(0).adjust(
+						NFSDoubleCalculator.sum(improvingflows.get(0).datarate, amortizedbw));
+				double newrate = improvingflows.get(0).datarate;
+				totalfreedbw = NFSDoubleCalculator.sub(
+						totalfreedbw, NFSDoubleCalculator.sub(newrate, oldrate));
+				improvingflows.remove(0);
+			}
 		}//end of it's a closing flow
 	}
 	

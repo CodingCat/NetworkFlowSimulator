@@ -20,6 +20,10 @@ public class NFSCloseMapReduceFlowEvent extends
 	public void eventRoutine(NFSTaskBindedFlow finishedflow) {
 		sendTraceNote(finishedflow.getName() + "-" + finishedflow.datarate + " finishes");
 		finishedflow.finish();
+		if (finishedflow.getPaths().size() == 0) {
+			System.out.println(finishedflow.getName() + " status:" + 
+					finishedflow.getStatus().toString());
+		}
 		NFSFlowRateChangeEvent flowrateevent = new NFSFlowRateChangeEvent(
 				getModel(),
 				"RateChangeEventTriggeredByCloseFlow",

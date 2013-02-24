@@ -29,10 +29,8 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 	
 	@Override
 	public void reallocateBandwidth(NFSLink link, NFSFlow changedflow) {
-		if (changedflow.getStatus() != NFSFlowStatus.NEWSTARTED) {
-			if (changedflow.getStatus() == NFSFlowStatus.CLOSED) {
-				NFSFlowSchedulingAlgorithm.allocate(link, changedflow);
-			}//end of if this flow is closed
+		if (changedflow.getStatus() == NFSFlowStatus.CLOSED) {
+			NFSFlowSchedulingAlgorithm.allocate(link, changedflow);
 		}
 		else {
 			// this is a new flow
@@ -48,7 +46,7 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 					sendTraceNote(demandingflows.size() + " demanding flows, avrRate:" + avrRate);
 					double demand = 0.0;
 					NFSFlow flow = demandingflows.get(0);
-					if (flow.status.equals(NFSFlowStatus.NEWSTARTED)) {
+					if (flow.status.equals(NFSFlowStatus.NEWSTARTED) || flow.status.equals(NFSFlowStatus.ADJUSTING)) {
 						demand = flow.expectedrate;
 					} else {
 						demand = flow.datarate;
@@ -57,9 +55,10 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 						remainingBandwidth = NFSDoubleCalculator.sub(remainingBandwidth, demand);
 					}
 					else {
-						if (flow.status.equals(NFSFlowStatus.NEWSTARTED)) {
+						if (flow.status.equals(NFSFlowStatus.NEWSTARTED) || flow.status.equals(NFSFlowStatus.ADJUSTING)) {
 							String outstr = "change " + flow.getName() + " rate from " + flow.expectedrate + " to ";
 							flow.expectedrate = avrRate;
+							flow.setBottleneckLink(link);
 							sendTraceNote(outstr + flow.expectedrate);
 						}
 						remainingBandwidth = NFSDoubleCalculator.sub(remainingBandwidth, avrRate);

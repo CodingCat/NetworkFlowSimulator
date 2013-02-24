@@ -1,6 +1,7 @@
 package simulator.entity.topology;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 
 import simulator.entity.NFSNode;
 import simulator.entity.flow.NFSFlow;
@@ -10,11 +11,28 @@ import desmoj.core.simulator.Model;
 
 public class NFSLink extends Entity{
 	
+	public static class NFSLinkComparator implements Comparator<NFSLink> {
+		
+		private static NFSLinkComparator _instance = null;
+		
+		public static NFSLinkComparator _Instance() {
+			if (_instance == null) _instance = new NFSLinkComparator();
+			return _instance;
+		}
+		
+		@Override
+		public int compare(NFSLink link1, NFSLink link2) {
+			return link1.getName().compareTo(link2.getName());
+		}
+		
+	}
+	
 	double availableBandwidth = 0.0;
 	double totalBandwidth = 0.0;
 	
 	public NFSNode src = null;
 	public NFSNode dst = null;
+	public static NFSLinkComparator linkcomparator = null;
 	
 	private ArrayList<NFSFlow> runningflows = null;
 	
@@ -25,6 +43,7 @@ public class NFSLink extends Entity{
 		src = s;
 		dst = d;
 		runningflows = new ArrayList<NFSFlow>();
+		linkcomparator = NFSLinkComparator._Instance();
 	}
 	
 	public void setAvailableBandwidth(char op, double v) {

@@ -27,11 +27,11 @@
 	</property>
 	<property>
 		<name>fluidsim.topology.l3switchnum</name>
-		<value>2</value>
+		<value>4</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.l2switchnum</name>
-		<value>4</value>
+		<value>8</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.hostsperl2sw</name>
