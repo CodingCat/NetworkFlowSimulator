@@ -68,7 +68,10 @@ public class NFSReduceTask extends Entity {
 	private NFSReduceTaskInfo taskinfo = null;
 	NFSReduceTaskReporter taskreporter = null;
 	
-	public NFSReduceTask(Model model, String taskName, boolean showInReport, NFSHost host) {
+	private NFSMapReduceJob parentJob = null;
+	
+	public NFSReduceTask(Model model, String taskName, boolean showInReport, NFSHost host, 
+			NFSMapReduceJob job) {
 		super(model, taskName, showInReport);
 		senders = new ArrayList<String>();
 		finishedmappers = new ArrayList<String>();
@@ -76,6 +79,7 @@ public class NFSReduceTask extends Entity {
 		tasktracker = host;
 		taskinfo = new NFSReduceTaskInfo(model, taskName, NFSModel.showReduceTask, true);
 		taskreporter = new NFSReduceTaskReporter(taskinfo);
+		parentJob = job;
 	}
 	
 	/**
@@ -113,6 +117,7 @@ public class NFSReduceTask extends Entity {
 				taskinfo.responseTime = TimeOperations.diff(endtime, starttime).getTimeAsDouble();
 				taskinfo.shuffleSize = shufflesize;
 			}
+			parentJob.finishReduce();
 		}
 		catch (Exception e) {
 			e.printStackTrace();

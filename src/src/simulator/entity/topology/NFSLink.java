@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import simulator.entity.NFSNode;
 import simulator.entity.flow.NFSFlow;
+import simulator.utils.NFSDoubleCalculator;
 import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
 
@@ -40,7 +41,20 @@ public class NFSLink extends Entity{
 	}
 	
 	public double getAvailableBandwidth() {
-		return availableBandwidth;
+		double sum = 0.0;
+		//NFSFlow newflow = null;
+		for (NFSFlow flow : runningflows) {
+			if (flow.datarate != -1) {
+			//	newflow = flow;
+				continue;
+			}
+			sum = NFSDoubleCalculator.sum(sum, flow.datarate);
+		}
+		if (sum > totalBandwidth) {
+			System.out.println("Shit!!!");
+		//	if (newflow != null) System.out.println("in start phase");
+		}
+		return NFSDoubleCalculator.sub(totalBandwidth, sum);
 	}
 	
 	public double getTotalBandwidth() {

@@ -162,12 +162,17 @@ public class NFSMapTask extends Entity {
 		}
 	}
 	
+	public NFSHost getTaskTracker() {
+		return tasktracker;
+	}
+	
 	public void finishflow() {
 		//System.out.println(getName() + " finishes a flow");
 		closedflowN++;
 		if (closedflowN == flows.length) {
 			finishTime = presentTime();
 			taskinfo.responseTime = TimeOperations.diff(finishTime, startTime).getTimeAsDouble();
+			parentJob.finishMap();
 		}
 	}
 }

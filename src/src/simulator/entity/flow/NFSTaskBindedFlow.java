@@ -57,6 +57,7 @@ public class NFSTaskBindedFlow extends NFSFlow {
 	}
 	
 	public void finish() {
+		setStatus(NFSFlowStatus.CLOSED);
 		finishTime = presentTime();
 		mapper.finishflow();
 		reducer.finishflow(this);

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import simulator.entity.topology.NFSLink;
 import simulator.model.NFSModel;
+import simulator.utils.NFSDoubleCalculator;
 import desmoj.core.report.Reporter;
 import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
@@ -168,8 +169,8 @@ public class NFSFlow extends Entity {
 	public void start() {
 		//lastlink, we have determine the datarate of the new flow
 		sendTraceNote(getName() + " is starting");
-		//datarate = expectedrate;
-		sendTraceNote("determine " + getName() + " datarate as " + datarate);
+	//	datarate = expectedrate;
+		//sendTraceNote("determine " + getName() + " datarate as " + datarate);
 		lastCheckingPoint = presentTime();
 		consumeBandwidth();
 		setStatus(NFSFlowStatus.RUNNING);
@@ -196,8 +197,8 @@ public class NFSFlow extends Entity {
 	public void update(char model, double newdata) {
 		update();
 		String tracerecord = "change flow " + getName() + " rate from " + datarate;
-		if (model == '-') datarate -= newdata;
-		if (model == '+') datarate += newdata;
+		if (model == '-') datarate = NFSDoubleCalculator.sub(datarate, newdata);
+		if (model == '+') datarate = NFSDoubleCalculator.sum(datarate, newdata);
 		sendTraceNote(tracerecord + " to " + datarate + " in update(char model, double newdata)");
 	}
 	
@@ -262,6 +263,9 @@ public class NFSFlow extends Entity {
 				}
 				sendTraceNote(flowratesStr);
 			}
+			datarate = expectedrate;
+			if (datarate < 0) System.out.println("NEGATIVE!!!!!");
+			sendTraceNote("determine " + getName() + " datarate as " + datarate);
 			sendTraceNote("existing from consumeBandwidth()");
 		}
 		catch (Exception e) {

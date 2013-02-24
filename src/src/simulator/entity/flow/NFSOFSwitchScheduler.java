@@ -1,15 +1,15 @@
 package simulator.entity.flow;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+//import java.util.HashMap;
 
 import simulator.entity.topology.NFSLink;
 import desmoj.core.simulator.Model;
 
 public class NFSOFSwitchScheduler extends NFSFlowScheduler {
 	
-	private HashMap<NFSFlow.NFSFlowType, Double> staticAppTable = null;
-	private NFSOFController controller = null;
+	//private HashMap<NFSFlow.NFSFlowType, Double> staticAppTable = null;
+	//private NFSOFController controller = null;
 	
 	public NFSOFSwitchScheduler(Model model, String entityName,
 			boolean showInReport, ArrayList<NFSLink> links) {

@@ -19,15 +19,15 @@
 	</property>
 	<property>
 		<name>fluidsim.topology.buildingnum</name>
-		<value>2</value>
+		<value>1</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.l3switchnum</name>
-		<value>2</value>
+		<value>4</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.l2switchnum</name>
-		<value>16</value>
+		<value>8</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.hostsperl2sw</name>
@@ -35,7 +35,7 @@
 	</property>
 	<property>
 		<name>fluidsim.topology.corenum</name>
-		<value>4</value>
+		<value>1</value>
 	</property>
 	<property>
 		<name>fluidsim.application.onoff.controlflag</name>
@@ -74,16 +74,20 @@
 		<value>simulator.entity.application.NFSMapReduceTraffic</value>
 	</property>
 	<property>
+		<name>fluidsim.application.mapreduce.rate</name>
+		<value>1000</value>
+	</property>
+	<property>
 		<name>fluidsim.application.pa.jobnum</name>
 		<value>0</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.jobnum</name>
-		<value>8</value>
+		<value>10</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.mean</name>
-		<value>1024</value>
+		<value>512</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.stdev</name>
@@ -91,6 +95,6 @@
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.expansionfactor</name>
-		<value>1.2</value>
+		<value>1.0</value>
 	</property>
 </configuration>

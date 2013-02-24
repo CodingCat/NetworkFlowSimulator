@@ -1,6 +1,7 @@
 package simulator.utils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public class NFSDoubleCalculator {
 	
@@ -27,7 +28,7 @@ public class NFSDoubleCalculator {
 			if (d2 == 0.0) throw new Exception ("cannot divide anything by 0");
 			BigDecimal bd1 = new BigDecimal(Double.toString(d1));
 			BigDecimal bd2 = new BigDecimal(Double.toString(d2));
-			return bd1.divide(bd2).doubleValue();
+			return bd1.divide(bd2, 6, RoundingMode.HALF_UP).doubleValue();
 		}
 		catch (Exception e) {
 			e.printStackTrace();

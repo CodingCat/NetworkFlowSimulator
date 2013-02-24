@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Map.Entry;
 
 import simulator.NetworkFlowSimulator;
 import simulator.entity.NFSRouter;
@@ -242,6 +243,16 @@ public class NFSOFController extends Entity {
 	
 	public void registerNewFlow(NFSLink link, String jobname, NFSTaskBindedFlow newflow) {
 		linkappmap.get(link).registerNewFlow(jobname, newflow);
+	}
+	
+	public void finishflow(NFSLink link, NFSTaskBindedFlow finishedflow) {
+		linkappmap.get(link).finishflow(finishedflow);
+	}
+	
+	public void finishjob(NFSMapReduceJob job) {
+		for (Entry<NFSLink, NFSOFJobAllocationMap> entry : linkappmap.entrySet()) {
+			entry.getValue().clearJobInfo(job);
+		}
 	}
 	
 	public static NFSOFController _Instance(Model model) {

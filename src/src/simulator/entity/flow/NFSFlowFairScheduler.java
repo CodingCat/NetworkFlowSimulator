@@ -6,6 +6,7 @@ import desmoj.core.simulator.Model;
 
 import simulator.entity.flow.NFSFlow.NFSFlowStatus;
 import simulator.entity.topology.NFSLink;
+import simulator.utils.NFSDoubleCalculator;
 
 public class NFSFlowFairScheduler extends NFSFlowScheduler {
 
@@ -45,24 +46,25 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 					if (maychangeflow.equals(changedflow)) continue;
 					if (maychangeflow.datarate < avrRate && maychangeflow.datarate != -1.0) {
 						// these flows may be bottlenecked in other links
-						availablebisecBandwidth += (avrRate - maychangeflow.datarate);
+						double a = NFSDoubleCalculator.sub(avrRate, maychangeflow.datarate);
+						availablebisecBandwidth =  NFSDoubleCalculator.sum(availablebisecBandwidth, a);
 					}
 				}
 				sendTraceNote("involved flows: " + involvedflowsstr);
 				double allocatedrateOnthisLink = Math.min((avrRate + availablebisecBandwidth), changedflow.demandrate);
-				if (changedflow.expectedrate == -1.0) {
-					//first link
+				if (changedflow.expectedrate > allocatedrateOnthisLink) {
 					changedflow.expectedrate = allocatedrateOnthisLink;
-				}
+					changedflow.setBottleneckLink(link);
+				} 
 				else {
-					if (changedflow.expectedrate > allocatedrateOnthisLink) {
-						changedflow.expectedrate = allocatedrateOnthisLink;
-						changedflow.setBottleneckLink(link);
-					}
+					System.out.println(changedflow.getStatus());
 				}
 				sendTraceNote("set " + changedflow + 
 						" expected rate to " + changedflow.expectedrate + 
 						" avr rate:" + avrRate);
+			}
+			else {
+				changedflow.setBottleneckLink(link);
 			}
 		}//end of if this flow is new
 	}

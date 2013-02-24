@@ -18,6 +18,8 @@ public class NFSMapReduceJob extends Entity {
 	private int priority = 1;
 	private NFSMapTask [] mappers = null;
 	private NFSReduceTask [] reducers = null;
+	private int finishedmapnum = 0;
+	private int finishedreducenum = 0;
 	
 	TimeInstant startTime = null;
 	TimeInstant finishTime = null;
@@ -62,7 +64,8 @@ public class NFSMapReduceJob extends Entity {
 			reducers[i] = new NFSReduceTask(getModel(),
 					getName() + "-r-" + i,
 					true, 
-					NFSModel.trafficcontroller.topocontroller.getHost(rand.nextInt(totalmachineNum)));
+					NFSModel.trafficcontroller.topocontroller.getHost(rand.nextInt(totalmachineNum)),
+					this);
 		}
 	}
 	
@@ -80,6 +83,22 @@ public class NFSMapReduceJob extends Entity {
 	
 	public int getPriority() {
 		return priority;
+	}
+	
+	private void checkJobFinish() {
+		if (finishedmapnum == mapnum && finishedreducenum == reducenum) {
+			//TODO: report to the controller 
+		}
+	}
+	
+	public void finishMap() {
+		finishedmapnum++;
+		checkJobFinish();
+	}
+	
+	public void finishReduce() {
+		finishedreducenum++;
+		checkJobFinish();
 	}
 	
 	public void run() {

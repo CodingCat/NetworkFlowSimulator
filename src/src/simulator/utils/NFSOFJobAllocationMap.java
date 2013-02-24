@@ -7,6 +7,11 @@ import simulator.entity.application.NFSMapReduceJob;
 import simulator.entity.flow.NFSFlow;
 import simulator.entity.flow.NFSTaskBindedFlow;
 
+/**
+ * 
+ * store the job loads in certain link
+ * 
+ */
 public class NFSOFJobAllocationMap {
 	
 	//job name -> sum of remaining input of flows on the link
@@ -63,5 +68,23 @@ public class NFSOFJobAllocationMap {
 		sumflowloads += flow.getleftsize();
 		jobflowload.put(flow, flow.getleftsize());
 		jobloadMap.put(jobname, jobflowload);
+	}
+	
+	public void finishflow(NFSTaskBindedFlow finishedflow) {
+		NFSMapReduceJob job = finishedflow.getSender().getJob();
+		String jobname = job.getName();
+		sumflowloads -= jobloadMap.get(jobname).get(finishedflow);
+		jobloadMap.get(jobname).remove(finishedflow);
+	}
+	
+	public void clearJobInfo(NFSMapReduceJob job) {
+		//jobweigthMap
+		sumjobweights -= job.getPriority();
+		jobweightMap.remove(job.getName());
+		for (Entry<String, Double> entry : jobweightMap.entrySet()) {
+			entry.setValue(entry.getValue() / sumjobweights);
+		}
+		//jobloadMap
+		jobloadMap.remove(job.getName());
 	}
 }
