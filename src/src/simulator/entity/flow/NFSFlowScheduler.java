@@ -6,6 +6,7 @@ import java.util.Comparator;
 import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
 
+import simulator.entity.NFSNode;
 import simulator.entity.flow.NFSFlow.NFSFlowStatus;
 import simulator.entity.topology.NFSLink;
 
@@ -34,16 +35,22 @@ public abstract class NFSFlowScheduler extends Entity{
 		}
 	}
 	
+	private NFSNode hostnode = null;
 	protected ArrayList<NFSLink> outlinks = null;
 	public static NFSFlowDemandComparator demandcomparator = null;
 	public static NFSFlowRateComparator ratecomparator = null;
 	
 	public NFSFlowScheduler(Model model, String entityName, boolean showInReport, 
-			ArrayList<NFSLink> links) {
+			ArrayList<NFSLink> links, NFSNode node) {
 		super(model, entityName, showInReport);
 		outlinks = links;
 		demandcomparator = new NFSFlowDemandComparator();
 		ratecomparator = new NFSFlowRateComparator();
+		hostnode = node;
+	}
+	
+	public NFSNode getNode() {
+		return hostnode;
 	}
 	
 	/**

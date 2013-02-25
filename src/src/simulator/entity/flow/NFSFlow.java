@@ -161,9 +161,6 @@ public class NFSFlow extends Entity {
 	public void close() {
 		expectedrate = 0;
 		//path.clear();
-		/*for (int i = 0; i < path.size(); i++) {
-			path.get(i).removeRunningFlow(this);
-		}*/
 		update();
 	}
 	
@@ -246,7 +243,7 @@ public class NFSFlow extends Entity {
 	}
 	
 	public double getleftsize() {
-		return inputSize - sendoutSize;
+		return NFSDoubleCalculator.sub(inputSize, sendoutSize);
 	}
 	
 	public void clearLinks() {

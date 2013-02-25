@@ -1,6 +1,7 @@
 package simulator.entity.flow;
 
 import java.util.ArrayList;
+
 import java.util.Collections;
 
 import desmoj.core.simulator.Model;
@@ -8,12 +9,13 @@ import desmoj.core.simulator.Model;
 import simulator.entity.flow.NFSFlow.NFSFlowStatus;
 import simulator.entity.topology.NFSLink;
 import simulator.utils.NFSDoubleCalculator;
+import simulator.entity.NFSNode;
 
 public class NFSFlowFairScheduler extends NFSFlowScheduler {
 
 	public NFSFlowFairScheduler(Model model, String entityName,
-			boolean showInReport, ArrayList<NFSLink> links) {
-		super(model, entityName, showInReport, links);
+			boolean showInReport, ArrayList<NFSLink> links, NFSNode node) {
+		super(model, entityName, showInReport, links, node);
 	}
 
 	@Override

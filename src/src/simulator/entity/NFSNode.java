@@ -64,15 +64,19 @@ public class NFSNode extends Entity{
 					NetworkFlowSimulator.parser.getString("fluidsim.flow.scheduler", 
 							"simulator.entity.flow.NFSFlowFairScheduler"));
 			Class<?> [] parameterTypes = {Model.class, String.class, boolean.class, 
-					ArrayList.class};
+					ArrayList.class, NFSNode.class};
 			java.lang.reflect.Constructor<?> constructor = 
 					flowSchedulerClass.getConstructor(parameterTypes);
 			Object [] parameterList = {getModel(), "flowschedulerOn" + this.getName(), true, 
-					outLinks};
+					outLinks, this};
 			flowscheduler = (NFSFlowScheduler) constructor.newInstance(parameterList); 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	public NFSFlowScheduler getScheduler() {
+		return flowscheduler;
 	}
 	
 	public void PrintLinks() {
@@ -80,7 +84,6 @@ public class NFSNode extends Entity{
 			System.out.println(link);
 		}
 	}
-	
 	 
 	@Override
 	public String toString() {

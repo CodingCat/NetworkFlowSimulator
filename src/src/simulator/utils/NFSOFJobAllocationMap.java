@@ -1,7 +1,7 @@
 package simulator.utils;
 
 import java.util.HashMap;
-import java.util.Map.Entry;
+import java.util.HashSet;
 
 import simulator.entity.application.NFSMapReduceJob;
 import simulator.entity.flow.NFSFlow;
@@ -15,25 +15,24 @@ import simulator.entity.flow.NFSTaskBindedFlow;
 public class NFSOFJobAllocationMap {
 	
 	//job name -> sum of remaining input of flows on the link
-	private HashMap<String, HashMap<NFSFlow, Double>> jobloadMap = null;
-	//job name -> sum of job fair share
-	private HashMap<String, Double> jobweightMap = null;
+	private HashMap<String, HashSet<NFSFlow>> jobflowMap = null;
+	//job list
+	private HashSet<NFSMapReduceJob> joblist = null;
+	//job name -> allocation (sum of all flows' left size belonging to this job)
+	private HashMap<String, Double> joballocMap = null;
 	
 	private double sumflowloads = 0;
 	private double sumjobweights = 0;
 	
 	public NFSOFJobAllocationMap() {
-		jobloadMap = new HashMap<String, HashMap<NFSFlow, Double>>();
-		jobweightMap = new HashMap<String, Double>();
+		jobflowMap = new HashMap<String, HashSet<NFSFlow>>();
+		joblist = new HashSet<NFSMapReduceJob>();
+		joballocMap = new HashMap<String, Double>();
 	}
 	
-	
-	public double getJobWeight(String jobname) {
-		return jobweightMap.get(jobname);
-	}
-	
-	public double getFlowWeight(String jobname, NFSFlow newflow) {
-		return jobloadMap.get(jobname).get(newflow);
+	public double getFlowWeight(NFSTaskBindedFlow flow) {
+		String jobname = flow.getSender().getJob().getName();
+		return NFSDoubleCalculator.div(flow.getleftsize(), joballocMap.get(jobname));
 	}
 	
 	public double getsumrates() {
@@ -48,43 +47,54 @@ public class NFSOFJobAllocationMap {
 		return input / (input + sumflowloads);
 	}
 	
-	public void registerNewJob(NFSMapReduceJob newjob) {
-		if (jobweightMap.containsKey(newjob)) {
-			for (Entry<String, Double> entry : jobweightMap.entrySet()) {
-				jobweightMap.put(entry.getKey(), 
-						entry.getValue() * sumjobweights / (sumjobweights + newjob.getPriority()));
-			}
+	public void register(NFSTaskBindedFlow newflow) {
+		registerNewJob(newflow.getSender().getJob());
+		registerNewFlow(newflow);
+	}
+	
+	private void registerNewJob(NFSMapReduceJob newjob) {
+		if (joblist.contains(newjob) == false) {
+			joblist.add(newjob);
 			sumjobweights += newjob.getPriority();
-			jobweightMap.put(newjob.getName(), (double) newjob.getPriority() / sumjobweights);
+			jobflowMap.put(newjob.getName(), new HashSet<NFSFlow>());
+			joballocMap.put(newjob.getName(), 0.0);
 		}
 	}
 	
-	public void registerNewFlow(String jobname, NFSTaskBindedFlow flow) {
-		HashMap<NFSFlow, Double> jobflowload = jobloadMap.get(jobname);
-		for (Entry<NFSFlow, Double> entry : jobflowload.entrySet()) {
-			jobflowload.put(entry.getKey(), entry.getValue() * sumflowloads / 
-					(sumflowloads + flow.getleftsize()));
+	private void registerNewFlow(NFSTaskBindedFlow flow) {
+		String jobname = flow.getSender().getJob().getName();
+		if (jobflowMap.containsKey(jobname)) {
+			jobflowMap.get(jobname).add(flow);
+			joballocMap.put(jobname, 
+					NFSDoubleCalculator.sum(joballocMap.get(jobname), flow.getleftsize()));
+			sumflowloads = NFSDoubleCalculator.sum(sumflowloads, flow.getleftsize());
 		}
-		sumflowloads += flow.getleftsize();
-		jobflowload.put(flow, flow.getleftsize());
-		jobloadMap.put(jobname, jobflowload);
+	}
+	
+	public void updateflowrate() {
+		//TODO
 	}
 	
 	public void finishflow(NFSTaskBindedFlow finishedflow) {
 		NFSMapReduceJob job = finishedflow.getSender().getJob();
 		String jobname = job.getName();
-		sumflowloads -= jobloadMap.get(jobname).get(finishedflow);
-		jobloadMap.get(jobname).remove(finishedflow);
+		sumflowloads -= finishedflow.getleftsize();
+		jobflowMap.get(jobname).remove(finishedflow);
+		joballocMap.put(
+				jobname, 
+				NFSDoubleCalculator.sub(joballocMap.get(jobname), 
+						finishedflow.getleftsize()));
+		if (joballocMap.get(jobname) == 0.0) {
+			clearJobInfo(job);
+		}
 	}
 	
-	public void clearJobInfo(NFSMapReduceJob job) {
+	private void clearJobInfo(NFSMapReduceJob job) {
 		//jobweigthMap
 		sumjobweights -= job.getPriority();
-		jobweightMap.remove(job.getName());
-		for (Entry<String, Double> entry : jobweightMap.entrySet()) {
-			entry.setValue(entry.getValue() / sumjobweights);
-		}
+		joblist.remove(job);
 		//jobloadMap
-		jobloadMap.remove(job.getName());
+		jobflowMap.remove(job.getName());
+		joballocMap.remove(job.getName());
 	}
 }

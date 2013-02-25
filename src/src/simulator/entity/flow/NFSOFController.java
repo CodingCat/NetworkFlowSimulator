@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 
 import simulator.NetworkFlowSimulator;
+import simulator.entity.NFSNode;
 import simulator.entity.NFSRouter;
 import simulator.entity.NFSRouter.RouterType;
 import simulator.entity.application.NFSMapReduceJob;
@@ -47,6 +48,7 @@ public class NFSOFController extends Entity {
 	
 	private HashMap<NFSRouter, ArrayList<NFSLink>> globalmap = null;
 	private HashMap<NFSLink, NFSOFJobAllocationMap> linkappmap = null; 
+	private HashMap<NFSNode, NFSOFSwitchScheduler> swschedulerlist = null;
 	
 	private double latencyPercentage = 0.0;
 	private double throughputPercentage = 0.0;
@@ -55,9 +57,14 @@ public class NFSOFController extends Entity {
 		super(model, entityName, showInTrace);
 		globalmap = new HashMap<NFSRouter, ArrayList<NFSLink>>();
 		linkappmap = new HashMap<NFSLink, NFSOFJobAllocationMap>();
+		swschedulerlist = new HashMap<NFSNode, NFSOFSwitchScheduler>();
 		latencyPercentage = NetworkFlowSimulator.parser.getDouble(
 				"fluidsim.openflow.latencypercentage", 0.5);
 		throughputPercentage = 1 - latencyPercentage;
+	}
+	
+	public void registerSwitch(NFSNode node, NFSOFSwitchScheduler swscheduler) {
+		swschedulerlist.put(node, swscheduler);
 	}
 	
 	public double allocaterate(NFSLink link, NFSFlow newflow) {
@@ -175,11 +182,13 @@ public class NFSOFController extends Entity {
 					//in the same lan
 					selectedlink = router.getLanLink(flow.dstipString);
 					resultmsg = decide(selectedlink, flow);
+					if (resultmsg == null) break;
 				}
 				else{
 					//send through the least congested link to distribution layer
 					resultmsg = decide(globalmap.get(router), flow);
 					if (resultmsg == null) break;
+					selectedlink = resultmsg.getAllocatedLink();
 					router = (NFSRouter) selectedlink.dst;
 				}
 			}
@@ -192,12 +201,14 @@ public class NFSOFController extends Entity {
 						//it's in the same building, so, just send back to edge layer
 						selectedlink = router.getLanLink(dstCrange);
 						resultmsg = decide(selectedlink, flow);
+						if (resultmsg == null) break;
 					}
 					else {
 						//send through the least congested link to the core
 						resultmsg = decide(globalmap.get(router), flow);
 						if (resultmsg == null) break;
-						router = (NFSRouter) resultmsg.getAllocatedLink().dst;
+						selectedlink = resultmsg.getAllocatedLink();
+						router = (NFSRouter) selectedlink.dst;
 					}
 				}
 				else {
@@ -214,7 +225,8 @@ public class NFSOFController extends Entity {
 					if (potentialLinks.size() != 0) {
 						resultmsg = decide(potentialLinks, flow);
 						if (resultmsg == null) break;
-						router = (NFSRouter) resultmsg.getAllocatedLink().src;
+						selectedlink = resultmsg.getAllocatedLink();
+						router = (NFSRouter) selectedlink.src;
 					}
 				}
 			}
@@ -224,11 +236,13 @@ public class NFSOFController extends Entity {
 		if (resultmsg != null) {
 			if (!flow.isLatencySensitive()) {
 				NFSTaskBindedFlow taskbindedflow = (NFSTaskBindedFlow) flow;
-				NFSMapReduceJob job = taskbindedflow.getSender().getJob();
 				for (NFSLink link : flow.getPaths()) {
-					linkappmap.get(link).registerNewJob(job);
-					linkappmap.get(link).registerNewFlow(job.getName(), taskbindedflow);
+					linkappmap.get(link).register(taskbindedflow);
 				}
+			}
+			//update switch flow table
+			for (NFSLink link : flow.getPaths()) {
+				((NFSOFSwitchScheduler) link.dst.getScheduler()).insert(flow.getName(), link);
 			}
 		}
 		else {
@@ -237,12 +251,8 @@ public class NFSOFController extends Entity {
 		return resultmsg;
 	}
 	
-	public void registerNewJob(NFSLink link, NFSMapReduceJob newjob) {
-		linkappmap.get(link).registerNewJob(newjob);
-	}
-	
-	public void registerNewFlow(NFSLink link, String jobname, NFSTaskBindedFlow newflow) {
-		linkappmap.get(link).registerNewFlow(jobname, newflow);
+	public void registerNewFlow(NFSLink link, NFSTaskBindedFlow newflow) {
+		linkappmap.get(link).register(newflow);
 	}
 	
 	public void finishflow(NFSLink link, NFSTaskBindedFlow finishedflow) {
