@@ -2,9 +2,9 @@ package simulator.utils;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map.Entry;
 
 import simulator.entity.application.NFSMapReduceJob;
-import simulator.entity.flow.NFSFlow;
 import simulator.entity.flow.NFSTaskBindedFlow;
 
 /**
@@ -15,7 +15,7 @@ import simulator.entity.flow.NFSTaskBindedFlow;
 public class NFSOFJobAllocationMap {
 	
 	//job name -> sum of remaining input of flows on the link
-	private HashMap<String, HashSet<NFSFlow>> jobflowMap = null;
+	private HashMap<String, HashSet<NFSTaskBindedFlow>> jobflowMap = null;
 	//job list
 	private HashSet<NFSMapReduceJob> joblist = null;
 	//job name -> allocation (sum of all flows' left size belonging to this job)
@@ -25,7 +25,7 @@ public class NFSOFJobAllocationMap {
 	private double sumjobweights = 0;
 	
 	public NFSOFJobAllocationMap() {
-		jobflowMap = new HashMap<String, HashSet<NFSFlow>>();
+		jobflowMap = new HashMap<String, HashSet<NFSTaskBindedFlow>>();
 		joblist = new HashSet<NFSMapReduceJob>();
 		joballocMap = new HashMap<String, Double>();
 	}
@@ -50,13 +50,14 @@ public class NFSOFJobAllocationMap {
 	public void register(NFSTaskBindedFlow newflow) {
 		registerNewJob(newflow.getSender().getJob());
 		registerNewFlow(newflow);
+		updateflowrate("newflow");
 	}
 	
 	private void registerNewJob(NFSMapReduceJob newjob) {
 		if (joblist.contains(newjob) == false) {
 			joblist.add(newjob);
 			sumjobweights += newjob.getPriority();
-			jobflowMap.put(newjob.getName(), new HashSet<NFSFlow>());
+			jobflowMap.put(newjob.getName(), new HashSet<NFSTaskBindedFlow>());
 			joballocMap.put(newjob.getName(), 0.0);
 		}
 	}
@@ -71,8 +72,25 @@ public class NFSOFJobAllocationMap {
 		}
 	}
 	
-	public void updateflowrate() {
-		//TODO
+	public void updateflowrate(String modelflag) {
+		for (Entry<String, HashSet<NFSTaskBindedFlow>> entry : jobflowMap.entrySet()) {
+			HashSet<NFSTaskBindedFlow> jobflows = entry.getValue();
+			for (NFSTaskBindedFlow flow : jobflows) {
+				NFSMapReduceJob job = flow.getSender().getJob();
+				double jobweight = NFSDoubleCalculator.div(job.getPriority(),
+						sumjobweights);
+				double flowweight = NFSDoubleCalculator.div(flow.datarate,
+						joballocMap.get(job.getName()));
+				flow.update('+', NFSDoubleCalculator.mul(sumflowloads,
+						NFSDoubleCalculator.mul(jobweight, flowweight)));
+				if (modelflag.equals("closerate")) flow.expectedrate = flow.datarate;
+			}
+		}
+	}
+	
+	public void adjustallocation(double v) {
+		sumflowloads = NFSDoubleCalculator.sub(sumflowloads, v);
+		updateflowrate("updateflow");
 	}
 	
 	public void finishflow(NFSTaskBindedFlow finishedflow) {
@@ -87,6 +105,7 @@ public class NFSOFJobAllocationMap {
 		if (joballocMap.get(jobname) == 0.0) {
 			clearJobInfo(job);
 		}
+		updateflowrate("closerate");
 	}
 	
 	private void clearJobInfo(NFSMapReduceJob job) {

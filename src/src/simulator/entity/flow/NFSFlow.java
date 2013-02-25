@@ -3,6 +3,7 @@ package simulator.entity.flow;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import simulator.NetworkFlowSimulator;
 import simulator.entity.topology.NFSLink;
 import simulator.model.NFSModel;
 import simulator.utils.NFSDoubleCalculator;
@@ -171,13 +172,13 @@ public class NFSFlow extends Entity {
 	public void start() {
 		//lastlink, we have determine the datarate of the new flow
 		sendTraceNote(getName() + " is starting");
-	//	datarate = expectedrate;
-		//sendTraceNote("determine " + getName() + " datarate as " + datarate);
+		boolean openflowonoff = NetworkFlowSimulator.parser.getBoolean(
+				"fluidsim.openflow.onoff", false);
 		lastCheckingPoint = presentTime();
-		consumeBandwidth();
+		if (!openflowonoff) consumeBandwidth();
 		setStatus(NFSFlowStatus.RUNNING);
 	}
-	
+		
 	/**
 	 * update the data members of the flow
 	 */

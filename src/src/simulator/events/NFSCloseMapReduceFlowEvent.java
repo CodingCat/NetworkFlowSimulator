@@ -1,5 +1,7 @@
 package simulator.events;
 
+import simulator.NetworkFlowSimulator;
+import simulator.entity.flow.NFSOFController;
 import simulator.entity.flow.NFSTaskBindedFlow;
 //import simulator.entity.flow.NFSOFController;
 
@@ -19,16 +21,19 @@ public class NFSCloseMapReduceFlowEvent extends
 	@Override
 	public void eventRoutine(NFSTaskBindedFlow finishedflow) {
 		sendTraceNote(finishedflow.getName() + "-" + finishedflow.datarate + " finishes");
-		finishedflow.finish();
-		if (finishedflow.getPaths().size() == 0) {
-			System.out.println(finishedflow.getName() + " status:" + 
-					finishedflow.getStatus().toString());
+		boolean openflowonoff = NetworkFlowSimulator.parser.getBoolean(
+				"fluidsim.openflow.onoff", false);
+		if (!openflowonoff) {
+			finishedflow.finish();
+			NFSFlowRateChangeEvent flowrateevent = new NFSFlowRateChangeEvent(
+					getModel(),
+					"RateChangeEventTriggeredByCloseFlow",
+					true);
+			flowrateevent.schedule(finishedflow.getSender().getTaskTracker(), 
+					finishedflow.getFirstLink(), finishedflow, presentTime());
 		}
-		NFSFlowRateChangeEvent flowrateevent = new NFSFlowRateChangeEvent(
-				getModel(),
-				"RateChangeEventTriggeredByCloseFlow",
-				true);
-		flowrateevent.schedule(finishedflow.getSender().getTaskTracker(), 
-				finishedflow.getFirstLink(), finishedflow, presentTime());
+		else {
+			NFSOFController._Instance(getModel()).finishflow(finishedflow);
+		}
 	}
 }
