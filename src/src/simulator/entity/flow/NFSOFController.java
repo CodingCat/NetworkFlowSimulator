@@ -247,6 +247,14 @@ public class NFSOFController extends Entity {
 		if (resultmsg != null) {
 			System.out.println("allocate " + flow.getName() + " with rate " + flow.expectedrate + 
 					" with hop num " + flow.getPaths().size());
+			flow.datarate = flow.expectedrate;
+			flow.expectedrate = 0;
+			//update switch flow table
+			for (NFSLink link : flow.getPaths()) {
+				((NFSOFSwitchScheduler) link.dst.getScheduler()).insert(flow.getName(), 
+						link);
+				link.addRunningFlow(flow);
+			}
 			if (!flow.isLatencySensitive()) {
 				NFSTaskBindedFlow taskbindedflow = (NFSTaskBindedFlow) flow;
 				for (NFSLink link : flow.getPaths()) {
@@ -266,12 +274,6 @@ public class NFSOFController extends Entity {
 							" sumflowrate:" + sumflowrate);
 					linkappmap.get(link).setsumbesteffortbw(sumflowrate);
 				}
-			}
-			//update switch flow table
-			for (NFSLink link : flow.getPaths()) {
-				((NFSOFSwitchScheduler) link.dst.getScheduler()).insert(flow.getName(), 
-						link);
-				link.addRunningFlow(flow);
 			}
 			for (NFSLink link : linkappmap.keySet()) {
 				linkappmap.get(link).sync();

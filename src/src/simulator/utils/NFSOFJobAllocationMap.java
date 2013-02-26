@@ -58,7 +58,6 @@ public class NFSOFJobAllocationMap {
 		registerNewJob(newflow.getSender().getJob());
 		registerNewFlow(newflow);
 		updateflowrate("newflow");
-		newflow.datarate = newflow.expectedrate;
 		sumbesteffortbandwidth += newflow.datarate;
 	}
 	
@@ -100,11 +99,11 @@ public class NFSOFJobAllocationMap {
 	}
 	
 	public void updateflowrate(String modelflag) {
-		sync();
 		for (Entry<String, ArrayList<NFSTaskBindedFlow>> entry : jobflowMap.entrySet()) {
 			ArrayList<NFSTaskBindedFlow> jobflows = entry.getValue();
 			for (NFSTaskBindedFlow flow : jobflows) {
 				if (flow.getStatus().equals(NFSFlowStatus.NEWSTARTED)) continue;
+				if (modelflag.equals("closeflow") && flow.getBottleneckLink().equals(keylink) == false) continue;
 				NFSMapReduceJob job = flow.getSender().getJob();
 				double jobweight = NFSDoubleCalculator.div(job.getPriority(),
 						sumjobweights);
