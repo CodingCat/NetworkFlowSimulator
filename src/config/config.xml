@@ -22,8 +22,12 @@
 		<value>1000</value>
 	</property>
 	<property>
+		<name>fluidsim.flow.scheduler</name>
+		<value>simulator.entity.flow.NFSOFSwitchScheduler</value>
+	</property>
+	<property>
 		<name>fluidsim.topology.buildingnum</name>
-		<value>1</value>
+		<value>25</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.l3switchnum</name>
@@ -39,7 +43,7 @@
 	</property>
 	<property>
 		<name>fluidsim.topology.corenum</name>
-		<value>1</value>
+		<value>4</value>
 	</property>
 	<property>
 		<name>fluidsim.application.onoff.controlflag</name>
@@ -91,7 +95,7 @@
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.mean</name>
-		<value>2048</value>
+		<value>192</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.stdev</name>
@@ -100,5 +104,9 @@
 	<property>
 		<name>fluidsim.application.mapreduce.expansionfactor</name>
 		<value>1.0</value>
+	</property>
+	<property>
+		<name>fluidsim.openflow.onoff</name>
+		<value>true</value>
 	</property>
 </configuration>

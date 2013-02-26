@@ -131,7 +131,7 @@ public class NFSMapTask extends Entity {
 		}
 		for (int i = 0; i < receiverNum; i++) {
 			if (receivers[i].getTaskTrackerIP().equals(tasktracker.ipaddress)) {
-			//	System.out.println(getName() + " starts local tasks");
+				System.out.println(getName() + " starts local tasks");
 				continue;//map and reducer are in the same host
 			}
 			flows[i] = new NFSTaskBindedFlow(getModel(), 
@@ -156,7 +156,8 @@ public class NFSMapTask extends Entity {
 				receiveflowevent.schedule(tasktracker, (NFSRouter) passLink.dst, flows[i], presentTime());
 			}
 			else {
-				NFSOpenFlowSubscribeEvent subevent = new NFSOpenFlowSubscribeEvent(getModel(), tasktracker.getName() + flows[i].getName() + "subEvent", true);
+				NFSOpenFlowSubscribeEvent subevent = 
+						new NFSOpenFlowSubscribeEvent(getModel(), tasktracker.getName() + flows[i].getName() + "subEvent", true);
 				subevent.schedule(tasktracker, flows[i], presentTime());
 			}
 		}

@@ -21,10 +21,11 @@ public class NFSCloseMapReduceFlowEvent extends
 	@Override
 	public void eventRoutine(NFSTaskBindedFlow finishedflow) {
 		sendTraceNote(finishedflow.getName() + "-" + finishedflow.datarate + " finishes");
+		System.out.println("closing " + finishedflow.getName());
 		boolean openflowonoff = NetworkFlowSimulator.parser.getBoolean(
 				"fluidsim.openflow.onoff", false);
+		finishedflow.finish();
 		if (!openflowonoff) {
-			finishedflow.finish();
 			NFSFlowRateChangeEvent flowrateevent = new NFSFlowRateChangeEvent(
 					getModel(),
 					"RateChangeEventTriggeredByCloseFlow",

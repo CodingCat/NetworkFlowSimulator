@@ -37,6 +37,7 @@ public class NFSOpenFlowSubscribeEvent extends EventOf2Entities<NFSHost, NFSFlow
 		}
 		else {
 			if ((subscribecnt++) < subscribebound) {
+				System.out.println("------------rejected for " + subscribecnt + " times-------------");
 				schedule(host, flow, TimeOperations.add(presentTime(), new TimeSpan(pauseDuration)));
 			}
 		}

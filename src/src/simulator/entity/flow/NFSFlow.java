@@ -182,7 +182,7 @@ public class NFSFlow extends Entity {
 	/**
 	 * update the data members of the flow
 	 */
-	private void update() {
+	protected void update() {
 		lastingTime = TimeOperations.add(lastingTime, TimeOperations.diff(presentTime(), lastCheckingPoint));
 		sendoutSize += (TimeOperations.diff(presentTime(), lastCheckingPoint).getTimeAsDouble() * datarate);
 		lastCheckingPoint = presentTime();
@@ -241,10 +241,6 @@ public class NFSFlow extends Entity {
 	
 	public NFSLink getFirstLink() {
 		return path.get(0);
-	}
-	
-	public double getleftsize() {
-		return NFSDoubleCalculator.sub(inputSize, sendoutSize);
 	}
 	
 	public void clearLinks() {

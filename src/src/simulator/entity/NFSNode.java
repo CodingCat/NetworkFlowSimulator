@@ -51,6 +51,10 @@ public class NFSNode extends Entity{
 		return ipaddress != null;
 	}
 	
+	public ArrayList<NFSLink> getOutLinks() {
+		return outLinks;
+	}
+	
 	public void changeResourceAllocation(NFSLink link, NFSFlow changedflow) {
 		flowscheduler.reallocateBandwidth(link, changedflow);
 	}

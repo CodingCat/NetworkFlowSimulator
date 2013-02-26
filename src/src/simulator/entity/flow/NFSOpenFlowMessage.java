@@ -9,7 +9,7 @@ public class NFSOpenFlowMessage {
 	
 	public NFSOpenFlowMessage(NFSLink link, double rate) {
 		allocatedrate = rate;
-		link = outlink;
+		outlink = link;
 	}
 	
 	public double getRate() {

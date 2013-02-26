@@ -67,12 +67,12 @@ public class NFSLink extends Entity{
 				if (flow.datarate == -1) continue;
 				sum = NFSDoubleCalculator.sum(sum, flow.datarate);
 			}
-			if (sum > totalBandwidth) {
+			if (sum > totalBandwidth + 0.001) {
 				String str = "";
 				for (int i = 0; i < runningflows.size(); i++) {
 					str += (runningflows.get(i).getName() + "-" + runningflows.get(i).datarate + "\n");
 				}
-				throw new Exception(str);
+				throw new Exception(str + " sum:" + sum);
 			}
 		}
 		catch (Exception e) {
