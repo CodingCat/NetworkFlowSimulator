@@ -1,8 +1,8 @@
-This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009) (format=pdflatex 2010.9.2)  27 FEB 2013 13:05
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009) (format=pdflatex 2010.9.2)  27 FEB 2013 16:51
 entering extended mode
  %&-line parsing enabled.
-**/Users/zhunan/codes/NetworkFlowSimulator/doc/hotsdn/main.tex
-(/Users/zhunan/codes/NetworkFlowSimulator/doc/hotsdn/main.tex
+**main.tex
+(./main.tex
 LaTeX2e <2009/09/24>
 Babel <v3.8l> and hyphenation patterns for english, usenglishmax, dumylang, noh
 yphenation, german-x-2009-06-19, ngerman-x-2009-06-19, ancientgreek, ibycus, ar
@@ -219,6 +219,12 @@ Package: subfigure 2002/03/15 v2.1.5 subfigure package
 (/usr/local/texlive/2009/texmf-dist/tex/latex/multirow/multirow.sty
 \bigstrutjot=\dimen125
 )
+(/usr/local/texlive/2009/texmf-dist/tex/latex/tools/verbatim.sty
+Package: verbatim 2003/08/22 v1.5q LaTeX2e package for verbatim enhancements
+\every@verbatim=\toks35
+\verbatim@line=\toks36
+\verbatim@in@stream=\read1
+)
 \c@theorem=\count113
 \c@definition=\count114
 
@@ -229,18 +235,18 @@ LaTeX Warning: Unused global option(s):
 (./main.aux)
 \openout1 = `main.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 13.
-LaTeX Font Info:    ... okay on input line 13.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 13.
-LaTeX Font Info:    ... okay on input line 13.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 13.
-LaTeX Font Info:    ... okay on input line 13.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 13.
-LaTeX Font Info:    ... okay on input line 13.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 13.
-LaTeX Font Info:    ... okay on input line 13.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 13.
-LaTeX Font Info:    ... okay on input line 13.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 14.
+LaTeX Font Info:    ... okay on input line 14.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 14.
+LaTeX Font Info:    ... okay on input line 14.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 14.
+LaTeX Font Info:    ... okay on input line 14.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 14.
+LaTeX Font Info:    ... okay on input line 14.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 14.
+LaTeX Font Info:    ... okay on input line 14.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 14.
+LaTeX Font Info:    ... okay on input line 14.
  (/usr/local/texlive/2009/texmf-dist/tex/context/base/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count115
@@ -248,61 +254,83 @@ LaTeX Font Info:    ... okay on input line 13.
 \scratchbox=\box30
 \nofMPsegments=\count116
 \nofMParguments=\count117
-\everyMPshowfont=\toks35
+\everyMPshowfont=\toks37
 \MPscratchCnt=\count118
 \MPscratchDim=\dimen127
 \MPnumerator=\count119
-\everyMPtoPDFconversion=\toks36
+\everyMPtoPDFconversion=\toks38
 )
-LaTeX Font Info:    Try loading font information for U+msa on input line 29.
+LaTeX Font Info:    Try loading font information for U+msa on input line 30.
  (/usr/local/texlive/2009/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2009/06/22 v3.00 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 29.
+LaTeX Font Info:    Try loading font information for U+msb on input line 30.
 
 (/usr/local/texlive/2009/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2009/06/22 v3.00 AMS symbols B
 )
-LaTeX Font Info:    Try loading font information for U+lasy on input line 29.
+LaTeX Font Info:    Try loading font information for U+lasy on input line 30.
 
 (/usr/local/texlive/2009/texmf-dist/tex/latex/base/ulasy.fd
 File: ulasy.fd 1998/08/17 v2.2e LaTeX symbol font definitions
 ) (./intro.tex)
-(./analysis.tex <pic/placeholder.pdf, id=1, 744.7825pt x 360.34625pt>
+(./analysis.tex
+Overfull \hbox (8.39716pt too wide) in paragraph at lines 7--8
+[]\T1/aer/m/n/10 Hadoop [4] is an open source im-ple-men-ta-tion of MapRe-
+ []
+
+
+Overfull \hbox (3.6692pt too wide) in paragraph at lines 9--10
+\T1/aer/m/n/10 works to Re-duc-ers, which is re-ferred as \T1/aer/m/it/10 Shuf-
+fle \T1/aer/m/n/10 in Hadoop
+ []
+
+<pic/placeholder.pdf, id=1, 744.7825pt x 360.34625pt>
 File: pic/placeholder.pdf Graphic file (type pdf)
 
-<use pic/placeholder.pdf>) (./tech.tex
+<use pic/placeholder.pdf>
+LaTeX Font Info:    Try loading font information for T1+aett on input line 22.
+
+(/usr/local/texlive/2009/texmf-dist/tex/latex/ae/t1aett.fd
+File: t1aett.fd 1997/11/16 Font definitions for T1/aett.
+)
+File: pic/placeholder.pdf Graphic file (type pdf)
+
+<use pic/placeholder.pdf> [1{/usr/local/texlive/2009/texmf-var/fonts/map/pdftex
+/updmap/pdftex.map}
+
+
+ <./pic/placeholder.pdf>]
+File: pic/placeholder.pdf Graphic file (type pdf)
+ <use pic/placeholder.pdf>)
+(./tech.tex
 Overfull \hbox (5.75845pt too wide) in paragraph at lines 13--14
 []\T1/aer/m/n/10 1. in-volves con-trollers too of-ten, those latency-sensitive
  []
 
-[1{/usr/local/texlive/2009/texmf-var/fonts/map/pdftex/updmap/pdftex.map}
-
-
- <./pic/placeholder.pdf>]) (./main.bbl) [2
-
-] (./main.aux) ) 
+) (./main.bbl) [2] (./main.aux) ) 
 Here is how much of TeX's memory you used:
- 2417 strings out of 493848
- 28692 string characters out of 3149208
- 83126 words of memory out of 3000000
- 5644 multiletter control sequences out of 15000+200000
- 44093 words of font info for 56 fonts, out of 3000000 for 9000
+ 2475 strings out of 493848
+ 29568 string characters out of 3149208
+ 84782 words of memory out of 3000000
+ 5695 multiletter control sequences out of 15000+200000
+ 44582 words of font info for 58 fonts, out of 3000000 for 9000
  717 hyphenation exceptions out of 8191
- 39i,7n,26p,858b,227s stack positions out of 5000i,500n,10000p,200000b,50000s
-{/usr/local/texlive/2009/texmf-dist/fonts/enc/dvips/base/8r.enc
-}</usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb>
-</usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><
-/usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></u
-sr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/
-local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/l
-ocal/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/lo
-cal/texlive/2009/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb></usr/local/tex
-live/2009/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2009/
-texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on main.pdf (2 pages, 163342 bytes).
+ 39i,7n,26p,806b,227s stack positions out of 5000i,500n,10000p,200000b,50000s
+{/usr/local/texlive/2009/texmf-dist/fonts/enc/
+dvips/base/8r.enc}</usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfon
+ts/cm/cmbx10.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfont
+s/cm/cmmi10.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts
+/cm/cmr10.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/c
+m/cmr7.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/c
+msy10.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cm
+ti10.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/public/amsfonts/cm/cmt
+t10.pfb></usr/local/texlive/2009/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb
+></usr/local/texlive/2009/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/loc
+al/texlive/2009/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
+Output written on main.pdf (2 pages, 192403 bytes).
 PDF statistics:
- 57 PDF objects out of 1000 (max. 8388607)
+ 61 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  6 words of extra memory for PDF output out of 10000 (max. 10000000)
 

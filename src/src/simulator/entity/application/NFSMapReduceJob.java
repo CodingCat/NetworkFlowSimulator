@@ -4,6 +4,7 @@ import java.util.Random;
 
 import simulator.NetworkFlowSimulator;
 import simulator.model.NFSModel;
+import simulator.utils.NFSDoubleCalculator;
 import simulator.utils.NFSRandomArrayGenerator;
 import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
@@ -45,9 +46,7 @@ public class NFSMapReduceJob extends Entity {
 	 */
 	private void distribute() {
 		//generate the partition of key space
-		double [] partitions = new double[mapnum];
 		int totalmachineNum = NFSModel.trafficcontroller.topocontroller.getHostN();
-		NFSRandomArrayGenerator.getDoubleArray(partitions);
 		Random rand = new Random(System.currentTimeMillis());
 		//start map tasks
 		for (int i = 0; i < mapnum; i++) { 
@@ -55,7 +54,7 @@ public class NFSMapReduceJob extends Entity {
 					getName() + "-m-" + i, 
 					true, 
 					i, //task id
-					partitions[i] * shuffleSize, // data to be transferred to be through the networks from this mapper 
+					NFSDoubleCalculator.div(shuffleSize, (double) mapnum), // data to be transferred to be through the networks from this mapper 
 					NFSModel.trafficcontroller.topocontroller.getHost(rand.nextInt(totalmachineNum)),//the tasktracker
 					this);
 		}

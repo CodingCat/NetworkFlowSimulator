@@ -7,4 +7,35 @@ Mohammad Alizadeh, Albert Greenberg, David~A. Maltz, Jitendra Padhye, Parveen
 \newblock In {\em Proceedings of the ACM SIGCOMM 2010 conference}, SIGCOMM '10,
   pages 63--74, New York, NY, USA, 2010. ACM.
 
+\bibitem{Mantri}
+Ganesh Ananthanarayanan, Srikanth Kandula, Albert Greenberg, Ion Stoica, Yi~Lu,
+  Bikas Saha, and Edward Harris.
+\newblock Reining in the outliers in map-reduce clusters using mantri.
+\newblock In {\em Proceedings of the 9th USENIX conference on Operating systems
+  design and implementation}, OSDI'10, pages 1--16, Berkeley, CA, USA, 2010.
+  USENIX Association.
+
+\bibitem{MapReduce}
+Jeffrey Dean and Sanjay Ghemawat.
+\newblock Mapreduce: simplified data processing on large clusters.
+\newblock {\em Commun. ACM}, 51(1):107--113, January 2008.
+
+\bibitem{Hadoop}
+Apache Foundation.
+\newblock Hadoop project.
+\newblock http://hadoop.apache.org/.
+
+\bibitem{DatacenterDesign}
+Urs Hoelzle and Luiz~Andre Barroso.
+\newblock {\em The Datacenter as a Computer: An Introduction to the Design of
+  Warehouse-Scale Machines}.
+\newblock Morgan and Claypool Publishers, 1st edition, 2009.
+
+\bibitem{LATE}
+Matei Zaharia, Andy Konwinski, Anthony~D. Joseph, Randy Katz, and Ion Stoica.
+\newblock Improving mapreduce performance in heterogeneous environments.
+\newblock In {\em Proceedings of the 8th USENIX conference on Operating systems
+  design and implementation}, OSDI'08, pages 29--42, Berkeley, CA, USA, 2008.
+  USENIX Association.
+
 \end{thebibliography}
