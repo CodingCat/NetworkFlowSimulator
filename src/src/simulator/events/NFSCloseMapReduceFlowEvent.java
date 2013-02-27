@@ -1,6 +1,7 @@
 package simulator.events;
 
 import simulator.NetworkFlowSimulator;
+import simulator.entity.flow.NFSFlowSchedulingAlgorithm;
 import simulator.entity.flow.NFSOFController;
 import simulator.entity.flow.NFSTaskBindedFlow;
 //import simulator.entity.flow.NFSOFController;
@@ -11,11 +12,8 @@ import desmoj.core.simulator.Model;
 public class NFSCloseMapReduceFlowEvent extends
 		Event<NFSTaskBindedFlow> {
 	
-//	private NFSOFController controller = null;
-
 	public NFSCloseMapReduceFlowEvent(Model model, String eventName, boolean showInTrace) {
 		super(model, eventName, showInTrace);
-	//	controller = NFSOFController._Instance(model);
 	}
 
 	@Override
@@ -26,12 +24,9 @@ public class NFSCloseMapReduceFlowEvent extends
 				"fluidsim.openflow.onoff", false);
 		finishedflow.finish();
 		if (!openflowonoff) {
-			NFSFlowRateChangeEvent flowrateevent = new NFSFlowRateChangeEvent(
-					getModel(),
-					"RateChangeEventTriggeredByCloseFlow",
-					true);
-			flowrateevent.schedule(finishedflow.getSender().getTaskTracker(), 
-					finishedflow.getFirstLink(), finishedflow, presentTime());
+			NFSFlowSchedulingAlgorithm.rateAllocation(
+					finishedflow.getSender().getTaskTracker(), 
+					finishedflow.getFirstLink(), finishedflow);
 		}
 		else {
 			NFSOFController._Instance(getModel()).finishflow(finishedflow);

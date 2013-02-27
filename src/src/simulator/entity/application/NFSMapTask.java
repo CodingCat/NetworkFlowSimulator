@@ -1,12 +1,15 @@
 package simulator.entity.application;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Random;
 
 import simulator.NetworkFlowSimulator;
 import simulator.entity.NFSHost;
 import simulator.entity.NFSRouter;
+import simulator.entity.NFSRouter.RouterType;
 import simulator.entity.flow.NFSFlow;
+import simulator.entity.flow.NFSFlowSchedulingAlgorithm;
 import simulator.entity.flow.NFSTaskBindedFlow;
 import simulator.entity.topology.NFSLink;
 import simulator.events.NFSOpenFlowSubscribeEvent;
@@ -147,15 +150,10 @@ public class NFSMapTask extends Entity {
 			flows[i].expectedrate = flows[i].demandrate;
 			flows[i].setStatus(NFSFlow.NFSFlowStatus.NEWSTARTED);
 			if (openflowonoff == false) {
-				//in regular model
-			/*	NFSLink passLink = tasktracker.startNewFlow(flows[i]);
-				//schedule receive flow event
-				NFSReceiveFlowEvent receiveflowevent = new NFSReceiveFlowEvent(
-						getModel(), 
-						"receiveflow-" + flows[i].srcipString + "-" + flows[i].dstipString, true);
-				receiveflowevent.setSchedulingPriority(1);
-				receiveflowevent.schedule(tasktracker, (NFSRouter) passLink.dst, flows[i], presentTime());*/
-				System.out.println("nan");
+				//1. select path
+				NFSFlowSchedulingAlgorithm.ecmpPathSelection(tasktracker.getOutlink(), flows[i]);
+				//2. determine rate
+				NFSFlowSchedulingAlgorithm.rateAllocation(tasktracker, tasktracker.getOutlink(), flows[i]);
 			}
 			else {
 				NFSOpenFlowSubscribeEvent subevent = 
@@ -166,6 +164,8 @@ public class NFSMapTask extends Entity {
 			}
 		}
 	}
+	
+	
 	
 	public NFSHost getTaskTracker() {
 		return tasktracker;

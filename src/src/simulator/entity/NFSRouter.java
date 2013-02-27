@@ -160,7 +160,7 @@ public class NFSRouter extends NFSNode {
 						}
 					}
 					if (potentialLinks.size() != 0) {
-						int selectedIdx = flow.dstipString.hashCode() % outLinks.size();
+						int selectedIdx = flow.dstipString.hashCode() % potentialLinks.size();
 						outgoingPath = potentialLinks.get(selectedIdx);
 						nexthopNode = outgoingPath.src;
 					}
