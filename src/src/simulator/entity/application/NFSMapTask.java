@@ -155,6 +155,7 @@ public class NFSMapTask extends Entity {
 						"receiveflow-" + flows[i].srcipString + "-" + flows[i].dstipString, true);
 				receiveflowevent.setSchedulingPriority(1);
 				receiveflowevent.schedule(tasktracker, (NFSRouter) passLink.dst, flows[i], presentTime());*/
+				System.out.println("nan");
 			}
 			else {
 				NFSOpenFlowSubscribeEvent subevent = 
