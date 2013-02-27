@@ -148,13 +148,13 @@ public class NFSMapTask extends Entity {
 			flows[i].setStatus(NFSFlow.NFSFlowStatus.NEWSTARTED);
 			if (openflowonoff == false) {
 				//in regular model
-				NFSLink passLink = tasktracker.startNewFlow(flows[i]);
+			/*	NFSLink passLink = tasktracker.startNewFlow(flows[i]);
 				//schedule receive flow event
 				NFSReceiveFlowEvent receiveflowevent = new NFSReceiveFlowEvent(
 						getModel(), 
 						"receiveflow-" + flows[i].srcipString + "-" + flows[i].dstipString, true);
 				receiveflowevent.setSchedulingPriority(1);
-				receiveflowevent.schedule(tasktracker, (NFSRouter) passLink.dst, flows[i], presentTime());
+				receiveflowevent.schedule(tasktracker, (NFSRouter) passLink.dst, flows[i], presentTime());*/
 			}
 			else {
 				NFSOpenFlowSubscribeEvent subevent = 
