@@ -157,7 +157,9 @@ public class NFSMapTask extends Entity {
 			}
 			else {
 				NFSOpenFlowSubscribeEvent subevent = 
-						new NFSOpenFlowSubscribeEvent(getModel(), tasktracker.getName() + flows[i].getName() + "subEvent", true);
+						new NFSOpenFlowSubscribeEvent(getModel(), 
+								tasktracker.getName() + flows[i].getName() + "subEvent", 
+								true);
 				subevent.schedule(tasktracker, flows[i], presentTime());
 			}
 		}

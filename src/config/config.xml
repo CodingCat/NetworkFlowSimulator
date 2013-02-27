@@ -87,7 +87,7 @@
 	</property>
 	<property>
 		<name>fluidsim.application.pa.jobnum</name>
-		<value>0</value>
+		<value>100</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.jobnum</name>
