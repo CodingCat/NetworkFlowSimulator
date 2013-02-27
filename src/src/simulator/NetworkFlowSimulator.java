@@ -23,12 +23,13 @@ public class NetworkFlowSimulator {
 		int traceperiod = parser.getInt("fluidsim.system.traceperiod", 100);
 		int debugperiod = parser.getInt("fluidsim.system.debugperiod", 100);
 		int runperiod = parser.getInt("fluidsim.system.runlength", 100);
+		boolean showProgress = parser.getBoolean("fluidsim.system.showprogress", true);
 		
 		mainModel.connectToExperiment(exp);
 		
 		exp.tracePeriod(new TimeInstant(0), new TimeInstant(traceperiod));
 		exp.debugPeriod(new TimeInstant(0), new TimeInstant(debugperiod));
-		exp.setShowProgressBar(false);
+		exp.setShowProgressBar(showProgress);
 		exp.stop(new TimeInstant(runperiod)); 
 		exp.start();
 		exp.report();

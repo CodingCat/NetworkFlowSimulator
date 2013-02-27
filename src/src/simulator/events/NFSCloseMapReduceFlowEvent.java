@@ -12,6 +12,8 @@ import desmoj.core.simulator.Model;
 public class NFSCloseMapReduceFlowEvent extends
 		Event<NFSTaskBindedFlow> {
 	
+	private static int closecnt = 0;
+	
 	public NFSCloseMapReduceFlowEvent(Model model, String eventName, boolean showInTrace) {
 		super(model, eventName, showInTrace);
 	}
@@ -19,7 +21,7 @@ public class NFSCloseMapReduceFlowEvent extends
 	@Override
 	public void eventRoutine(NFSTaskBindedFlow finishedflow) {
 		sendTraceNote(finishedflow.getName() + "-" + finishedflow.datarate + " finishes");
-		System.out.println("closing " + finishedflow.getName());
+		System.out.println("closing " + finishedflow.getName() + " close cnt:" + closecnt++);
 		boolean openflowonoff = NetworkFlowSimulator.parser.getBoolean(
 				"fluidsim.openflow.onoff", false);
 		finishedflow.finish();

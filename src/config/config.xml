@@ -31,7 +31,7 @@
 	</property>
 	<property>
 		<name>fluidsim.topology.buildingnum</name>
-		<value>25</value>
+		<value>2</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.l3switchnum</name>
@@ -99,7 +99,7 @@
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.mean</name>
-		<value>1024</value>
+		<value>4096</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.stdev</name>
