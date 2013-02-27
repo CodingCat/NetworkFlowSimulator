@@ -12,7 +12,6 @@ import simulator.entity.NFSRouter.RouterType;
 import simulator.entity.application.NFSMapReduceJob;
 import simulator.entity.topology.NFSLink;
 import simulator.utils.NFSDoubleCalculator;
-import simulator.utils.NFSOFJobAllocationMap;
 import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
 
@@ -70,6 +69,8 @@ public class NFSOFController extends Entity {
 	public double allocaterate(NFSLink link, NFSFlow newflow) {
 		double allocatedrate = 0.0;
 		if (link.getAvailableBandwidth() > newflow.expectedrate) {
+			System.out.println("flow name:" + newflow.getName() + " link available bw:" + link.getAvailableBandwidth() + 
+					" expected rate:" + newflow.expectedrate);
 			double allocation = Math.min(newflow.expectedrate, link.getAvailableBandwidth());
 			if (newflow.expectedrate >= allocation) {
 				newflow.expectedrate = allocation;
@@ -128,13 +129,14 @@ public class NFSOFController extends Entity {
 				NFSMapReduceJob job = taskflow.getSender().getJob();
 				double ab = NFSDoubleCalculator.sub(link.getTotalBandwidth(), 
 						sumRateExistingLatencyFlows);
-				System.out.println("available flows on " + link.getName() + " is " + ab);
 				NFSOFJobAllocationMap jappmap = linkappmap.get(link);
 				double jw = jappmap == null ? 1.0 : 
 					jappmap.getPossibleJobAllocation(job);
 				double ja = NFSDoubleCalculator.mul(ab, jw);
-				double fa = NFSDoubleCalculator.mul(ja, 
-						jappmap == null ? 1 : jappmap.getPossibleFlowWeight(taskflow));
+				double fw = jappmap == null ? 1 : jappmap.getPossibleFlowWeight(taskflow);
+				double fa = NFSDoubleCalculator.mul(ja, fw);
+				System.out.println("flow name:" + newflow.getName() + " ab:" + ab + " jw:" + jw + " ja:" + ja + 
+						" fw: " + fw + " fa:" + fa);
 				if (fa <= newflow.expectedrate) {
 					newflow.expectedrate = fa;
 					newflow.setBottleneckLink(link);
@@ -154,6 +156,10 @@ public class NFSOFController extends Entity {
 			selectedlink = link;
 			rate = allocaterate(selectedlink, flow);
 			if (rate != 0) break;
+			else {
+				System.out.println("FUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCK on decide(list)");
+				System.exit(-1);
+			}
 		}
 		if (rate == 0) return null;
 		//flow.addPath(selectedlink);
@@ -162,7 +168,10 @@ public class NFSOFController extends Entity {
 	
 	private NFSOpenFlowMessage decide(NFSLink link, NFSFlow flow) {
 		double rate = allocaterate(link, flow);
-		if (rate == 0) return null;
+		if (rate == 0) {
+			System.out.println("FUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCK on decide(link)");
+			return null;
+		}
 		return new NFSOpenFlowMessage(link, rate);
 	}
 	

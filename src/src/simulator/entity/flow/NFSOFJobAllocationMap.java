@@ -1,4 +1,4 @@
-package simulator.utils;
+package simulator.entity.flow;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -6,8 +6,8 @@ import java.util.Map.Entry;
 
 import simulator.entity.application.NFSMapReduceJob;
 import simulator.entity.flow.NFSFlow.NFSFlowStatus;
-import simulator.entity.flow.NFSTaskBindedFlow;
 import simulator.entity.topology.NFSLink;
+import simulator.utils.NFSDoubleCalculator;
 
 /**
  * 
@@ -49,9 +49,11 @@ public class NFSOFJobAllocationMap {
 	
 	public double getPossibleFlowWeight(NFSTaskBindedFlow newflow) {
 		NFSMapReduceJob job = newflow.getSender().getJob();
+		if (!joblist.contains(job)) registerNewJob(job);
 		return NFSDoubleCalculator.div(
 				newflow.getDemandSize(),
-				NFSDoubleCalculator.sum(newflow.getDemandSize(), joballocMap.get(job.getName())));
+				NFSDoubleCalculator.sum(newflow.getDemandSize(), 
+						joballocMap.get(job.getName())));
 	}
 	
 	public void register(NFSTaskBindedFlow newflow) {
@@ -67,7 +69,7 @@ public class NFSOFJobAllocationMap {
 			sumjobweights += newjob.getPriority();
 			jobflowMap.put(newjob.getName(), new ArrayList<NFSTaskBindedFlow>());
 			joballocMap.put(newjob.getName(), 0.0);
-			System.out.println("register new job " + newjob.getName() + " for link " + keylink.getName());
+		//	System.out.println("register new job " + newjob.getName() + " for link " + keylink.getName());
 		}
 	}
 	

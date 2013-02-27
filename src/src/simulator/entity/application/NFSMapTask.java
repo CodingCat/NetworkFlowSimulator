@@ -12,6 +12,7 @@ import simulator.entity.topology.NFSLink;
 import simulator.events.NFSOpenFlowSubscribeEvent;
 import simulator.events.NFSReceiveFlowEvent;
 import simulator.model.NFSModel;
+import simulator.utils.NFSDoubleCalculator;
 import simulator.utils.NFSRandomArrayGenerator;
 import desmoj.core.report.Reporter;
 import desmoj.core.simulator.Entity;
@@ -138,7 +139,7 @@ public class NFSMapTask extends Entity {
 					"flows-" + tasktracker.ipaddress + "-" + receivers[i].getTaskTrackerIP(),
 					true,
 					NetworkFlowSimulator.parser.getDouble("fluidsim.application.mapreduce.rate", 10),
-					outputdist[i] * shufflesize,
+					NFSDoubleCalculator.mul(outputdist[i], shufflesize),
 					this, 
 					receivers[i]);
 			flows[i].srcipString = tasktracker.ipaddress;

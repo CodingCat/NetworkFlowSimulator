@@ -79,7 +79,7 @@ public class NFSLink extends Entity{
 			e.printStackTrace();
 			//System.exit(-1);
 		}
-		return NFSDoubleCalculator.sub(totalBandwidth, sum);
+		return Math.max(0, NFSDoubleCalculator.sub(totalBandwidth, sum));
 	}
 	
 	public double getTotalBandwidth() {
