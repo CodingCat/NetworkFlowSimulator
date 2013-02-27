@@ -21,7 +21,6 @@ public class NFSFlowSchedulingAlgorithm {
 		while (nextlink != null) {
 			dummynode = nextlink.dst;
 			dummynode.changeResourceAllocation(nextlink, changingflow);
-			System.out.println("nextlink-" + nextlink.getName());
 			nextlink = changingflow.getNextLink(nextlink);
 		}
 		if (changingflow.getStatus().equals(NFSFlow.NFSFlowStatus.NEWSTARTED)) {
@@ -50,7 +49,6 @@ public class NFSFlowSchedulingAlgorithm {
 		String dstbuildingTag = dstlater3seg.substring(0, dstlater3seg.indexOf("."));
 		while (true) {
 			String localCrange = router.ipaddress.substring(0, router.ipaddress.lastIndexOf(".")) + ".0";
-			System.out.println("flow:" + flow.getName() + " " + selectedlink.getName());
 			if (router.getRouterType().equals(RouterType.Edge)) {
 				if (dstCrange.equals(localCrange)) {	
 					//in the same lan
@@ -85,13 +83,7 @@ public class NFSFlowSchedulingAlgorithm {
 					for (String link: router.getPods()) {
 						String linklater3seg = link.substring(link.indexOf(".") + 1, link.length());
 						String linkbuildingTag = linklater3seg.substring(0, linklater3seg.indexOf("."));
-						if (linkbuildingTag.equals(dstbuildingTag)) {
-							potentialLinks.add(router.getLanLink(link));
-							System.out.println("dst building:" + dstbuildingTag + 
-									" linkbuildingTag:" + linkbuildingTag + 
-									" link:" + link);
-							
-						}
+						if (linkbuildingTag.equals(dstbuildingTag)) potentialLinks.add(router.getLanLink(link));
 					}
 					if (potentialLinks.size() != 0) {
 						int selectedIdx = (flow.srcipString + flow.dstipString).hashCode() % potentialLinks.size();

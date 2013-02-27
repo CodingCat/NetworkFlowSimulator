@@ -1,19 +1,14 @@
 package simulator.entity.application;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Random;
 
 import simulator.NetworkFlowSimulator;
 import simulator.entity.NFSHost;
-import simulator.entity.NFSRouter;
-import simulator.entity.NFSRouter.RouterType;
 import simulator.entity.flow.NFSFlow;
 import simulator.entity.flow.NFSFlowSchedulingAlgorithm;
 import simulator.entity.flow.NFSTaskBindedFlow;
-import simulator.entity.topology.NFSLink;
 import simulator.events.NFSOpenFlowSubscribeEvent;
-import simulator.events.NFSReceiveFlowEvent;
 import simulator.model.NFSModel;
 import simulator.utils.NFSDoubleCalculator;
 import simulator.utils.NFSRandomArrayGenerator;

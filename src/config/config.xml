@@ -22,6 +22,10 @@
 		<value>1000</value>
 	</property>
 	<property>
+		<name>fluidsim.application.mapreduce.inputskew</name>
+		<value>0.001</value>
+	</property>
+	<property>
 		<name>fluidsim.flow.scheduler</name>
 		<value>simulator.entity.flow.NFSFlowFairScheduler</value>
 	</property>
@@ -95,7 +99,7 @@
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.mean</name>
-		<value>1024</value>
+		<value>10240</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.stdev</name>
