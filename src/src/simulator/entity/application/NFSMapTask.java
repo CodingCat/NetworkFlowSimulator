@@ -134,7 +134,7 @@ public class NFSMapTask extends Entity {
 				continue;//map and reducer are in the same host
 			}
 			flows[i] = new NFSTaskBindedFlow(getModel(), 
-					"flows-" + tasktracker.ipaddress + "-" + receivers[i].getTaskTrackerIP(),
+					"flows-" + tasktracker.ipaddress + "-" + receivers[i].getTaskTrackerIP() + "-" + getName(),
 					true,
 					NetworkFlowSimulator.parser.getDouble("fluidsim.application.mapreduce.rate", 10),
 					NFSDoubleCalculator.mul(outputdist[i], shufflesize),
