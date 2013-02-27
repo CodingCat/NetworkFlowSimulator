@@ -1,0 +1,10 @@
+\begin{thebibliography}{1}
+
+\bibitem{DCTCP}
+Mohammad Alizadeh, Albert Greenberg, David~A. Maltz, Jitendra Padhye, Parveen
+  Patel, Balaji Prabhakar, Sudipta Sengupta, and Murari Sridharan.
+\newblock Data center tcp (dctcp).
+\newblock In {\em Proceedings of the ACM SIGCOMM 2010 conference}, SIGCOMM '10,
+  pages 63--74, New York, NY, USA, 2010. ACM.
+
+\end{thebibliography}
