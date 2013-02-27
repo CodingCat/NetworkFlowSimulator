@@ -5,6 +5,7 @@ import java.util.Comparator;
 
 import simulator.entity.NFSNode;
 import simulator.entity.flow.NFSFlow;
+import simulator.entity.flow.NFSFlow.NFSFlowStatus;
 import simulator.utils.NFSDoubleCalculator;
 import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
@@ -64,7 +65,7 @@ public class NFSLink extends Entity{
 		try {
 			//NFSFlow newflow = null;
 			for (NFSFlow flow : runningflows) {
-				if (flow.datarate == -1) continue;
+				if (flow.getStatus().equals(NFSFlowStatus.NEWSTARTED)) continue;
 				sum = NFSDoubleCalculator.sum(sum, flow.datarate);
 			}
 			if (sum > totalBandwidth + 0.001) {
@@ -72,7 +73,7 @@ public class NFSLink extends Entity{
 				for (int i = 0; i < runningflows.size(); i++) {
 					str += (runningflows.get(i).getName() + "-" + runningflows.get(i).datarate + "\n");
 				}
-				throw new Exception(str + " sum:" + sum);
+				throw new Exception(str + " sum:" + sum + " on link:" + this.getName());
 			}
 		}
 		catch (Exception e) {

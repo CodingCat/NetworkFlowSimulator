@@ -184,9 +184,11 @@ public class NFSFlow extends Entity {
 	 */
 	protected void update() {
 		lastingTime = TimeOperations.add(lastingTime, TimeOperations.diff(presentTime(), lastCheckingPoint));
-		sendoutSize += (TimeOperations.diff(presentTime(), lastCheckingPoint).getTimeAsDouble() * datarate);
+		sendoutSize = NFSDoubleCalculator.sum(sendoutSize, 
+				TimeOperations.diff(presentTime(), lastCheckingPoint).getTimeAsDouble() * datarate);
 		lastCheckingPoint = presentTime();
-		throughput = sendoutSize / lastingTime.getTimeAsDouble();
+		throughput = lastingTime.getTimeAsDouble() != 0 ?
+				NFSDoubleCalculator.div(sendoutSize, lastingTime.getTimeAsDouble()) : 0;
 		flowinform.setlastingtime(lastingTime.getTimeAsDouble());
 		flowinform.setsendsize(sendoutSize);
 		flowinform.setthroughput(throughput);

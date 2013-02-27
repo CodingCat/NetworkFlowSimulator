@@ -69,8 +69,8 @@ public class NFSOFController extends Entity {
 	public double allocaterate(NFSLink link, NFSFlow newflow) {
 		double allocatedrate = 0.0;
 		if (link.getAvailableBandwidth() > newflow.expectedrate) {
-			System.out.println("flow name:" + newflow.getName() + " link available bw:" + link.getAvailableBandwidth() + 
-					" expected rate:" + newflow.expectedrate);
+		//	System.out.println("flow name:" + newflow.getName() + " link available bw:" + link.getAvailableBandwidth() + 
+			//		" expected rate:" + newflow.expectedrate);
 			double allocation = Math.min(newflow.expectedrate, link.getAvailableBandwidth());
 			if (newflow.expectedrate >= allocation) {
 				newflow.expectedrate = allocation;
@@ -185,8 +185,11 @@ public class NFSOFController extends Entity {
 		//select the least congested link
 		NFSLink selectedlink = firstlink;
 		NFSOpenFlowMessage resultmsg = null;
-		firstlink.addRunningFlow(flow);
+	//	firstlink.addRunningFlow(flow);
 		flow.addPath(firstlink);
+		//decide on the link from host to router
+		resultmsg = decide(firstlink, flow);
+		if (resultmsg == null) return null;
 		NFSRouter router = (NFSRouter) firstlink.dst;
 		String dstCrange = flow.dstipString.substring(0, flow.dstipString.lastIndexOf(".")) + ".0";
 		//get the building tag
@@ -254,8 +257,8 @@ public class NFSOFController extends Entity {
 			if (resultmsg.getAllocatedLink().src.ipaddress.equals(flow.dstipString)) break;
 		}//end of loop
 		if (resultmsg != null) {
-			System.out.println("allocate " + flow.getName() + " with rate " + flow.expectedrate + 
-					" with hop num " + flow.getPaths().size());
+		//	System.out.println("allocate " + flow.getName() + " with rate " + flow.expectedrate + 
+			//		" with hop num " + flow.getPaths().size());
 			flow.datarate = flow.expectedrate;
 			flow.expectedrate = 0;
 			//update switch flow table
@@ -268,7 +271,7 @@ public class NFSOFController extends Entity {
 				NFSTaskBindedFlow taskbindedflow = (NFSTaskBindedFlow) flow;
 				for (NFSLink link : flow.getPaths()) {
 					if (linkappmap.get(link) == null) {
-						System.out.println("new link : " + link.getName());
+					//	System.out.println("new link : " + link.getName());
 						linkappmap.put(link, new NFSOFJobAllocationMap(link));
 					}
 					linkappmap.get(link).register(taskbindedflow);

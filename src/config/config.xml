@@ -87,11 +87,11 @@
 	</property>
 	<property>
 		<name>fluidsim.application.pa.jobnum</name>
-		<value>0</value>
+		<value>1</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.jobnum</name>
-		<value>10</value>
+		<value>1</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.mean</name>

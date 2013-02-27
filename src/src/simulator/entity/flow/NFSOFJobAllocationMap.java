@@ -78,12 +78,12 @@ public class NFSOFJobAllocationMap {
 		if (jobflowMap.containsKey(jobname)) {
 			
 			jobflowMap.get(jobname).add(flow);
-			System.out.println("add a new flow " + flow.getName() + 
-					" with the status: " + flow.getStatus().toString());
+		//	System.out.println("add a new flow " + flow.getName() + 
+			//		" with the status: " + flow.getStatus().toString());
 			joballocMap.put(jobname, 
 					NFSDoubleCalculator.sum(joballocMap.get(jobname), flow.getDemandSize()));
 			System.out.println("register new flow " + flow.getName() + "-" + 
-					flow.expectedrate + "-" + flow.getDemandSize() + " on link " + 
+					flow.datarate + "-" + flow.getDemandSize() + " on link " + 
 					keylink.getName());
 		}
 	}
@@ -121,7 +121,7 @@ public class NFSOFJobAllocationMap {
 				else {
 					flow.update(possibleRate);
 				}
-				System.out.println(flow.datarate);
+				System.out.println(flow.datarate + " on link " + keylink.getName());
 				if (modelflag.equals("closeflow")) flow.expectedrate = flow.datarate;
 			}
 		}
