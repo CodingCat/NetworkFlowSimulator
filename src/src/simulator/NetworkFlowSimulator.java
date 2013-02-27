@@ -28,6 +28,7 @@ public class NetworkFlowSimulator {
 		
 		exp.tracePeriod(new TimeInstant(0), new TimeInstant(traceperiod));
 		exp.debugPeriod(new TimeInstant(0), new TimeInstant(debugperiod));
+		exp.setShowProgressBar(false);
 		exp.stop(new TimeInstant(runperiod)); 
 		exp.start();
 		exp.report();
