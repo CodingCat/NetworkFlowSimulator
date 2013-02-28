@@ -88,6 +88,7 @@ public class NFSMapReduceJob extends Entity {
 	private void checkJobFinish() {
 		if (finishedmapnum == mapnum && finishedreducenum == reducenum) {
 			//TODO: report to the controller 
+			System.out.println(getName() + " finished");
 		}
 	}
 	
