@@ -122,8 +122,9 @@ public class NFSMapTask extends Entity {
 			while (recvcandidate.getTaskTrackerIP().equals(tasktracker.ipaddress)) {
 				recvcandidate = parentJob.getReducer(rand.nextInt(reducenum));
 			}
-			System.out.println("select receiver " + recvcandidate.getTaskTrackerIP() + " local ip:" + 
-					tasktracker.ipaddress);
+			if (tasktracker.ipaddress.equals(recvcandidate.getTaskTrackerIP()))
+				System.out.println("select receiver " + recvcandidate.getTaskTrackerIP() + " local ip:" + 
+						tasktracker.ipaddress);
 			String name = recvcandidate.getName();
 			while (selectedReceivers.contains(name)) {
 				recvcandidate = parentJob.getReducer(rand.nextInt(reducenum));
