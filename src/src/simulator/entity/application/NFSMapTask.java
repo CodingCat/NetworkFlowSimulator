@@ -111,7 +111,6 @@ public class NFSMapTask extends Entity {
 		int reducenum = parentJob.reduceNum();
 		receiverNum = rand.nextInt(reducenum + 1);
 		taskinfo.sendingFlowNum = receiverNum;
-		HashSet<String> selectedReceivers = new HashSet<String>();
 		flows = new NFSTaskBindedFlow[receiverNum];
 		outputdist = new double[receiverNum];
 		receivers = new NFSReduceTask[receiverNum];
@@ -125,14 +124,8 @@ public class NFSMapTask extends Entity {
 			if (tasktracker.ipaddress.equals(recvcandidate.getTaskTrackerIP()))
 				System.out.println("select receiver " + recvcandidate.getTaskTrackerIP() + " local ip:" + 
 						tasktracker.ipaddress);
-			String name = recvcandidate.getName();
-			while (selectedReceivers.contains(name)) {
-				recvcandidate = parentJob.getReducer(rand.nextInt(reducenum));
-				name = recvcandidate.getName();
-			}
 			receivers[i] = recvcandidate;
 			receivers[i].addSender(getName());
-			selectedReceivers.add(name);
 		}
 		for (int i = 0; i < receiverNum; i++) {
 			if (receivers[i].getTaskTrackerIP().equals(tasktracker.ipaddress)) {
