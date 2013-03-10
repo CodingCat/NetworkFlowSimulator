@@ -289,9 +289,9 @@ public class NFSOFController extends Entity {
 			((NFSOFSwitchScheduler) link.dst.getScheduler()).remove(finishedflow.getName());
 			linkappmap.get(link).finishflow(finishedflow);
 		}
-	/*	for (NFSLink link : finishedflow.getPaths()) {
+		for (NFSLink link : finishedflow.getPaths()) {
 			linkappmap.get(link).updateflowrate("closeflow");
-		}*/
+		}
 	}
 	
 	public static NFSOFController _Instance(Model model) {

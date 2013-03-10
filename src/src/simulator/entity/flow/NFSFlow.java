@@ -272,10 +272,10 @@ public class NFSFlow extends Entity {
 	 */
 	private void consumeBandwidth() {
 		try {
-			if (!status.equals(NFSFlowStatus.NEWSTARTED) && !status.equals(NFSFlowStatus.ADJUSTING)) {
+			if (!status.equals(NFSFlowStatus.NEWSTARTED) && 
+					!status.equals(NFSFlowStatus.ADJUSTING)) {
 				throw new Exception("flow must be NEWSTARTED || ADJUSTING, but " + status.toString() + " detected");
 			}
-			sendTraceNote("path length:" + path.size());
 			for (NFSLink link : path) {
 				sendTraceNote(getName() + " proposing rate:" + expectedrate);
 				NFSFlowSchedulingAlgorithm.allocate(link, this);

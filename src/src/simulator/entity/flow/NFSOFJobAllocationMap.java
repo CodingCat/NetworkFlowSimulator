@@ -92,13 +92,13 @@ public class NFSOFJobAllocationMap {
 			ArrayList<NFSTaskBindedFlow> jobflows = entry.getValue();
 			for (NFSTaskBindedFlow flow : jobflows) {
 				if (flow.getStatus().equals(NFSFlowStatus.NEWSTARTED)) continue;
-				if (modelflag.equals("closeflow") && flow.getBottleneckLink().equals(keylink) == false) continue;
+				if (modelflag.equals("closeflow") &&
+						flow.getBottleneckLink().equals(keylink) == false) continue;
 				NFSMapReduceJob job = flow.getSender().getJob();
 				double jobweight = NFSDoubleCalculator.div(job.getPriority(),
 						sumjobweights);
 				double flowweight = NFSDoubleCalculator.div(flow.getDemandSize(),
 						joballocMap.get(job.getName()));
-				System.out.print("change " + flow.getName() + " rate from " + flow.datarate + " to ");
 				double possibleRate = NFSDoubleCalculator.mul(
 						NFSDoubleCalculator.sub(keylink.getTotalBandwidth(), sumrateLatencyflows), 
 						NFSDoubleCalculator.mul(jobweight, flowweight));
@@ -108,7 +108,6 @@ public class NFSOFJobAllocationMap {
 				else {
 					flow.update(possibleRate);
 				}
-				System.out.println(flow.datarate + " on link " + keylink.getName());
 				if (modelflag.equals("closeflow")) flow.expectedrate = flow.datarate;
 			}
 		}
@@ -128,7 +127,7 @@ public class NFSOFJobAllocationMap {
 				NFSDoubleCalculator.sub(joballocMap.get(jobname), 
 						finishedflow.getDemandSize()));
 		if (joballocMap.get(jobname) == 0.0) {
-			System.out.println("remove job " + job.getName() + " on link " + keylink.getName());
+			//System.out.println("remove job " + job.getName() + " on link " + keylink.getName());
 			clearJobInfo(job);
 		}
 	}

@@ -111,7 +111,7 @@ public class NFSFlowSchedulingAlgorithm {
 			while (demandingflows.size() != 0 && remainingBandwidth != 0) {
 				double demand = 0.0;
 				NFSFlow flow = demandingflows.get(0);
-				demand = flow.status.equals(NFSFlowStatus.NEWSTARTED) ? flow.expectedrate : flow.datarate;
+				demand = !flow.status.equals(NFSFlowStatus.RUNNING) ? flow.expectedrate : flow.datarate;
 				if (demand < avrRate) {
 					remainingBandwidth = NFSDoubleCalculator.sub(remainingBandwidth, demand);
 				} else {
