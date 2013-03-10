@@ -102,6 +102,8 @@ public class NFSOFJobAllocationMap {
 				double possibleRate = NFSDoubleCalculator.mul(
 						NFSDoubleCalculator.sub(keylink.getTotalBandwidth(), sumrateLatencyflows), 
 						NFSDoubleCalculator.mul(jobweight, flowweight));
+				System.out.println("jobweight:" + jobweight + " flowweight:" + flowweight + 
+						" possibleRate:" + possibleRate);
 				if (!modelflag.equals("closeflow")) {
 					if (flow.datarate > possibleRate) flow.update(possibleRate); 
 				}
