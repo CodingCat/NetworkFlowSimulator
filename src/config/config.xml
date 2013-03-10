@@ -27,7 +27,7 @@
 	</property>
 	<property>
 		<name>fluidsim.flow.scheduler</name>
-		<value>simulator.entity.flow.NFSFlowFairScheduler</value>
+		<value>simulator.entity.flow.NFSOFSwitchScheduler</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.buildingnum</name>
@@ -111,6 +111,6 @@
 	</property>
 	<property>
 		<name>fluidsim.openflow.onoff</name>
-		<value>false</value>
+		<value>true</value>
 	</property>
 </configuration>

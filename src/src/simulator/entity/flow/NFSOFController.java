@@ -257,8 +257,6 @@ public class NFSOFController extends Entity {
 			if (resultmsg.getAllocatedLink().src.ipaddress.equals(flow.dstipString)) break;
 		}//end of loop
 		if (resultmsg != null) {
-		//	System.out.println("allocate " + flow.getName() + " with rate " + flow.expectedrate + 
-			//		" with hop num " + flow.getPaths().size());
 			flow.datarate = flow.expectedrate;
 			flow.expectedrate = 0;
 			//update switch flow table
@@ -271,24 +269,10 @@ public class NFSOFController extends Entity {
 				NFSTaskBindedFlow taskbindedflow = (NFSTaskBindedFlow) flow;
 				for (NFSLink link : flow.getPaths()) {
 					if (linkappmap.get(link) == null) {
-					//	System.out.println("new link : " + link.getName());
 						linkappmap.put(link, new NFSOFJobAllocationMap(link));
 					}
 					linkappmap.get(link).register(taskbindedflow);
-					double jobweight = linkappmap.get(link).getJobWeight(
-							((NFSTaskBindedFlow) flow).getSender().getJob());
-					double flowweight = linkappmap.get(link).getFlowWeight(
-							(NFSTaskBindedFlow) flow);
-					double sumflowrate = NFSDoubleCalculator.div(
-							NFSDoubleCalculator.div(flow.expectedrate, flowweight),
-							jobweight);
-					sendTraceNote("job weight:" + jobweight + " flow weight:" + flowweight + 
-							" sumflowrate:" + sumflowrate);
-					linkappmap.get(link).setsumbesteffortbw(sumflowrate);
 				}
-			}
-			for (NFSLink link : linkappmap.keySet()) {
-				linkappmap.get(link).sync();
 			}
 		}
 		else {
@@ -305,12 +289,9 @@ public class NFSOFController extends Entity {
 			((NFSOFSwitchScheduler) link.dst.getScheduler()).remove(finishedflow.getName());
 			linkappmap.get(link).finishflow(finishedflow);
 		}
-		for (NFSLink link : finishedflow.getPaths()) {
+	/*	for (NFSLink link : finishedflow.getPaths()) {
 			linkappmap.get(link).updateflowrate("closeflow");
-		}
-		for (NFSLink link : linkappmap.keySet()) {
-			linkappmap.get(link).sync();
-		}
+		}*/
 	}
 	
 	public static NFSOFController _Instance(Model model) {
