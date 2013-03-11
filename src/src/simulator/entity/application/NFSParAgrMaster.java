@@ -110,6 +110,7 @@ public class NFSParAgrMaster extends Entity {
 	
 	public void finish() {
 		for (NFSParAgrLeader leader : leaders) {
+			if (leader == null) continue;
 			demandSize += leader.getDemandSize();
 			countinSize += leader.getCountSize();
 		}

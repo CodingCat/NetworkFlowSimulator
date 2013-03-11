@@ -28,7 +28,7 @@ public class NFSPAFlow extends NFSFlow {
 	
 	private void init() {
 		demandSize = NetworkFlowSimulator.parser.getDouble(
-				"fluidsim.application.pa.demandflowsize", 0.05);
+				"fluidsim.application.pa.demandflowsize", 0.032);
 		deadline = NetworkFlowSimulator.parser.getDouble(
 				"fluidsim.application.pa.deadline", 0.2);
 	}
