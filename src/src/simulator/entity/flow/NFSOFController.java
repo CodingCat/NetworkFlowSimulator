@@ -69,14 +69,7 @@ public class NFSOFController extends Entity {
 	public double allocaterate(NFSLink link, NFSFlow newflow) {
 		double allocatedrate = 0.0;
 		if (link.getAvailableBandwidth() > newflow.expectedrate) {
-		//	System.out.println("flow name:" + newflow.getName() + " link available bw:" + link.getAvailableBandwidth() + 
-			//		" expected rate:" + newflow.expectedrate);
-			double allocation = Math.min(newflow.expectedrate, link.getAvailableBandwidth());
-			if (newflow.expectedrate >= allocation) {
-				newflow.expectedrate = allocation;
-				newflow.setBottleneckLink(link);
-			}
-			allocatedrate = allocation;
+			allocatedrate = Math.min(newflow.expectedrate, link.getAvailableBandwidth());
 		}
 		else {
 			//spare capacity cannot meet the flow's expected rate
@@ -90,6 +83,7 @@ public class NFSOFController extends Entity {
 					sumRateExistingThroughputFlows = NFSDoubleCalculator.sum(sumRateExistingThroughputFlows, flow.datarate);
 				}
 			}
+			//allocate bandwidth
 			if (newflow.isLatencySensitive()) {
 				double sumRateLatencyFlows = NFSDoubleCalculator.sum(sumRateExistingLatencyFlows, newflow.expectedrate);
 				// 1. check if sensitive service has achieved their
@@ -155,21 +149,15 @@ public class NFSOFController extends Entity {
 		for (NFSLink link : candidatelinks) {
 			selectedlink = link;
 			rate = allocaterate(selectedlink, flow);
-			if (rate != 0) break;
-			else {
-				System.out.println("FUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCK on decide(list)");
-				System.exit(-1);
-			}
+			if (rate != 0) break;	
 		}
 		if (rate == 0) return null;
-		//flow.addPath(selectedlink);
 		return new NFSOpenFlowMessage(selectedlink, rate);
 	}
 	
 	private NFSOpenFlowMessage decide(NFSLink link, NFSFlow flow) {
 		double rate = allocaterate(link, flow);
 		if (rate == 0) {
-			System.out.println("FUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCK on decide(link)");
 			return null;
 		}
 		return new NFSOpenFlowMessage(link, rate);
@@ -272,6 +260,13 @@ public class NFSOFController extends Entity {
 						linkappmap.put(link, new NFSOFJobAllocationMap(link));
 					}
 					linkappmap.get(link).register(taskbindedflow);
+				}
+			}
+			else {
+				for (NFSLink link : flow.getPaths()) {
+					if (linkappmap.get(link) != null) {
+						linkappmap.get(link).updateflowrate("startlatencyflow");
+					}
 				}
 			}
 		}
