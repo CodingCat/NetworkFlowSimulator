@@ -37,13 +37,13 @@ public class NFSTrafficGenerator extends Entity {
 		mrarrivaldist = new ContDistNormal(NetworkFlowSimulator.mainModel, 
 				"mr arrival dist", 
 				NetworkFlowSimulator.parser.getDouble("fluidsim.system.runlength", 100) / 2,
-				NetworkFlowSimulator.parser.getDouble("fluidsim.app.mr.arrival.stdev", 
+				NetworkFlowSimulator.parser.getDouble("fluidsim.application.mapreduce.arrival.stdev", 
 						NetworkFlowSimulator.parser.getDouble("fluidsim.system.runlength", 100) / 2),
 				true, true);
 		paarrivaldist = new ContDistNormal(NetworkFlowSimulator.mainModel, 
 				"pa arrival dist", 
 				NetworkFlowSimulator.parser.getDouble("fluidsim.system.runlength", 100) / 2,
-				NetworkFlowSimulator.parser.getDouble("fluidsim.app.mr.arrival.stdev", 
+				NetworkFlowSimulator.parser.getDouble("fluidsim.application.pa.arrival.stdev", 
 						NetworkFlowSimulator.parser.getDouble("fluidsim.system.runlength", 100) / 2),
 				true, true);
 		rand = new Random(System.currentTimeMillis());
