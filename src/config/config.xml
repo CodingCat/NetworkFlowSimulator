@@ -27,7 +27,7 @@
 	</property>
 	<property>
 		<name>fluidsim.flow.scheduler</name>
-		<value>simulator.entity.flow.NFSOFSwitchScheduler</value>
+		<value>simulator.entity.flow.NFSFlowFairScheduler</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.buildingnum</name>
@@ -35,19 +35,19 @@
 	</property>
 	<property>
 		<name>fluidsim.topology.l3switchnum</name>
-		<value>1</value>
+		<value>4</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.l2switchnum</name>
-		<value>1</value>
+		<value>4</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.hostsperl2sw</name>
-		<value>2</value>
+		<value>10</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.corenum</name>
-		<value>1</value>
+		<value>2</value>
 	</property>
 	<property>
 		<name>fluidsim.application.onoff.controlflag</name>
@@ -99,19 +99,27 @@
 	</property>
 	<property>
 		<name>fluidsim.application.pa.demandflowsize</name>
-		<value>0.032</value>
+		<value>0.03</value>
 	</property>
 	<property>
 		<name>fluidsim.application.pa.rate</name>
-		<value>0.625</value>
+		<value>3</value>
 	</property>
 	<property>
 		<name>fluidsim.application.pa.master.deadline</name>
-		<value>0.06</value>
+		<value>0.01</value>
+	</property>
+	<property>
+		<name>fluidsim.application.pa.leader.outfactor</name>
+		<value>20</value>
+	</property>
+	<property>
+		<name>fluidsim.application.pa.master.outfactor</name>
+		<value>5</value>
 	</property>
 	<property>
 		<name>fluidsim.openflow.pauseEvent</name>
-		<value>0.06</value>
+		<value>0.001</value>
 	</property>
 	<property>
 		<name>fluidsim.application.pa.arrival.stdev</name>
@@ -119,7 +127,7 @@
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.jobnum</name>
-		<value>10</value>
+		<value>1</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.mean</name>
@@ -135,10 +143,10 @@
 	</property>
 	<property>
 		<name>fluidsim.openflow.latencypercentage</name>
-		<value>0.7</value>
+		<value>1.0</value>
 	</property>
 	<property>
 		<name>fluidsim.openflow.onoff</name>
-		<value>true</value>
+		<value>false</value>
 	</property>
 </configuration>

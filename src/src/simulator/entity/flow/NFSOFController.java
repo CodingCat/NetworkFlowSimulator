@@ -289,6 +289,18 @@ public class NFSOFController extends Entity {
 		}
 	}
 	
+	public void finishflow(NFSPAFlow finishedflow) {
+		for (NFSLink link : finishedflow.getPaths()) {
+			link.removeRunningFlow(finishedflow);
+		}
+		for (NFSLink link : finishedflow.getPaths()) {
+			((NFSOFSwitchScheduler) link.dst.getScheduler()).remove(finishedflow.getName());
+		}
+		for (NFSLink link : finishedflow.getPaths()) {
+			if (linkappmap.get(link) != null) linkappmap.get(link).updateflowrate("closeflow");
+		}
+	}
+	
 	public static NFSOFController _Instance(Model model) {
 		if (_instance == null) {
 			_instance = new NFSOFController(model, "OpenFlowController", true); 

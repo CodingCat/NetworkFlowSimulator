@@ -33,6 +33,7 @@ public class NFSPAFlow extends NFSFlow {
 		deadline = NFSDoubleCalculator.div(demandSize, this.demandrate);
 		closeevent = new NFSClosePAFlowEvent(getModel(), "closeEvent-" + getName(),
 				true);
+		closeevent.setSchedulingPriority(1);
 	}
 	
 	public double getDemandSize() {
@@ -67,6 +68,10 @@ public class NFSPAFlow extends NFSFlow {
 			System.out.println(datarate + ":" + demandSize + ":" + sendoutSize);
 			e.printStackTrace();
 		}
+	}
+	
+	public NFSParAgrLeader getSender() {
+		return this.flowsource;
 	}
 	
 	public void finish() {

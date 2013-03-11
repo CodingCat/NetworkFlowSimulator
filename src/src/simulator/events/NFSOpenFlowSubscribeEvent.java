@@ -21,7 +21,7 @@ public class NFSOpenFlowSubscribeEvent extends EventOf2Entities<NFSHost, NFSFlow
 		super(model, eventName, showInTrace);
 		controller = NFSOFController._Instance(model);
 		pauseDuration = NetworkFlowSimulator.parser.getDouble(
-				"fluidsim.openflow.pauseEvent", 0.06);
+				"fluidsim.openflow.pauseEvent", 0.03);
 		subscribebound = NetworkFlowSimulator.parser.getInt(
 				"fluidsim.openflow.subscribebound", 3);
 	

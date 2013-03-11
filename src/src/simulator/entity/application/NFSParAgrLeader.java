@@ -72,6 +72,10 @@ public class NFSParAgrLeader extends Entity {
 		return sum;
 	}
 	
+	public NFSHost getTaskTracker() {
+		return this.tasktracker;
+	}
+	
 	public double getCountSize() {
 		return countinsize;
 	}
