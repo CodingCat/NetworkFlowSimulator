@@ -3,7 +3,7 @@ package simulator.entity.application;
 import java.util.HashMap;
 import java.util.Random;
 
-import desmoj.core.dist.DiscreteDistPoisson;
+import desmoj.core.dist.ContDistNormal;
 import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
 import desmoj.core.simulator.TimeOperations;
@@ -21,8 +21,8 @@ public class NFSTrafficGenerator extends Entity {
 	
 	protected HashMap<String, String> oneToOneTrafficMap = null;//src ip -> dst ip
 	
-	private DiscreteDistPoisson mrarrivaldist = null;
-	private DiscreteDistPoisson paarrivaldist = null;
+	private ContDistNormal mrarrivaldist = null;
+	private ContDistNormal paarrivaldist = null;
 	Random rand = null;
 	
 	public NFSTrafficGenerator(Model model, String entityName, boolean showInReport,
@@ -34,13 +34,17 @@ public class NFSTrafficGenerator extends Entity {
 	
 	protected void init() {
 		oneToOneTrafficMap = new HashMap<String, String>();
-		mrarrivaldist = new DiscreteDistPoisson(NetworkFlowSimulator.mainModel, 
+		mrarrivaldist = new ContDistNormal(NetworkFlowSimulator.mainModel, 
 				"mr arrival dist", 
-				NetworkFlowSimulator.parser.getDouble("fluidsim.system.runlength", 100) / 2, 
+				NetworkFlowSimulator.parser.getDouble("fluidsim.system.runlength", 100) / 2,
+				NetworkFlowSimulator.parser.getDouble("fluidsim.app.mr.arrival.stdev", 
+						NetworkFlowSimulator.parser.getDouble("fluidsim.system.runlength", 100) / 2),
 				true, true);
-		paarrivaldist = new DiscreteDistPoisson(NetworkFlowSimulator.mainModel, 
+		paarrivaldist = new ContDistNormal(NetworkFlowSimulator.mainModel, 
 				"pa arrival dist", 
-				NetworkFlowSimulator.parser.getDouble("fluidsim.system.runlength", 100) / 2, 
+				NetworkFlowSimulator.parser.getDouble("fluidsim.system.runlength", 100) / 2,
+				NetworkFlowSimulator.parser.getDouble("fluidsim.app.mr.arrival.stdev", 
+						NetworkFlowSimulator.parser.getDouble("fluidsim.system.runlength", 100) / 2),
 				true, true);
 		rand = new Random(System.currentTimeMillis());
 		buildflowmap();
