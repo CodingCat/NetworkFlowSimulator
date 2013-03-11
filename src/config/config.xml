@@ -15,11 +15,11 @@
 	</property>
 	<property>
 		<name>fluidsim.topology.locallinkrate</name>
-		<value>1000</value>
+		<value>100</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.crossrouterlinkrate</name>
-		<value>1000</value>
+		<value>100</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputskew</name>
@@ -35,19 +35,19 @@
 	</property>
 	<property>
 		<name>fluidsim.topology.l3switchnum</name>
-		<value>4</value>
+		<value>1</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.l2switchnum</name>
-		<value>8</value>
+		<value>1</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.hostsperl2sw</name>
-		<value>40</value>
+		<value>1</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.corenum</name>
-		<value>4</value>
+		<value>1</value>
 	</property>
 	<property>
 		<name>fluidsim.application.onoff.controlflag</name>
@@ -77,7 +77,7 @@
 		<name>fluidsim.host.applications</name>
 		<value>simulator.entity.application.NFSMapReduceApplication</value>
 	</property>
-		<property>
+	<property>
 		<name>fluidsim.host.appRates</name>
 		<value>10,0.5</value>
 	</property>
@@ -90,16 +90,24 @@
 		<value>1000</value>
 	</property>
 	<property>
-		<name>fluidsim.application.pa.rate</name>
-		<value>0.625</value>
-	</property>
-	<property>
 		<name>fluidsim.application.pa.jobnum</name>
-		<value>10</value>
+		<value>1</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.arrival.stdev</name>
 		<value>200</value>
+	</property>
+	<property>
+		<name>fluidsim.application.pa.demandflowsize</name>
+		<value>0.032</value>
+	</property>
+	<property>
+		<name>fluidsim.application.pa.rate</name>
+		<value>0.625</value>
+	</property>
+	<property>
+		<name>fluidsim.application.pa.master.deadline</name>
+		<value>0.06</value>
 	</property>
 	<property>
 		<name>fluidsim.application.pa.arrival.stdev</name>
@@ -107,11 +115,11 @@
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.jobnum</name>
-		<value>10</value>
+		<value>5</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.mean</name>
-		<value>2048</value>
+		<value>64</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.stdev</name>

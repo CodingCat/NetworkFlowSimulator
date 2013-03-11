@@ -2,12 +2,10 @@ package simulator.entity.application;
 
 import simulator.NetworkFlowSimulator;
 import simulator.entity.NFSHost;
-import simulator.entity.NFSRouter;
+import simulator.entity.flow.NFSFlowSchedulingAlgorithm;
 import simulator.entity.flow.NFSPAFlow;
 import simulator.entity.flow.NFSFlow.NFSFlowStatus;
-import simulator.entity.topology.NFSLink;
 import simulator.events.NFSOpenFlowSubscribeEvent;
-import simulator.events.NFSReceiveFlowEvent;
 import simulator.model.NFSModel;
 import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
@@ -48,14 +46,11 @@ public class NFSParAgrLeader extends Entity {
 			flows[i].expectedrate = flows[i].demandrate;
 			flows[i].setStatus(NFSFlowStatus.NEWSTARTED);
 			if (openflowonoff == false) {
-				NFSLink passLink = tasktracker.startNewFlow(flows[i]);
-				//scheduler receive event
-				NFSReceiveFlowEvent receiveEvent = new NFSReceiveFlowEvent(
-						getModel(),
-						"receiveflow-" + flows[i].srcipString + "-" + flows[i].dstipString, 
-						true);
-				receiveEvent.setSchedulingPriority(1);
-				receiveEvent.schedule(tasktracker, (NFSRouter) passLink.dst, flows[i], presentTime());
+				//1. select path
+				NFSFlowSchedulingAlgorithm.ecmpPathSelection(tasktracker.getOutlink(), 
+						flows[i]);
+				//2. determine rate
+				NFSFlowSchedulingAlgorithm.rateAllocation(tasktracker, tasktracker.getOutlink(), flows[i]);
 			}
 			else {
 				NFSOpenFlowSubscribeEvent subevent = 

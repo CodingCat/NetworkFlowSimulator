@@ -105,11 +105,11 @@ public class NFSTrafficGenerator extends Entity {
 		for (int i = 0; i < jobnum; i++) {
 			NFSHost host = topocontroller.getHost(rand.nextInt(totalmachines));
 			NFSStartNewFlowEvent startevent = new NFSStartNewFlowEvent(
-					NetworkFlowSimulator.mainModel, "startMapRJobOn"
+					NetworkFlowSimulator.mainModel, "startPAJobOn"
 							+ host.ipaddress, true);
 			startevent.schedule(
 					host,
-					new NFSIntegerEntity(getModel(), "mapintentity", false, 2),
+					new NFSIntegerEntity(getModel(), "pa-intentity", false, 2),
 					TimeOperations.add(presentTime(),
 							new TimeSpan(paarrivaldist.sample())));
 		}

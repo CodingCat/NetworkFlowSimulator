@@ -78,7 +78,7 @@ public class NFSParAgrMaster extends Entity {
 		bindedevent = new NFSParAgrMasterCompleteEvent(model, entityName + "CompleteEvent", 
 				true);
 		deadline = NetworkFlowSimulator.parser.getDouble(
-				"fluidsim.application.pa.master.deadline", 0.3);
+				"fluidsim.application.pa.master.deadline", 0.06);
 		outfactor = NetworkFlowSimulator.parser.getInt(
 				"fluidsim.application.pa.master.outfactor", 5);
 		leaders = new NFSParAgrLeader[outfactor];
@@ -91,8 +91,6 @@ public class NFSParAgrMaster extends Entity {
 	public void run() {
 		Random rand = new Random(System.currentTimeMillis());
 		startTime = presentTime();
-		bindedevent.schedule(this, TimeOperations.add(presentTime(), 
-				new TimeSpan(deadline)));
 		int totalMachines = NFSModel.trafficcontroller.topocontroller.getHostN();
 		for (int i = 0; i < outfactor; i++) {
 			NFSHost leaderhost = NFSModel.trafficcontroller.topocontroller.getHost(
