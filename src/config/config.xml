@@ -15,11 +15,11 @@
 	</property>
 	<property>
 		<name>fluidsim.topology.locallinkrate</name>
-		<value>100</value>
+		<value>1</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.crossrouterlinkrate</name>
-		<value>100</value>
+		<value>1</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputskew</name>
@@ -43,7 +43,7 @@
 	</property>
 	<property>
 		<name>fluidsim.topology.hostsperl2sw</name>
-		<value>1</value>
+		<value>2</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.corenum</name>
@@ -91,7 +91,7 @@
 	</property>
 	<property>
 		<name>fluidsim.application.pa.jobnum</name>
-		<value>1</value>
+		<value>10</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.arrival.stdev</name>
@@ -115,11 +115,11 @@
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.jobnum</name>
-		<value>5</value>
+		<value>10</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.mean</name>
-		<value>64</value>
+		<value>192</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.stdev</name>
@@ -131,6 +131,6 @@
 	</property>
 	<property>
 		<name>fluidsim.openflow.onoff</name>
-		<value>false</value>
+		<value>true</value>
 	</property>
 </configuration>

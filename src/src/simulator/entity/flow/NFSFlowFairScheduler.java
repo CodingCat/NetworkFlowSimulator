@@ -45,7 +45,6 @@ public class NFSFlowFairScheduler extends NFSFlowScheduler {
 				double avrRate = link.getAvrRate();
 				Collections.sort(demandingflows, NFSFlowScheduler.ratecomparator);
 				while (demandingflows.size() != 0 && remainingBandwidth != 0) {
-					sendTraceNote(demandingflows.size() + " demanding flows, avrRate:" + avrRate);
 					double demand = 0.0;
 					NFSFlow flow = demandingflows.get(0);
 					if (flow.status.equals(NFSFlowStatus.NEWSTARTED) || flow.status.equals(NFSFlowStatus.ADJUSTING)) {
