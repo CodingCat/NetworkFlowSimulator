@@ -75,6 +75,7 @@ public class NFSPAFlow extends NFSFlow {
 	}
 	
 	public void finish() {
+		setStatus(NFSFlowStatus.CLOSED);
 		finishTime = presentTime();
 		flowsource.finish(this);
 	}

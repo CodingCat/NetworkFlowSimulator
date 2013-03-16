@@ -3,7 +3,7 @@
 <configuration>
 	<property>
 		<name>fluidsim.system.traceperiod</name>
-		<value>1000</value>
+		<value>100</value>
 	</property>
 	<property>
 		<name>fluidsim.system.debugperiod</name>
@@ -11,7 +11,11 @@
 	</property>
 	<property>
 		<name>fluidsim.system.runlength</name>
-		<value>1000</value>
+		<value>100</value>
+	</property>
+	<property>
+		<name>fluidsim.system.showprogress</name>
+		<value>false</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.locallinkrate</name>
@@ -20,10 +24,6 @@
 	<property>
 		<name>fluidsim.topology.crossrouterlinkrate</name>
 		<value>100</value>
-	</property>
-	<property>
-		<name>fluidsim.application.mapreduce.inputskew</name>
-		<value>0.001</value>
 	</property>
 	<property>
 		<name>fluidsim.flow.scheduler</name>
@@ -39,51 +39,19 @@
 	</property>
 	<property>
 		<name>fluidsim.topology.l2switchnum</name>
-		<value>4</value>
+		<value>8</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.hostsperl2sw</name>
-		<value>10</value>
+		<value>8</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.corenum</name>
-		<value>2</value>
-	</property>
-	<property>
-		<name>fluidsim.application.onoff.controlflag</name>
-		<value>false</value>
-	</property>
-	<property>
-		<name>fluidsim.application.onoff.maxonduration</name>
-		<value>40</value>
-	</property>
-	<property>
-		<name>fluidsim.application.onoff.maxoffduration</name>
-		<value>40</value>
-	</property>
-	<property>
-		<name>fluidsim.application.onoff.minonduration</name>
-		<value>20</value>
-	</property>
-	<property>
-		<name>fluidsim.application.onoff.minoffduration</name>
-		<value>20</value>
+		<value>4</value>
 	</property>
 	<property>
 		<name>fluidsim.application.rate</name>
 		<value>10</value>
-	</property>
-	<property>
-		<name>fluidsim.host.applications</name>
-		<value>simulator.entity.application.NFSMapReduceApplication</value>
-	</property>
-	<property>
-		<name>fluidsim.host.appRates</name>
-		<value>10,0.5</value>
-	</property>
-	<property>
-		<name>fluidsim.model.trafficcontroller</name>
-		<value>simulator.entity.application.NFSMapReduceTraffic</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.rate</name>
@@ -91,11 +59,7 @@
 	</property>
 	<property>
 		<name>fluidsim.application.pa.jobnum</name>
-		<value>10</value>
-	</property>
-	<property>
-		<name>fluidsim.application.mapreduce.arrival.stdev</name>
-		<value>200</value>
+		<value>20</value>
 	</property>
 	<property>
 		<name>fluidsim.application.pa.demandflowsize</name>
@@ -126,12 +90,20 @@
 		<value>200</value>
 	</property>
 	<property>
+		<name>fluidsim.application.mapreduce.inputskew</name>
+		<value>0.001</value>
+	</property>
+	<property>
+		<name>fluidsim.application.mapreduce.arrival.stdev</name>
+		<value>200</value>
+	</property>
+	<property>
 		<name>fluidsim.application.mapreduce.jobnum</name>
-		<value>1</value>
+		<value>20</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.mean</name>
-		<value>192</value>
+		<value>512</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.stdev</name>
@@ -140,6 +112,10 @@
 	<property>
 		<name>fluidsim.application.mapreduce.expansionfactor</name>
 		<value>1.0</value>
+	</property>
+	<property>
+		<name>fluidsim.application.mapreduce.arrival.pattern</name>
+		<value>uniform</value>
 	</property>
 	<property>
 		<name>fluidsim.openflow.latencypercentage</name>

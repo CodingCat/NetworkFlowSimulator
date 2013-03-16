@@ -115,7 +115,13 @@ public class NFSFlowSchedulingAlgorithm {
 				if (demand < avrRate) {
 					remainingBandwidth = NFSDoubleCalculator.sub(remainingBandwidth, demand);
 				} else {
-					flow.update('-', NFSDoubleCalculator.sub(flow.datarate, avrRate));
+					if (flow.status.equals(NFSFlowStatus.RUNNING)){
+						flow.update('-', NFSDoubleCalculator.sub(flow.datarate, avrRate));
+					}
+					else {
+						flow.expectedrate = NFSDoubleCalculator.sub(flow.datarate, 
+								NFSDoubleCalculator.sub(flow.datarate, avrRate));
+					}
 					flow.setBottleneckLink(link);
 					remainingBandwidth = NFSDoubleCalculator.sub(remainingBandwidth, avrRate);
 				}
@@ -132,7 +138,7 @@ public class NFSFlowSchedulingAlgorithm {
 			ArrayList<NFSFlow> improvingflows = new ArrayList<NFSFlow>();
 			double totalfreedbw = changingflow.datarate;
 			for (NFSFlow eleflow : link.getRunningFlows()) {
-				if (eleflow.getBottleneckLink().equals(link) && !eleflow.isFullyMeet()) {
+				if (!eleflow.isFullyMeet() && eleflow.getBottleneckLink().equals(link)) {
 					improvingflows.add(eleflow);
 				}
 			}

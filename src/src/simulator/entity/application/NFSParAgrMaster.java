@@ -67,7 +67,6 @@ public class NFSParAgrMaster extends Entity {
 	
 	private NFSParAgrLeader [] leaders = null;
 	private NFSParAgrMasterCompleteEvent bindedevent = null;
-	private NFSHost tracker = null;
 	
 	NFSParAgrMasterInfo masterinfo = null;
 	NFSParAgrMasterReporter masterreporter = null;
@@ -82,7 +81,6 @@ public class NFSParAgrMaster extends Entity {
 		outfactor = NetworkFlowSimulator.parser.getInt(
 				"fluidsim.application.pa.master.outfactor", 5);
 		leaders = new NFSParAgrLeader[outfactor];
-		tracker = host;
 		masterinfo = new NFSParAgrMasterInfo(model, entityName, NFSModel.showPATask, true);
 		masterreporter = new NFSParAgrMasterReporter(masterinfo);
 	}
@@ -95,7 +93,6 @@ public class NFSParAgrMaster extends Entity {
 		for (int i = 0; i < outfactor; i++) {
 			NFSHost leaderhost = NFSModel.trafficcontroller.topocontroller.getHost(
 					rand.nextInt(totalMachines));
-			if (tracker.ipaddress.equals(leaderhost.ipaddress)) continue;
 			leaders[i] = new NFSParAgrLeader(getModel(),
 					"NFSPALeader-" + getName() + "-" + leaderhost.ipaddress,
 					true, 
