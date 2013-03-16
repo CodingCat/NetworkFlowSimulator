@@ -4,6 +4,9 @@ import java.util.HashMap;
 import java.util.Random;
 
 import desmoj.core.dist.ContDistNormal;
+import desmoj.core.dist.DiscreteDist;
+import desmoj.core.dist.DiscreteDistUniform;
+import desmoj.core.dist.NumericalDist;
 import desmoj.core.simulator.Entity;
 import desmoj.core.simulator.Model;
 import desmoj.core.simulator.TimeOperations;
@@ -21,8 +24,8 @@ public class NFSTrafficGenerator extends Entity {
 	
 	protected HashMap<String, String> oneToOneTrafficMap = null;//src ip -> dst ip
 	
-	private ContDistNormal mrarrivaldist = null;
-	private ContDistNormal paarrivaldist = null;
+	private NumericalDist<?> mrarrivaldist = null;
+	private NumericalDist<?> paarrivaldist = null;
 	Random rand = null;
 	
 	public NFSTrafficGenerator(Model model, String entityName, boolean showInReport,
@@ -32,20 +35,37 @@ public class NFSTrafficGenerator extends Entity {
 		init();
 	}
 	
-	protected void init() {
-		oneToOneTrafficMap = new HashMap<String, String>();
-		mrarrivaldist = new ContDistNormal(NetworkFlowSimulator.mainModel, 
-				"mr arrival dist", 
-				NetworkFlowSimulator.parser.getDouble("fluidsim.system.runlength", 100) / 2,
-				NetworkFlowSimulator.parser.getDouble("fluidsim.application.mapreduce.arrival.stdev", 
-						NetworkFlowSimulator.parser.getDouble("fluidsim.system.runlength", 100) / 2),
-				true, true);
+	private void loadarrivalpattern () {
+		//mapreduce arrival dist
+		String mapreducePattern = NetworkFlowSimulator.parser.getString("fluidsim.application.mapreduce.arrival.pattern", "normal"); 
+		if (mapreducePattern.equals("normal")) {
+			mrarrivaldist = new ContDistNormal(NetworkFlowSimulator.mainModel, 
+					"mr arrival dist", 
+					NetworkFlowSimulator.parser.getDouble("fluidsim.system.runlength", 100) / 2,
+					NetworkFlowSimulator.parser.getDouble("fluidsim.application.mapreduce.arrival.stdev", 
+							NetworkFlowSimulator.parser.getDouble("fluidsim.system.runlength", 100) / 2),
+					true, true);
+		}
+		else {
+			if (mapreducePattern.equals("uniform")) {
+				mrarrivaldist = new DiscreteDistUniform(NetworkFlowSimulator.mainModel,
+						"mr arrival dist",
+						0,
+						(int) NetworkFlowSimulator.parser.getDouble("fluidsim.system.runlength", 100) / 2,
+						true, true);
+			}
+		}
 		paarrivaldist = new ContDistNormal(NetworkFlowSimulator.mainModel, 
 				"pa arrival dist", 
 				NetworkFlowSimulator.parser.getDouble("fluidsim.system.runlength", 100) / 2,
 				NetworkFlowSimulator.parser.getDouble("fluidsim.application.pa.arrival.stdev", 
 						NetworkFlowSimulator.parser.getDouble("fluidsim.system.runlength", 100) / 2),
 				true, true);
+	}
+	
+	protected void init() {
+		oneToOneTrafficMap = new HashMap<String, String>();
+		loadarrivalpattern();
 		rand = new Random(System.currentTimeMillis());
 		buildflowmap();
 	}
