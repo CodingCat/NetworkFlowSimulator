@@ -93,7 +93,7 @@ public class NFSOFJobAllocationMap {
 			for (NFSTaskBindedFlow flow : jobflows) {
 				if (flow.getStatus().equals(NFSFlowStatus.NEWSTARTED)) continue;
 				if (modelflag.equals("closeflow") &&
-						flow.getBottleneckLink().equals(keylink) == false) continue;
+						(flow.isFullyMeet() || !flow.getBottleneckLink().equals(keylink))) continue;
 				NFSMapReduceJob job = flow.getSender().getJob();
 				double jobweight = NFSDoubleCalculator.div(job.getPriority(),
 						sumjobweights);
