@@ -25,7 +25,7 @@ public class NFSLoadArrivalPattern {
 				arrivaldist = new DiscreteDistUniform(NetworkFlowSimulator.mainModel,
 						"mr arrival dist",
 						0,
-						(int) NetworkFlowSimulator.parser.getDouble("fluidsim.system.runlength", 100) / 2,
+						(int) NetworkFlowSimulator.parser.getDouble("fluidsim.system.runlength", 100),
 						true, true);
 			}
 		}
