@@ -33,6 +33,18 @@ public class NFSOFJobAllocationMap {
 		keylink = link;
 	}
 	
+	public double getFlowAllocation(NFSTaskBindedFlow flow) {
+		double jobweight = getPossibleJobAllocation(flow.getSender().getJob());
+		double flowweight = getFlowWeight(flow);
+		double sumrateLatencyflows = 0.0;
+		for (NFSFlow runflow : keylink.getRunningFlows()) {
+			if (runflow.isLatencySensitive()) 
+				sumrateLatencyflows = NFSDoubleCalculator.sum(sumrateLatencyflows, runflow.datarate);
+		}
+		double availbandwidth = NFSDoubleCalculator.sub(keylink.getTotalBandwidth(), sumrateLatencyflows);
+		return NFSDoubleCalculator.mul(availbandwidth, NFSDoubleCalculator.mul(jobweight, flowweight));
+	}
+	
 	public double getFlowWeight(NFSTaskBindedFlow flow) {
 		String jobname = flow.getSender().getJob().getName();
 		return NFSDoubleCalculator.div(flow.getDemandSize(), joballocMap.get(jobname));
@@ -93,7 +105,7 @@ public class NFSOFJobAllocationMap {
 			for (NFSTaskBindedFlow flow : jobflows) {
 				if (flow.getStatus().equals(NFSFlowStatus.NEWSTARTED)) continue;
 				if (modelflag.equals("closeflow") &&
-						(flow.isFullyMeet() || !flow.getBottleneckLink().equals(keylink))) continue;
+						(flow.isFullyMeet() || flow.getBottleneckLink().equals(keylink))) continue;
 				NFSMapReduceJob job = flow.getSender().getJob();
 				double jobweight = NFSDoubleCalculator.div(job.getPriority(),
 						sumjobweights);
@@ -104,17 +116,33 @@ public class NFSOFJobAllocationMap {
 						NFSDoubleCalculator.mul(jobweight, flowweight));
 				if (!modelflag.equals("closeflow")) {
 					if (flow.datarate > possibleRate) {
-						System.out.println("jobweight:" + jobweight + " flowweight:" + flowweight + 
-								" possibleRate:" + possibleRate);
+				//		System.out.println("jobweight:" + jobweight + " flowweight:" + flowweight + 
+					//			" possibleRate:" + possibleRate);
 						flow.update(possibleRate); 
+						flow.setBottleneckLink(keylink);
 					}
 				}
 				else {
-					flow.update(possibleRate);
+		//			flow.update(possibleRate);
+					increaseflowrate(flow, possibleRate);
 				}
 				if (modelflag.equals("closeflow")) flow.expectedrate = flow.datarate;
 			}
 		}
+	}
+	
+	
+	
+	private void increaseflowrate(NFSTaskBindedFlow flow, double possibleRate) {
+		double candidateRate = possibleRate;
+		for (NFSLink link : flow.getPaths()) {
+			double localallocation = NFSOFController._Instance().getFlowRate(link, flow);
+			if (candidateRate > localallocation) {
+				candidateRate = localallocation;
+				flow.setBottleneckLink(link);
+			}
+		}
+		flow.update(candidateRate);
 	}
 	
 	public double getJobWeight(NFSMapReduceJob job) {

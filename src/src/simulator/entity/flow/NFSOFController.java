@@ -70,6 +70,7 @@ public class NFSOFController extends Entity {
 		double allocatedrate = 0.0;
 		if (link.getAvailableBandwidth() > newflow.expectedrate) {
 			allocatedrate = Math.min(newflow.expectedrate, link.getAvailableBandwidth());
+			newflow.setBottleneckLink(link);
 		}
 		else {
 			//spare capacity cannot meet the flow's expected rate
@@ -276,6 +277,11 @@ public class NFSOFController extends Entity {
 		return resultmsg;
 	}
 	
+	public double getFlowRate(NFSLink link, NFSTaskBindedFlow flow) {
+		NFSOFJobAllocationMap jmap = linkappmap.get(link);
+		return jmap.getFlowAllocation(flow);
+	}
+	
 	public void finishflow(NFSTaskBindedFlow finishedflow) {
 		for (NFSLink link : finishedflow.getPaths()) {
 			link.removeRunningFlow(finishedflow);
@@ -307,5 +313,16 @@ public class NFSOFController extends Entity {
 		}
 		return _instance;
 	}
-
+	
+	public static NFSOFController _Instance() {
+		try {
+			if (_instance == null) 
+				throw new Exception("OpenFlow Controller hasn't been initialized");
+			return _instance;
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 }

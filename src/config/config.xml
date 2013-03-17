@@ -27,7 +27,7 @@
 	</property>
 	<property>
 		<name>fluidsim.flow.scheduler</name>
-		<value>simulator.entity.flow.NFSFlowFairScheduler</value>
+		<value>simulator.entity.flow.NFSOFSwitchScheduler</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.buildingnum</name>
@@ -59,7 +59,7 @@
 	</property>
 	<property>
 		<name>fluidsim.application.pa.jobnum</name>
-		<value>20</value>
+		<value>30</value>
 	</property>
 	<property>
 		<name>fluidsim.application.pa.demandflowsize</name>
@@ -103,7 +103,7 @@
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.mean</name>
-		<value>1024</value>
+		<value>512</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.stdev</name>
@@ -123,6 +123,6 @@
 	</property>
 	<property>
 		<name>fluidsim.openflow.onoff</name>
-		<value>false</value>
+		<value>true</value>
 	</property>
 </configuration>
