@@ -19,11 +19,11 @@
 	</property>
 	<property>
 		<name>fluidsim.topology.locallinkrate</name>
-		<value>100</value>
+		<value>200</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.crossrouterlinkrate</name>
-		<value>100</value>
+		<value>200</value>
 	</property>
 	<property>
 		<name>fluidsim.flow.scheduler</name>
@@ -31,7 +31,7 @@
 	</property>
 	<property>
 		<name>fluidsim.topology.buildingnum</name>
-		<value>2</value>
+		<value>10</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.l3switchnum</name>
@@ -55,7 +55,7 @@
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.rate</name>
-		<value>1000</value>
+		<value>100</value>
 	</property>
 	<property>
 		<name>fluidsim.application.pa.jobnum</name>
@@ -75,7 +75,7 @@
 	</property>
 	<property>
 		<name>fluidsim.application.pa.leader.outfactor</name>
-		<value>20</value>
+		<value>40</value>
 	</property>
 	<property>
 		<name>fluidsim.application.pa.master.outfactor</name>
@@ -99,11 +99,11 @@
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.jobnum</name>
-		<value>20</value>
+		<value>30</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.mean</name>
-		<value>512</value>
+		<value>1024</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.stdev</name>
