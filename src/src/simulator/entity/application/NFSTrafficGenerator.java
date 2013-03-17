@@ -36,7 +36,7 @@ public class NFSTrafficGenerator extends Entity {
 				"fluidsim.application.mapreduce.arrival.pattern", 
 				"normal");
 		String paPattern = NetworkFlowSimulator.parser.getString(
-				"fluidsim.application.mapreduce.arrival.pattern",
+				"fluidsim.application.pa.arrival.pattern",
 				"normal");
 		mrarrivaldist = new NFSLoadArrivalPattern(mapreducePattern);
 		paarrivaldist = new NFSLoadArrivalPattern(paPattern);
