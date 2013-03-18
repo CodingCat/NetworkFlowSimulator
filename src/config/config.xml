@@ -3,7 +3,7 @@
 <configuration>
 	<property>
 		<name>fluidsim.system.traceperiod</name>
-		<value>100</value>
+		<value>0</value>
 	</property>
 	<property>
 		<name>fluidsim.system.debugperiod</name>
@@ -27,7 +27,7 @@
 	</property>
 	<property>
 		<name>fluidsim.flow.scheduler</name>
-		<value>simulator.entity.flow.NFSOFSwitchScheduler</value>
+		<value>simulator.entity.flow.NFSFlowFairScheduler</value>
 	</property>
 	<property>
 		<name>fluidsim.topology.buildingnum</name>
@@ -50,16 +50,12 @@
 		<value>4</value>
 	</property>
 	<property>
-		<name>fluidsim.application.rate</name>
-		<value>10</value>
-	</property>
-	<property>
 		<name>fluidsim.application.mapreduce.rate</name>
 		<value>100</value>
 	</property>
 	<property>
 		<name>fluidsim.application.pa.jobnum</name>
-		<value>30</value>
+		<value>360</value>
 	</property>
 	<property>
 		<name>fluidsim.application.pa.demandflowsize</name>
@@ -67,11 +63,11 @@
 	</property>
 	<property>
 		<name>fluidsim.application.pa.rate</name>
-		<value>3</value>
+		<value>1</value>
 	</property>
 	<property>
 		<name>fluidsim.application.pa.master.deadline</name>
-		<value>0.01</value>
+		<value>0.03</value>
 	</property>
 	<property>
 		<name>fluidsim.application.pa.leader.outfactor</name>
@@ -103,7 +99,7 @@
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.mean</name>
-		<value>512</value>
+		<value>1024</value>
 	</property>
 	<property>
 		<name>fluidsim.application.mapreduce.inputsize.stdev</name>
@@ -118,11 +114,15 @@
 		<value>uniform</value>
 	</property>
 	<property>
+		<name>fluidsim.application.pa.arrival.pattern</name>
+		<value>uniform</value>
+	</property>
+	<property>
 		<name>fluidsim.openflow.latencypercentage</name>
 		<value>1.0</value>
 	</property>
 	<property>
 		<name>fluidsim.openflow.onoff</name>
-		<value>true</value>
+		<value>false</value>
 	</property>
 </configuration>

@@ -42,7 +42,11 @@ public class NFSOFJobAllocationMap {
 				sumrateLatencyflows = NFSDoubleCalculator.sum(sumrateLatencyflows, runflow.datarate);
 		}
 		double availbandwidth = NFSDoubleCalculator.sub(keylink.getTotalBandwidth(), sumrateLatencyflows);
-		return NFSDoubleCalculator.mul(availbandwidth, NFSDoubleCalculator.mul(jobweight, flowweight));
+		double r =  NFSDoubleCalculator.mul(availbandwidth, NFSDoubleCalculator.mul(jobweight, flowweight));
+		if (r <= 0) {
+			System.out.println("bad result: " + availbandwidth + "," + jobweight + "," + flowweight);
+		}
+		return r;
 	}
 	
 	public double getFlowWeight(NFSTaskBindedFlow flow) {
@@ -88,9 +92,9 @@ public class NFSOFJobAllocationMap {
 			jobflowMap.get(jobname).add(flow);
 			joballocMap.put(jobname, 
 					NFSDoubleCalculator.sum(joballocMap.get(jobname), flow.getDemandSize()));
-			System.out.println("register new flow " + flow.getName() + "-" + 
+		/*	System.out.println("register new flow " + flow.getName() + "-" + 
 					flow.datarate + "-" + flow.getDemandSize() + " on link " + 
-					keylink.getName());
+					keylink.getName());*/
 		}
 	}
 	
@@ -114,16 +118,20 @@ public class NFSOFJobAllocationMap {
 				double possibleRate = NFSDoubleCalculator.mul(
 						NFSDoubleCalculator.sub(keylink.getTotalBandwidth(), sumrateLatencyflows), 
 						NFSDoubleCalculator.mul(jobweight, flowweight));
+				if (possibleRate <= 0) {
+					System.out.println(
+							"availableBandwidth:" + NFSDoubleCalculator.sub(keylink.getTotalBandwidth(), sumrateLatencyflows) + 
+							"job allocation:" + joballocMap.get(job.getName()) + 
+							" demandsize:" + flow.getDemandSize() + 
+							" floweight:" + flowweight + " jobweight:" + jobweight);
+				}
 				if (!modelflag.equals("closeflow")) {
 					if (flow.datarate > possibleRate) {
-				//		System.out.println("jobweight:" + jobweight + " flowweight:" + flowweight + 
-					//			" possibleRate:" + possibleRate);
 						flow.update(possibleRate); 
 						flow.setBottleneckLink(keylink);
 					}
 				}
 				else {
-		//			flow.update(possibleRate);
 					increaseflowrate(flow, possibleRate);
 				}
 				if (modelflag.equals("closeflow")) flow.expectedrate = flow.datarate;
@@ -137,6 +145,10 @@ public class NFSOFJobAllocationMap {
 		double candidateRate = possibleRate;
 		for (NFSLink link : flow.getPaths()) {
 			double localallocation = NFSOFController._Instance().getFlowRate(link, flow);
+			if (localallocation <= 0) {
+				System.out.println("local allocation no greater than 0");
+				System.exit(1);
+			}
 			if (candidateRate > localallocation) {
 				candidateRate = localallocation;
 				flow.setBottleneckLink(link);
