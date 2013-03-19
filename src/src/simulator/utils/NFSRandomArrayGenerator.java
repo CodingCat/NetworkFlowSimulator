@@ -20,7 +20,7 @@ public class NFSRandomArrayGenerator {
 			if (i == array.length - 1) array[i] = NFSDoubleCalculator.sub(1, sum);
 			else {
 				array[i] = rand.nextDouble() % (1 - sum);
-				while (Math.abs(NFSDoubleCalculator.sub(array[i], avr)) > inputskew ) {
+				while (Math.abs(NFSDoubleCalculator.sub(array[i], avr)) > inputskew) {
 					//bug here?
 					array[i] = rand.nextDouble() % (1 - sum);
 				}

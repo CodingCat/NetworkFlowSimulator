@@ -44,7 +44,8 @@ public class NFSOFJobAllocationMap {
 		double availbandwidth = NFSDoubleCalculator.sub(keylink.getTotalBandwidth(), sumrateLatencyflows);
 		double r =  NFSDoubleCalculator.mul(availbandwidth, NFSDoubleCalculator.mul(jobweight, flowweight));
 		if (r <= 0) {
-			System.out.println("bad result: " + availbandwidth + "," + jobweight + "," + flowweight);
+			System.out.println("bad result: " + availbandwidth + "," + jobweight + "," + flowweight + "," + 
+					flow.getDemandSize());
 		}
 		return r;
 	}
@@ -64,11 +65,15 @@ public class NFSOFJobAllocationMap {
 	
 	public double getPossibleFlowWeight(NFSTaskBindedFlow newflow) {
 		NFSMapReduceJob job = newflow.getSender().getJob();
+		double r = 0;
 		if (!joblist.contains(job)) registerNewJob(job);
-		return NFSDoubleCalculator.div(
+		if (NFSDoubleCalculator.sum(newflow.getDemandSize(),
+						joballocMap.get(job.getName())) == 0) return 0;
+		r = NFSDoubleCalculator.div(
 				newflow.getDemandSize(),
-				NFSDoubleCalculator.sum(newflow.getDemandSize(), 
+				NFSDoubleCalculator.sum(newflow.getDemandSize(),
 						joballocMap.get(job.getName())));
+		return r;
 	}
 	
 	public void register(NFSTaskBindedFlow newflow) {
@@ -145,10 +150,10 @@ public class NFSOFJobAllocationMap {
 		double candidateRate = possibleRate;
 		for (NFSLink link : flow.getPaths()) {
 			double localallocation = NFSOFController._Instance().getFlowRate(link, flow);
-			if (localallocation <= 0) {
+			/*if (localallocation <= 0) {
 				System.out.println("local allocation no greater than 0");
 				System.exit(1);
-			}
+			}*/
 			if (candidateRate > localallocation) {
 				candidateRate = localallocation;
 				flow.setBottleneckLink(link);

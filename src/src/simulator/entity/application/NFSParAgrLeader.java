@@ -53,9 +53,11 @@ public class NFSParAgrLeader extends Entity {
 				NFSFlowSchedulingAlgorithm.rateAllocation(tasktracker, tasktracker.getOutlink(), flows[i]);
 			}
 			else {
-				NFSOpenFlowSubscribeEvent subevent = 
-						new NFSOpenFlowSubscribeEvent(getModel(), tasktracker.getName() + "subEvent", true);
-				subevent.schedule(tasktracker, flows[i], presentTime());
+				if (flows[i].getDemandSize() != 0.0) {
+					NFSOpenFlowSubscribeEvent subevent = 
+							new NFSOpenFlowSubscribeEvent(getModel(), tasktracker.getName() + "subEvent", true);
+					subevent.schedule(tasktracker, flows[i], presentTime());
+				}
 			}
 		}
 	}

@@ -130,8 +130,8 @@ public class NFSOFController extends Entity {
 				double ja = NFSDoubleCalculator.mul(ab, jw);
 				double fw = jappmap == null ? 1 : jappmap.getPossibleFlowWeight(taskflow);
 				double fa = NFSDoubleCalculator.mul(ja, fw);
-				System.out.println("flow name:" + newflow.getName() + " ab:" + ab + " jw:" + jw + " ja:" + ja + 
-						" fw: " + fw + " fa:" + fa);
+			//	System.out.println("flow name:" + newflow.getName() + " ab:" + ab + " jw:" + jw + " ja:" + ja + 
+			//			" fw: " + fw + " fa:" + fa);
 				if (fa <= newflow.expectedrate) {
 					newflow.expectedrate = fa;
 					newflow.setBottleneckLink(link);

@@ -140,6 +140,14 @@ public class NFSFlow extends Entity {
 		flowtype = type;
 	}
 	
+	public double getExpectedRate() {
+		return expectedrate;
+	}
+	
+	public void setExpectedRate(double r) {
+		expectedrate = r;
+	}
+	
 	public void setStatus(NFSFlowStatus s) {
 		status = s;
 	}

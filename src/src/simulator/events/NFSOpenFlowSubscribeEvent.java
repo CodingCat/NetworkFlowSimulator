@@ -5,6 +5,7 @@ import simulator.entity.NFSHost;
 import simulator.entity.flow.NFSFlow;
 import simulator.entity.flow.NFSOFController;
 import simulator.entity.flow.NFSOpenFlowMessage;
+import simulator.utils.NFSDoubleCalculator;
 import desmoj.core.simulator.EventOf2Entities;
 import desmoj.core.simulator.Model;
 import desmoj.core.simulator.TimeOperations;
@@ -20,8 +21,8 @@ public class NFSOpenFlowSubscribeEvent extends EventOf2Entities<NFSHost, NFSFlow
 	public NFSOpenFlowSubscribeEvent(Model model, String eventName, boolean showInTrace) {
 		super(model, eventName, showInTrace);
 		controller = NFSOFController._Instance(model);
-		pauseDuration = NetworkFlowSimulator.parser.getDouble(
-				"fluidsim.openflow.pauseEvent", 0.03);
+		pauseDuration = NFSDoubleCalculator.div(NetworkFlowSimulator.parser.getDouble(
+				"fluidsim.application.pa.master.deadline", 0.0), 2);
 		subscribebound = NetworkFlowSimulator.parser.getInt(
 				"fluidsim.openflow.subscribebound", 3);
 	
@@ -38,7 +39,9 @@ public class NFSOpenFlowSubscribeEvent extends EventOf2Entities<NFSHost, NFSFlow
 		else {
 			if ((subscribecnt++) < subscribebound) {
 				System.out.println("------------rejected for " + subscribecnt + " times-------------");
-				schedule(host, flow, TimeOperations.add(presentTime(), new TimeSpan(pauseDuration)));
+				flow.setExpectedRate(NFSDoubleCalculator.mul(flow.getExpectedRate(), subscribecnt + 1));
+				schedule(host, flow, TimeOperations.add(presentTime(), 
+						new TimeSpan(NFSDoubleCalculator.div(pauseDuration, subscribebound + 1))));
 			}
 		}
 	}

@@ -73,10 +73,15 @@ public class NFSTaskBindedFlow extends NFSFlow {
 			} else {
 				if (closeevent.isScheduled()) {
 					closeevent.cancel();
-					TimeInstant newfinishTime = TimeOperations.add(
-							presentTime(),
-							new TimeSpan((demandSize - sendoutSize) / datarate));
-					closeevent.schedule(this, newfinishTime);
+					if (datarate != 0.0) {
+						TimeInstant newfinishTime = TimeOperations.add(
+								presentTime(),
+								new TimeSpan((demandSize - sendoutSize) / datarate));
+						closeevent.schedule(this, newfinishTime);
+					}
+					else {
+						closeevent.schedule(this, presentTime());
+					}
 				}
 			}
 		}
@@ -98,15 +103,21 @@ public class NFSTaskBindedFlow extends NFSFlow {
 			} else {
 				if (closeevent.isScheduled()) {
 					closeevent.cancel();
-					TimeInstant newfinishTime = TimeOperations.add(
-							presentTime(),
-							new TimeSpan((demandSize - sendoutSize) / datarate));
-					closeevent.schedule(this, newfinishTime);
+					if (datarate != 0.0) {
+						TimeInstant newfinishTime = TimeOperations.add(
+								presentTime(),
+								new TimeSpan((demandSize - sendoutSize) / datarate));
+						closeevent.schedule(this, newfinishTime);
+					}
+					else {
+						closeevent.schedule(this, presentTime());
+					}
 				}
 			}
 		} catch (Exception e) {
 			System.out.println(datarate + ":" + demandSize + ":" + sendoutSize);
 			e.printStackTrace();
+			System.exit(1);
 		}
 	}
 	
