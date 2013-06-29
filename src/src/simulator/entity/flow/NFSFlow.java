@@ -123,7 +123,7 @@ public class NFSFlow extends Entity {
 	NFSFlowInfo flowinform = null;
 	NFSFlowReporter flowreporter = null;
 	
-	private ArrayList<NFSLink> path = null;
+	protected ArrayList<NFSLink> path = null;
 	private NFSLink bottlenecklink = null;
 	NFSFlowType flowtype = null;
 	

@@ -56,10 +56,11 @@ public class NFSPAFlow extends NFSFlow {
 			if (demandSize <= sendoutSize) {
 				if (!closeevent.isScheduled()) closeevent.schedule(this, presentTime());
 			} else {
-				if (closeevent.isScheduled()) {
-					closeevent.cancel();
-					TimeInstant newfinishTime = TimeOperations.add(presentTime(),
-							new TimeSpan((demandSize - sendoutSize) / datarate));
+				if (closeevent.isScheduled()) closeevent.cancel();
+				if (datarate != 0.0) {
+					TimeInstant newfinishTime = TimeOperations.add(
+							presentTime(), new TimeSpan(
+									(demandSize - sendoutSize) / datarate));
 					closeevent.schedule(this, newfinishTime);
 				}
 			}

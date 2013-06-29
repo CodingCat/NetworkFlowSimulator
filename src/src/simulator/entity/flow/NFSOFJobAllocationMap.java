@@ -52,6 +52,7 @@ public class NFSOFJobAllocationMap {
 	
 	public double getFlowWeight(NFSTaskBindedFlow flow) {
 		String jobname = flow.getSender().getJob().getName();
+		if (joballocMap.get(jobname) == null) return 0.0;
 		return NFSDoubleCalculator.div(flow.getDemandSize(), joballocMap.get(jobname));
 	}
 	

@@ -125,6 +125,9 @@ public class NFSMapTask extends Entity {
 				System.out.println(getName() + " starts local tasks");
 				continue;//map and reducer are in the same host
 			}
+			if (NFSDoubleCalculator.mul(outputdist[i], shufflesize) <= 0.000000001) {
+				continue;
+			}
 			flows[i] = new NFSTaskBindedFlow(getModel(), 
 					"flows-" + tasktracker.ipaddress + "-" + receivers[i].getTaskTrackerIP() + "-" + getName(),
 					true,

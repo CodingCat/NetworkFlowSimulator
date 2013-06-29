@@ -71,17 +71,12 @@ public class NFSTaskBindedFlow extends NFSFlow {
 			if (demandSize <= sendoutSize) {
 				if (!closeevent.isScheduled()) closeevent.schedule(this, presentTime());
 			} else {
-				if (closeevent.isScheduled()) {
-					closeevent.cancel();
-					if (datarate != 0.0) {
-						TimeInstant newfinishTime = TimeOperations.add(
-								presentTime(),
-								new TimeSpan((demandSize - sendoutSize) / datarate));
-						closeevent.schedule(this, newfinishTime);
-					}
-					else {
-						closeevent.schedule(this, presentTime());
-					}
+				if (closeevent.isScheduled()) closeevent.cancel();
+				if (datarate != 0.0) {
+					TimeInstant newfinishTime = TimeOperations.add(
+							presentTime(), new TimeSpan(
+									(demandSize - sendoutSize) / datarate));
+					closeevent.schedule(this, newfinishTime);
 				}
 			}
 		}
@@ -103,7 +98,7 @@ public class NFSTaskBindedFlow extends NFSFlow {
 			} else {
 				if (closeevent.isScheduled()) {
 					closeevent.cancel();
-					if (datarate != 0.0) {
+					if (datarate > 0.0) {
 						TimeInstant newfinishTime = TimeOperations.add(
 								presentTime(),
 								new TimeSpan((demandSize - sendoutSize) / datarate));
