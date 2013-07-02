@@ -1,4 +1,4 @@
-package simengine
+package scalasim.simengine
 
 import scala.collection.mutable.Queue
 

@@ -1,4 +1,4 @@
-package network
+package scalasim.network
 
 
 class Link (end_from : Node,
