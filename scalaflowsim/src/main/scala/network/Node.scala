@@ -3,19 +3,25 @@ package scalasim.network
 import scala.collection.mutable.HashMap;
 import scala.collection.mutable.ListBuffer;
 
-class Node (ip_address:String) {
-  protected val outlink = new HashMap[String, Link](); // key -> destination ip
+class Node () {
+  var ip_addr : String = null
+  protected val outlink = new HashMap[String, Link]() // key -> destination ip
 }
 
 trait NodeContainer {
-  val nodecontainer = new ListBuffer[Node]();
+  val nodecontainer = new ListBuffer[Node]()
+  var idx: Int = 0;
 
-  def create(nodeN : Int, ipPrefix : String, startIP : Int);
+  def create(nodeN : Int, ipPrefix : String, startIP : Int)
 
-  def create(nodeN : Int);
+  def create(nodeN : Int)
+
+  def size() : Int = nodecontainer.size
+
+  def apply(idx : Int) = nodecontainer.apply(idx)
 }
 
-class Host (ip_address:String) extends Node (ip_address);
+class Host () extends Node ()
 
 class HostContainer extends NodeContainer {
 
@@ -26,15 +32,15 @@ class HostContainer extends NodeContainer {
    * @param startIP
    */
   def create(nodeN: Int, ipPrefix: String, startIP: Int) {
-    for (i <- startIP to nodeN + startIP) nodecontainer += new Host(ipPrefix + "." + i);
+    for (i <- startIP to nodeN + startIP) nodecontainer += new Host()
   }
 
   def create(nodeN : Int) = {
-    for (i <- 0 to nodeN) nodecontainer += new Host(null);
+    for (i <- 0 to nodeN) nodecontainer += new Host()
   }
 }
 
-class Router (ip_address : String) extends Node (ip_address);
+class Router () extends Node ()
 
 class RouterContainer () extends NodeContainer {
   /**
@@ -43,12 +49,12 @@ class RouterContainer () extends NodeContainer {
    * @param ipPrefix 192.168.1
    * @param startIP
    */
-  def create(nodeN : Int, ipPrefix : String, startIP : Int) = {
-    for (i <- startIP to nodeN + startIP) nodecontainer += new Router(ipPrefix + "." + i);
+  def create(nodeN : Int, ipPrefix : String, startIP : Int) {
+    for (i <- startIP to nodeN + startIP) nodecontainer += new Router()
   }
 
-  def create(nodeN : Int) = {
-    for (i <- 0 to nodeN) nodecontainer += new Router(null);
+  def create(nodeN : Int) {
+    for (i <- 0 to nodeN) nodecontainer += new Router()
   }
 }
 

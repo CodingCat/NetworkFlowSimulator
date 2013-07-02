@@ -7,4 +7,5 @@ class SparkApp extends Application {
 
   }
 
+  def run() {}
 }
