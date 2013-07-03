@@ -19,12 +19,12 @@ class Cell (private val cellID : Int) {
 
   buildNetwork()
 
-  private def buildNetwork() = {
-
-
-    for (i <- 1 to rackSize) {
+  private def buildNetwork() {
+    for (i <- 1 to rackNumber) {
+      //assign ip to the TOR router
+      IPInstaller.assignIPAddress(torContainer(i), "10." + cellID + "." + i + ".1")
+      //assign ip addresses to the hosts
 
     }
   }
-
 }

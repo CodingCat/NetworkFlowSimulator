@@ -4,8 +4,9 @@ import scala.collection.mutable.HashMap;
 import scala.collection.mutable.ListBuffer;
 
 class Node () {
-  var ip_addr : String = null
+  protected val ip_addr : Array[String] = null
   protected val outlink = new HashMap[String, Link]() // key -> destination ip
+  def assignIP(ip : String) = ip_addr(Math.max(0, ip_addr.length - 1)) = ip
 }
 
 trait NodeContainer {
