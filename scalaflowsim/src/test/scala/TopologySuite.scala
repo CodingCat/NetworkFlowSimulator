@@ -1,0 +1,92 @@
+package scalasim.test
+
+import org.scalatest.FunSuite
+import scalasim.network._
+import network.topo.{IPInstaller, LanBuilder}
+
+class TopologySuite extends FunSuite{
+
+  test("IPInstaller can assign IPs to a host/router") {
+     val host : Host = new Host()
+     IPInstaller.assignIPAddress(host, "10.0.0.1")
+     assert(host.ip_addr.length == 1 && host.ip_addr(0) == "10.0.0.1")
+     IPInstaller.assignIPAddress(host, "10.0.0.2")
+     assert(host.ip_addr.length == 2 && host.ip_addr(0) == "10.0.0.1" && host.ip_addr(1) == "10.0.0.2")
+  }
+
+  test("IPInstaller can assign IPs to host/router container") {
+    val hostContainer : HostContainer = new HostContainer()
+    val router : Router = new Router()
+    IPInstaller.assignIPAddress(router, "10.0.0.1")
+    hostContainer.create(10)
+    IPInstaller.assignIPAddress(router.ip_addr(router.ip_addr.length - 1), 2, hostContainer, 0, 9)
+    for (i <- 0 until 10) {
+      assert(hostContainer(i).ip_addr(0) === "10.0.0." + (i + 2))
+    }
+  }
+
+  test("LanBuilder cannot build the lan for router-hosts before all involved elements are assigned with IP addresses") {
+    val router : Router = new Router()
+    val hostContainer = new  HostContainer()
+    val routerContainer = new RouterContainer()
+    hostContainer.create(10)
+    routerContainer.create(10)
+    var exception = intercept[RuntimeException] {
+      LanBuilder.buildLan(router, hostContainer, 0, 9)
+    }
+    assert(exception.getMessage === "Engress Router hasn't got ipaddress")
+    router.assignIP("10.0.0.1")
+    exception = intercept[RuntimeException] {
+      LanBuilder.buildLan(router, hostContainer, 0, 9)
+    }
+    assert(exception.getMessage === "Hosts haven't got ipaddress")
+
+  }
+
+  test("LanBuilder cannot build the lan for router-routers before all involved elements are assigned with IP addresses") {
+    val router : Router = new Router()
+    val routerContainer = new RouterContainer()
+    routerContainer.create(10)
+    var exception = intercept[RuntimeException] {
+      LanBuilder.buildLan(router, routerContainer, 0, 9)
+    }
+    assert(exception.getMessage === "AggRouter hasn't got ipaddress")
+    router.assignIP("10.0.0.1")
+    exception = intercept[RuntimeException] {
+      LanBuilder.buildLan(router, routerContainer, 0, 9)
+    }
+    assert(exception.getMessage === "ToRRouters haven't got ipaddress")
+  }
+
+  test("LanBuilder should be able to create the local area network for router-hosts") {
+    val router : Router = new Router()
+    val hosts : HostContainer = new HostContainer()
+    IPInstaller.assignIPAddress(router, "10.0.0.1")
+    hosts.create(10)
+    IPInstaller.assignIPAddress(router.ip_addr(0), 2, hosts, 0, 9)
+    LanBuilder.buildLan(router, hosts, 0, 9)
+    for (i <- 0 to 9) {
+      val hostOutLink = hosts(i).outlink.get("10.0.0.1")
+      //check host outlink
+      assert(router.ip_addr(0) === hostOutLink.get.end_to.ip_addr(0))
+      //check router inlink
+      assert(router.inLinks.get(hosts(i).ip_addr(0)).get.end_from === hosts(i))
+    }
+  }
+
+  test("LanBuilder should be able to create the local area network for router-routers") {
+    val aggRouter : Router = new Router()
+    val routers : RouterContainer = new RouterContainer()
+    IPInstaller.assignIPAddress(aggRouter, "10.0.0.1")
+    routers.create(10)
+    IPInstaller.assignIPAddress(aggRouter.ip_addr(0), 2, routers, 0, 9)
+    LanBuilder.buildLan(aggRouter, routers, 0, 9)
+    for (i <- 0 to 9) {
+      val routerOutlink = routers(i).outlink.get("10.0.0.1")
+      //check tor routers outlink
+      assert(aggRouter.ip_addr(0) === routerOutlink.get.end_to.ip_addr(0))
+      //check aggregate router inlink
+      assert(aggRouter.inLinks.get(routers(i).ip_addr(0)).get.end_from === routers(i))
+    }
+  }
+}
