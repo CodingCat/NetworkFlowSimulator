@@ -3,6 +3,7 @@ package scalasim.test
 import org.scalatest.FunSuite
 import scalasim.network._
 import network.topo.{IPInstaller, LanBuilder}
+import network.Cell
 
 class TopologySuite extends FunSuite{
 
@@ -34,13 +35,10 @@ class TopologySuite extends FunSuite{
     var exception = intercept[RuntimeException] {
       LanBuilder.buildLan(router, hostContainer, 0, 9)
     }
-    assert(exception.getMessage === "Engress Router hasn't got ipaddress")
     router.assignIP("10.0.0.1")
     exception = intercept[RuntimeException] {
       LanBuilder.buildLan(router, hostContainer, 0, 9)
     }
-    assert(exception.getMessage === "Hosts haven't got ipaddress")
-
   }
 
   test("LanBuilder cannot build the lan for router-routers before all involved elements are assigned with IP addresses") {
@@ -50,12 +48,10 @@ class TopologySuite extends FunSuite{
     var exception = intercept[RuntimeException] {
       LanBuilder.buildLan(router, routerContainer, 0, 9)
     }
-    assert(exception.getMessage === "AggRouter hasn't got ipaddress")
     router.assignIP("10.0.0.1")
     exception = intercept[RuntimeException] {
       LanBuilder.buildLan(router, routerContainer, 0, 9)
     }
-    assert(exception.getMessage === "ToRRouters haven't got ipaddress")
   }
 
   test("LanBuilder should be able to create the local area network for router-hosts") {
@@ -87,6 +83,30 @@ class TopologySuite extends FunSuite{
       assert(aggRouter.ip_addr(0) === routerOutlink.get.end_to.ip_addr(0))
       //check aggregate router inlink
       assert(aggRouter.inLinks.get(routers(i).ip_addr(0)).get.end_from === routers(i))
+    }
+  }
+
+  test("Cell network can be created correctly") {
+    val cellnet = new Cell(1)
+    //check aggregate routers's inlinks
+    for (i <- 0 until cellnet.numAggRouters; j <- 0 until cellnet.numRacks) {
+      val aggrouter = cellnet.getAggregatRouter(i)
+      assert(aggrouter.inLinks.contains("10.1." + j + ".1") === true)
+    }
+    //check tor router's inlinks and outlinks
+    for (i <- 0 until cellnet.numRacks; j <- 0 until cellnet.numMachinesPerRack) {
+      val torrouter = cellnet.getToRRouter(i)
+      //check inlinks
+      assert(torrouter.inLinks.contains("10.1." + i + "." + (j + 2)) === true)
+    }
+    for (i <- 0 until cellnet.numRacks; j <- 0 until cellnet.numAggRouters) {
+      val torrouter = cellnet.getToRRouter(i)
+      //check outlink
+      assert(torrouter.outlink.contains("10.1." + (cellnet.numRacks  + j).toString + ".1"))
+    }
+    //check hosts outlinks
+    for (i <- 0 until cellnet.numRacks; j <- 0 until cellnet.numMachinesPerRack) {
+      assert(cellnet.getHost(i, j).outlink.contains("10.1." + i + ".1") === true)
     }
   }
 }
