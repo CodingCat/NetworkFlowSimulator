@@ -1,7 +1,7 @@
-package network
+package network.topo
 
 import scalasim.XmlParser
-import network.topo.{LanBuilder, IPInstaller}
+import network.topo.builder.{LanBuilder, IPInstaller}
 ;
 
 class Cell (private val cellID : Int) {

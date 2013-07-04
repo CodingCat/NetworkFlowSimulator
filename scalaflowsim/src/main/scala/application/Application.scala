@@ -1,8 +1,6 @@
 package scalasim.application
 
 
-import scala.collection.mutable.ListBuffer
-import scalasim.XmlParser
 ;
 
 abstract class Application {

@@ -1,9 +1,8 @@
 package scalasim.test
 
 import org.scalatest.FunSuite
-import scalasim.network._
-import network.topo.{IPInstaller, LanBuilder}
-import network.Cell
+import network.topo.{Cell}
+import network.topo.builder.{LanBuilder, IPInstaller}
 
 class TopologySuite extends FunSuite{
 

@@ -1,8 +1,7 @@
-package network.topo
+package network.topo.builder
 
-import scalasim.network.Link
 import scalasim.XmlParser
-import network.{RouterContainer, HostContainer, Router}
+import network.topo.{RouterContainer, Router, Link, HostContainer}
 
 
 object LanBuilder {
