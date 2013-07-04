@@ -1,8 +1,8 @@
 package scalasim.network
 
 
-class Link (end_from : Node,
-             end_to : Node,
-             bandwidth : Double) {
+class Link (val end_from : Node,
+             val end_to : Node,
+             val bandwidth : Double) {
 
 }
