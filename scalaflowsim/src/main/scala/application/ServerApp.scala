@@ -1,6 +1,7 @@
 package scalasim.application
 
 import network.topo.HostContainer
+import application.PermuMatrixApp
 
 abstract class ServerApp(protected val servers : HostContainer) {
   def run()
@@ -9,7 +10,7 @@ abstract class ServerApp(protected val servers : HostContainer) {
 object ServerApp {
   def apply(appName : String, servers : HostContainer)  = {
     appName match {
-      case "Spark" => new MapReduceApp(servers)
+      case "PermuMatrixApp" => new PermuMatrixApp(servers)
     }
   }
 }

@@ -1,11 +1,13 @@
 package scalasim.simengine
 
-abstract  class Event {}
-
-abstract class EventOfSingleEntity[EntityType] (entity : EntityType) extends Event {
-   def process(entity: EntityType);
+abstract class Event (protected val timestamp : Double) {
+  def getTimeStamp() = timestamp
 }
 
-abstract class EventOfTwoEntities[ET1, ET2] (entity_a : ET1, entity_b : ET2) extends Event {
-   def process(entity_a: ET1, entity_b : ET2);
+abstract class EventOfSingleEntity[EntityType] (ts : Double) extends Event(ts) {
+   def process(entity: EntityType)
+}
+
+abstract class EventOfTwoEntities[ET1, ET2] (ts : Double) extends Event(ts) {
+   def process(entity_a: ET1, entity_b : ET2)
 }

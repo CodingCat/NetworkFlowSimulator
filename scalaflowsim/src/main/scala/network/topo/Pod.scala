@@ -59,6 +59,7 @@ class Pod (private val cellID : Int) {
   def getAggregatRouter(idx : Int) : Router = aggContainer(idx).asInstanceOf[Router]
   def getToRRouter(idx : Int) : Router = torContainer(idx).asInstanceOf[Router]
   def getHost(rackID : Int, hostID : Int) : Host = hostsContainer(rackID * rackSize + hostID).asInstanceOf[Host]
+  def getAllHostsInPod() : HostContainer = hostsContainer
 
   hostsContainer.create(rackNumber * rackSize)
   torContainer.create(rackNumber, new ToRRouterType)
