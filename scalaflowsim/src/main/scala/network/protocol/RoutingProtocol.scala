@@ -5,5 +5,5 @@ import network.data.Flow
 
 
 abstract class RoutingProtocol (val router : Router) {
-  abstract def nextNode(flow : Flow) : Node
+  def nextNode(flow : Flow) : Node
 }
