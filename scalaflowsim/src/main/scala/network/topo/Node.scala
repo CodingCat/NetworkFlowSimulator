@@ -2,7 +2,6 @@ package network.topo
 
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
-import network.topo.Link
 
 
 class Node () {
