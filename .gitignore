@@ -10,3 +10,9 @@ scalaflowsim/.DS_Store
 .DS_Store
 
 .DS_Store
+
+*.iml
+
+*.iml
+
+scalaflowsim/.idea_modules/scalaflowsim.iml
