@@ -11,7 +11,7 @@ object ApplicationRunner {
   private val apps = new ListBuffer[ServerApp];
 
   def installApplication() {
-    val appNames:String = XmlParser.getString("scalasim.application.names", "SparkApp");
+    val appNames:String = XmlParser.getString("scalasim.application.names", "MapReduceApp");
     val namesStr = appNames.split(',');
     for (name <- namesStr) apps += ServerApp(name, resourcePool);
   }
