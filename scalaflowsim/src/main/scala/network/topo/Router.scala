@@ -1,22 +1,14 @@
 package network.topo
 
 import scala.collection.mutable.HashMap
-import network.protocol.RoutingProtocolFactory
 import scalasim.XmlParser
 import network.data.Flow
+import network.controlplane.routing.RoutingProtocolFactory
+import network.controlplane.ControlPlane
 
-abstract class RouterType
-
-case class AggregateRouterType() extends RouterType
-case class ToRRouterType() extends  RouterType
-case class CoreRouterType() extends RouterType
-
-class Router (val routertype : RouterType) extends Node {
+class Router (nodetype : NodeType) extends Node(nodetype) {
   val inLinks = new HashMap[String, Link]() //if the other end is a host, then the key is the ip of the host,
   //if the other end is a router, then the key is the IP range of that host
-
-  private val controlPlane = RoutingProtocolFactory.getRoutingProtocol(
-    XmlParser.getString("scalasim.network.routingprotocol", "SimpleSymmetricRouting"), this)
 
   def registerIncomeLink(l : Link) {
     val otherEnd = l.end_from
@@ -28,7 +20,7 @@ class Router (val routertype : RouterType) extends Node {
 }
 
 class RouterContainer () extends NodeContainer {
-  def create(nodeN : Int, rtype : RouterType) {
+  def create(nodeN : Int, rtype : NodeType) {
     for (i <- 0 until nodeN) nodecontainer += new Router(rtype)
   }
 

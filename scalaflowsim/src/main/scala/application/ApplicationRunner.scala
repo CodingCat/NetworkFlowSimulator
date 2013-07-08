@@ -7,7 +7,6 @@ import scala.collection.mutable
 object ApplicationRunner {
 
   private var resourcePool : HostContainer = null
-
   private val apps = new mutable.HashMap[String, ServerApp]
 
   def setResource(r : HostContainer) = resourcePool = r
@@ -21,5 +20,9 @@ object ApplicationRunner {
 
   def run() = for (app <- apps.valuesIterator) app.run()
 
+  def run(appname : String) = apps(appname).run()
+
   def apply(name : String) : ServerApp = apps(name)
+
+
 }

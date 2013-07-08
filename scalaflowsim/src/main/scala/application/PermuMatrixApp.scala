@@ -4,6 +4,9 @@ import scalasim.application.ServerApp
 import network.topo.{Host, HostContainer}
 import scala.collection.mutable
 import scala.util.Random
+import scalasim.simengine.SimulationEngine
+import network.events.StartNewFlowEvent
+import network.data.Flow
 
 
 //build a permulate matrix between all machines,
@@ -34,7 +37,10 @@ class PermuMatrixApp (servers : HostContainer) extends ServerApp (servers) {
 
   def run() {
     selectMachinePairs()
-
+    for (srcdstPair <- selectedPair) {
+      SimulationEngine.eventqueue.enqueue(
+        new StartNewFlowEvent(Flow(srcdstPair._1, srcdstPair._2, 0), ipHostMap(srcdstPair._1) , 0))
+    }
   }
 
   init()

@@ -7,7 +7,7 @@ import org.scalatest.FunSuite
 class TopologySuite extends FunSuite {
 
   test("IPInstaller can assign IPs to a host/router") {
-     val host : Host = new Host()
+     val host : Host = new Host(new HostType)
      IPInstaller.assignIPAddress(host, "10.0.0.1")
      assert(host.ip_addr.length == 1 && host.ip_addr(0) == "10.0.0.1")
      IPInstaller.assignIPAddress(host, "10.0.0.2")

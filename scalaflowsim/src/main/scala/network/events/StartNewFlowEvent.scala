@@ -1,12 +1,11 @@
 package network.events
 
-import scalasim.simengine.EventOfSingleEntity
-import network.topo.Host
+import scalasim.simengine.{EventOfTwoEntities}
 
+class StartNewFlowEvent[Flow, Host] (flow : Flow, host : Host, timestamp : Double)
+  extends EventOfTwoEntities [Flow, Host] (flow, host, timestamp) {
 
-class StartNewFlowEvent (host : Host, timestamp : Double) extends EventOfSingleEntity[Host] (timestamp) {
-
-  def process(entity: Host) {
+  def process() {
 
   }
 }

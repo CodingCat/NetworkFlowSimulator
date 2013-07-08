@@ -1,6 +1,10 @@
 package scalasim.simengine
 
 import scala.collection.mutable.PriorityQueue
+import network.events.StartNewFlowEvent
+import scala.collection.mutable
+import network.topo.Link
+import network.data.Flow
 
 
 object SimulationEngine {
@@ -19,11 +23,8 @@ object SimulationEngine {
 
   val eventqueue = new PriorityQueue[Event]()(EventOrder)
 
-  def run() = {
-    for (event <- eventqueue) {
+  def run() = for (event <- eventqueue) event.process
 
-    }
-  }
   def addEvent(e : Event) = eventqueue += e
 
 }

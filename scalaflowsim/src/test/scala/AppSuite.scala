@@ -13,4 +13,6 @@ class AppSuite extends FunSuite {
     assert(ApplicationRunner("PermuMatrixApp").asInstanceOf[PermuMatrixApp].selectedPairSize ===
       cellnet.numMachinesPerRack * cellnet.numRacks)
   }
+
+
 }
