@@ -20,15 +20,18 @@ private [controlplane] class SimpleSymmetricRouting (node : Node) extends Routin
   private def selectRandomOutlink(flow : Flow) : Link = {
     val selectidx = Math.max(flow.DstIP.hashCode(), flow.DstIP.hashCode() * -1) % node.outlink.size
     var i = 0
-    var l : Link = null
+    var selectedlink : Link = null
     def selectLink() {
-      for (l <- node.outlink) {
-        if (i == selectidx) return
+      for (link <- node.outlink.values) {
+        if (i == selectidx) {
+          selectedlink = link
+          return
+        }
         i = i + 1
       }
     }
     selectLink()
-    l
+    selectedlink
   }
 
   private def getDstParameters(flow : Flow) {
@@ -37,41 +40,44 @@ private [controlplane] class SimpleSymmetricRouting (node : Node) extends Routin
     dstCellID = getCellID(flow.DstIP)
   }
 
-  def nextNode(flow: Flow): Node = node.nodetype match {
+  def selectNextLink(flow: Flow) : Link = node.nodetype match {
     case ToRRouterType() => {
-      if (flowPathMap.contains(flow)) return flowPathMap(flow).end_to
+      if (flowPathMap.contains(flow)) return flowPathMap(flow)
       getDstParameters(flow)
       val router = node.asInstanceOf[Router]
       if (dstRange == localRange) {
         if (router.inLinks.contains(flow.DstIP)) {
           //in the same lan
-          return router.inLinks(flow.DstIP).end_from
+          return router.inLinks(flow.DstIP)
         }
         else {
           //send through arbitrary outlinks to aggregate layer
-          return selectRandomOutlink(flow).end_to
+          return selectRandomOutlink(flow)
         }
       }
-      return null
+      else {
+        throw new Exception("topology error, tor router cannot find a router, " +
+          "dstRange:" + dstRange + "\tlocalRange:" + localRange)
+      }
     }
     case AggregateRouterType() => {
-      if (flowPathMap.contains(flow)) return flowPathMap(flow).end_to
+      if (flowPathMap.contains(flow)) return flowPathMap(flow)
       getDstParameters(flow)
       val router = node.asInstanceOf[Router]
       if (getCellID(node.ip_addr(0)) == dstCellID) {
         //in the same cell
         if (router.inLinks.contains(dstRange)) {
-          return router.inLinks(dstRange).end_from
+          return router.inLinks(dstRange)
         }
         else {
           //send through arbitrary link to the code
-          return selectRandomOutlink(flow).end_to
+          return selectRandomOutlink(flow)
         }
       }
       return null
     }
     case CoreRouterType() => {
-      if (flowPathMap.contains(flow)) return flowPathMap(flow).end_to
+      if (flowPathMap.contains(flow)) return flowPathMap(flow)
       getDstParameters(flow)
       val router = node.asInstanceOf[Router]
       val routepaths = new ListBuffer[Link]
@@ -80,14 +86,16 @@ private [controlplane] class SimpleSymmetricRouting (node : Node) extends Routin
       }
       if (routepaths.size > 0) {
         val selectIdx = flow.DstIP.hashCode % routepaths.size
-        return routepaths(Math.max(selectIdx, selectIdx * -1)).end_from
+        return routepaths(Math.max(selectIdx, selectIdx * -1))
       }
       return null
     }
     case _ => {
-      if (flowPathMap.contains(flow)) return flowPathMap(flow).end_to
+      if (flowPathMap.contains(flow)) return flowPathMap(flow)
       //it's a host
-      return selectRandomOutlink(flow).end_to
+      val l =  selectRandomOutlink(flow)
+      if (l == null) throw new Exception("failed on the first hop")
+      l
     }
   }
 }

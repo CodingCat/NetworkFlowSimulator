@@ -37,7 +37,7 @@ class SimpleSymmetricRouting (router : Router) extends RoutingProtocol (router) 
     dstCellID = getCellID(flow.DstIP)
   }
 
-  def nextNode(flow: Flow): Node = router.routertype match {
+  def nextNode(flow: Flow): Node = router.nodetype match {
     case ToRRouterType() => {
       getDstParameters(flow)
       if (dstRange == localRange) {

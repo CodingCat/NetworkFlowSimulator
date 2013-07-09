@@ -1,5 +1,9 @@
 package network.data
 
+import network.events.CompleteFlowEvent
+import scalasim.simengine.SimulationEngine
+import scala.collection.mutable.ListBuffer
+
 /**
  *
  * @param srcIP
@@ -16,13 +20,31 @@ class Flow (
   def SrcIP = srcIP
 
   private var rate : Double = 0.0
+  private var tempRate : Double = Double.MaxValue
 
-  def setRate(r : Double) = rate = r
+  def setRate(r : Double) {
+    rate = r
+  }
+
+  def setTempRate(tr : Double) {
+    tempRate = tr
+  }
+
+  def Demand = demand
+
+  def getTempRate = tempRate
 
   def Rate = rate
+
+  def sync() {
+    rate = tempRate
+  }
+
 }
 
 
 object Flow {
+  val finishedFlows = new ListBuffer[Flow]
   def apply(srcIP : String, dstIP : String, size : Double) : Flow = new Flow(srcIP, dstIP, size)
+
 }

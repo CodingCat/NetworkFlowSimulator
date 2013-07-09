@@ -8,7 +8,7 @@ import scala.collection.mutable.HashMap
 abstract private [controlplane] class RoutingProtocol (val node : Node) {
   protected val flowPathMap = new HashMap[Flow, Link]
 
-  def nextNode(flow : Flow) : Node
+  def selectNextLink(flow : Flow) : Link
 
   def insertFlowPath (flow : Flow, link : Link) {
     flowPathMap += (flow -> link)

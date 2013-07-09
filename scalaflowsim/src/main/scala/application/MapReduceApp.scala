@@ -5,7 +5,7 @@ import network.topo.HostContainer
 
 class MapReduceApp (servers : HostContainer) extends ServerApp (servers) {
 
-  class SparkJob {
+  class MapReduceJob {
 
   }
 

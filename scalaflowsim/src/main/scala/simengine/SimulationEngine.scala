@@ -1,6 +1,7 @@
 package scalasim.simengine
 
 import scala.collection.immutable.TreeMap
+import scala.collection.mutable.HashSet
 
 
 object SimulationEngine {
@@ -19,21 +20,27 @@ object SimulationEngine {
 
   var currentTime : Double = 0.0
 
-  var eventqueue = new TreeMap[Double, Event]()(KeyOrder)
+  var eventqueue = new TreeMap[Double,  HashSet[Event]]()(KeyOrder)//timestamp -> event
 
   def run() {
-    for (event <- eventqueue.values) {
+    for (eventsAtMoment <- eventqueue.values; event <- eventsAtMoment) {
       event.process
       currentTime = event.getTimeStamp
     }
   }
 
   def addEvent(e : Event) {
-    eventqueue = eventqueue + (e.getTimeStamp -> e)
+    if (eventqueue.contains(e.getTimeStamp) == false)
+      eventqueue += e.getTimeStamp -> new HashSet[Event]
+    eventqueue(e.getTimeStamp) += e
   }
 
   def cancelEvent(e : Event) {
     eventqueue = eventqueue - e.getTimeStamp
+  }
+
+  def clear() {
+    eventqueue = eventqueue.empty
   }
 }
 

@@ -1,6 +1,9 @@
 package scalasim.simengine
 
-abstract class Event (protected val timestamp : Double) {
+abstract class Event (protected var timestamp : Double) {
+  def setTimeStamp(t : Double) {
+    timestamp = t
+  }
   def getTimeStamp() = timestamp
   def process
 }

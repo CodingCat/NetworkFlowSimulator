@@ -16,7 +16,7 @@ class PermuMatrixApp (servers : HostContainer) extends ServerApp (servers) {
   private val selectedPair = new mutable.HashMap[String, String]//destination ip -> src ip
   private val ipHostMap = new mutable.HashMap[String, Host]//ip -> host
 
-  private def init() {
+  def init() {
     for (i <- 0 until servers.size) {
       ipHostMap += servers(i).ip_addr(0) -> servers(i).asInstanceOf[Host]
     }
@@ -38,8 +38,9 @@ class PermuMatrixApp (servers : HostContainer) extends ServerApp (servers) {
   def run() {
     selectMachinePairs()
     for (srcdstPair <- selectedPair) {
-      SimulationEngine.eventqueue.enqueue(
-        new StartNewFlowEvent(Flow(srcdstPair._1, srcdstPair._2, 0), ipHostMap(srcdstPair._1) , 0))
+      val newflowevent = new StartNewFlowEvent(Flow(srcdstPair._1, srcdstPair._2, 0), ipHostMap(srcdstPair._1),
+        SimulationEngine.currentTime)
+      SimulationEngine.eventqueue = SimulationEngine.eventqueue + (SimulationEngine.currentTime -> newflowevent)
     }
   }
 

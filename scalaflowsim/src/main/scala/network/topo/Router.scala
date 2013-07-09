@@ -16,7 +16,7 @@ class Router (nodetype : NodeType) extends Node(nodetype) {
     if (otherEnd.isInstanceOf[Router]) inLinks += otherEnd.ip_addr(0) -> l
   }
 
-  def receiveFlow(flow : Flow) : Node = controlPlane.nextNode(flow)
+ // def receiveFlow(flow : Flow) : Node = controlPlane.nextNode(flow)
 }
 
 class RouterContainer () extends NodeContainer {

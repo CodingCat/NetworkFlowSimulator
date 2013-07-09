@@ -9,13 +9,19 @@ abstract private [controlplane] class ResourceAllocator (node : Node) {
 
   protected val linkFlowMap = new HashMap[Link, HashSet[Flow]]
 
-  def init() {
-    for (link <- node.outlink.values) linkFlowMap += (link -> new HashSet[Flow])
-  }
-
   def allocate(flow : Flow, link : Link) : Double
 
-  def insertNewLinkFlowPair(link : Link, flow : Flow) = linkFlowMap(link) += flow
+  def insertNewLinkFlowPair(link : Link, flow : Flow) {
+    if (linkFlowMap.contains(link) == false) {
+      linkFlowMap += (link -> new HashSet[Flow])
+    }
+    linkFlowMap(link) += flow
+  }
 
-  init()
+  def getLinkAvailableBandwidth(l : Link) : Double = {
+    var usedBandwidth = 0.0
+    for (f <- linkFlowMap(l)) usedBandwidth += f.Rate
+    l.bandwidth - usedBandwidth
+  }
+
 }

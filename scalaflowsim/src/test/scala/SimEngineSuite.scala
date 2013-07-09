@@ -7,19 +7,19 @@ class SimEngineSuite extends FunSuite{
     def process() {
 
     }
-
   }
 
   test ("Events should be ordered with their timestamp") {
     val e1 = new DummySingleEntity("e1", 10)
     val e2 = new DummySingleEntity("e2", 5)
     val e3 = new DummySingleEntity("e3", 20)
+    SimulationEngine.clear()
     SimulationEngine.addEvent(e1)
     SimulationEngine.addEvent(e2)
     SimulationEngine.addEvent(e3)
     var r = -1.0
     for (e <- SimulationEngine.eventqueue.values) {
-      assert((r < e.asInstanceOf[DummySingleEntity].getTimeStamp) === true)
+      assert((r <= e.asInstanceOf[DummySingleEntity].getTimeStamp) === true)
       r = e.asInstanceOf[DummySingleEntity].getTimeStamp
     }
   }
@@ -28,6 +28,7 @@ class SimEngineSuite extends FunSuite{
     val e1 = new DummySingleEntity("e1", 10)
     val e2 = new DummySingleEntity("e2", 5)
     val e3 = new DummySingleEntity("e3", 20)
+    SimulationEngine.clear()
     SimulationEngine.addEvent(e1)
     SimulationEngine.addEvent(e2)
     SimulationEngine.addEvent(e3)
