@@ -38,9 +38,9 @@ class PermuMatrixApp (servers : HostContainer) extends ServerApp (servers) {
   def run() {
     selectMachinePairs()
     for (srcdstPair <- selectedPair) {
-      val newflowevent = new StartNewFlowEvent(Flow(srcdstPair._1, srcdstPair._2, 0), ipHostMap(srcdstPair._1),
+      val newflowevent = new StartNewFlowEvent(Flow(srcdstPair._1, srcdstPair._2, 100000), ipHostMap(srcdstPair._1),
         SimulationEngine.currentTime)
-      SimulationEngine.eventqueue = SimulationEngine.eventqueue + (SimulationEngine.currentTime -> newflowevent)
+      SimulationEngine.addEvent(newflowevent)
     }
   }
 

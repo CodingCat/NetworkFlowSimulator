@@ -1,14 +1,16 @@
 package scalasim.test
 
-import application.PermuMatrixApp
 import network.topo.Pod
-import org.scalatest.FunSuite
 import scalasim.application.ApplicationRunner
+import scalasim.simengine.SimulationEngine
 import scalasim.XmlParser
+import application.PermuMatrixApp
+import org.scalatest.FunSuite
 
 class AppSuite extends FunSuite {
 
   test ("PermuMatrixApp can build the matrix correctly") {
+    SimulationEngine.clear
     XmlParser.loadConf("config.xml")
     val cellnet = new Pod(1)
     ApplicationRunner.setResource(cellnet.getAllHostsInPod)

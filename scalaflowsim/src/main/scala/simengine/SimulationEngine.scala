@@ -20,7 +20,7 @@ object SimulationEngine {
 
   var currentTime : Double = 0.0
 
-  var eventqueue = new TreeMap[Double,  HashSet[Event]]()(KeyOrder)//timestamp -> event
+  private var eventqueue = new TreeMap[Double,  HashSet[Event]]()(KeyOrder)//timestamp -> event
 
   def run() {
     for (eventsAtMoment <- eventqueue.values; event <- eventsAtMoment) {
@@ -29,6 +29,8 @@ object SimulationEngine {
     }
   }
 
+  def Events() = eventqueue.values
+
   def addEvent(e : Event) {
     if (eventqueue.contains(e.getTimeStamp) == false)
       eventqueue += e.getTimeStamp -> new HashSet[Event]
@@ -36,7 +38,13 @@ object SimulationEngine {
   }
 
   def cancelEvent(e : Event) {
-    eventqueue = eventqueue - e.getTimeStamp
+    if (eventqueue(e.getTimeStamp).contains(e)) {
+      eventqueue(e.getTimeStamp) -= e
+      if (eventqueue(e.getTimeStamp()).isEmpty) eventqueue = eventqueue - e.getTimeStamp
+    }
+    else {
+      throw new Exception("no such an event to cancel")
+    }
   }
 
   def clear() {

@@ -32,13 +32,19 @@ class ControlPlane(node : Node) {
     val nextlink = routingModule.selectNextLink(flow)
     val nextnode = nextNode(nextlink)
     routingModule.insertFlowPath(flow, nextlink)
-    if (nextlink.end_from == node) resourceModule.allocate(flow, nextlink)
+    if (nextlink.end_from == node) {
+      resourceModule.allocate(flow, nextlink)
+    }
+    else {
+      nextnode.controlPlane.allocate(flow, nextlink)
+    }
     if (nextnode.ip_addr(0) != flow.DstIP) {
       nextnode.controlPlane.decide(flow)
     }
     else {
       //determine the final flow
       flow.sync()
+      println("scheduling completeEvent")
       val completeEvent = new CompleteFlowEvent(flow, SimulationEngine.currentTime + flow.Demand / flow.Rate)
       SimulationEngine.addEvent(completeEvent)
     }

@@ -20,6 +20,6 @@ class ControlPlaneSuite extends FunSuite {
     ApplicationRunner.installApplication()
     ApplicationRunner("PermuMatrixApp").run()
     SimulationEngine.run()
-
+    assert(Flow.finishedFlows.size === 2)
   }
 }
