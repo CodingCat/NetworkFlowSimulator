@@ -1,7 +1,5 @@
 package network.data
 
-import network.events.CompleteFlowEvent
-import scalasim.simengine.SimulationEngine
 import scala.collection.mutable.ListBuffer
 
 /**
@@ -46,5 +44,5 @@ class Flow (
 object Flow {
   val finishedFlows = new ListBuffer[Flow]
   def apply(srcIP : String, dstIP : String, size : Double) : Flow = new Flow(srcIP, dstIP, size)
-
+  def reset() {finishedFlows.clear()}
 }

@@ -1,13 +1,13 @@
 package scalasim.simengine
 
-import scala.collection.immutable.TreeMap
-import scala.collection.mutable.HashSet
+import scala.collection.mutable.{TreeSet, SynchronizedSet}
+import scala.collection.mutable
 
 
 object SimulationEngine {
 
-  implicit object KeyOrder extends Ordering[Double] {
-    def compare(x : Double, y : Double) = x > y match {
+  implicit object EventOrder extends Ordering[Event] {
+    def compare(x : Event, y : Event) = x.getTimeStamp > y.getTimeStamp match {
       case true => 1
       case false => {
         x == y match {
@@ -20,35 +20,45 @@ object SimulationEngine {
 
   var currentTime : Double = 0.0
 
-  private var eventqueue = new TreeMap[Double,  HashSet[Event]]()(KeyOrder)//timestamp -> event
+  private var eventqueue = new TreeSet[Event]()(EventOrder)
+
+  private var numPassedEvents = 0
 
   def run() {
-    for (eventsAtMoment <- eventqueue.values; event <- eventsAtMoment) {
+    while (eventqueue.isEmpty == false) {
+      val event = eventqueue.head
+      if (event.getTimeStamp < currentTime) {
+        throw new Exception("cannot execute an event happened before, event timestamp: " +
+          event.getTimeStamp + ", currentTime:" + currentTime)
+      }
       event.process
+      numPassedEvents += 1
       currentTime = event.getTimeStamp
+      eventqueue -= event
     }
   }
 
-  def Events() = eventqueue.values
+  def Events() = eventqueue
 
-  def addEvent(e : Event) {
-    if (eventqueue.contains(e.getTimeStamp) == false)
-      eventqueue += e.getTimeStamp -> new HashSet[Event]
-    eventqueue(e.getTimeStamp) += e
+  def numFinishedEvents = numPassedEvents
+
+  def addEvent(e : Event) = {
+    eventqueue += e
   }
 
   def cancelEvent(e : Event) {
-    if (eventqueue(e.getTimeStamp).contains(e)) {
-      eventqueue(e.getTimeStamp) -= e
-      if (eventqueue(e.getTimeStamp()).isEmpty) eventqueue = eventqueue - e.getTimeStamp
+    if (eventqueue.contains(e)) {
+      eventqueue -= e
     }
     else {
       throw new Exception("no such an event to cancel")
     }
   }
 
-  def clear() {
-    eventqueue = eventqueue.empty
+  def reset () {
+    currentTime = 0.0
+    numPassedEvents = 0
+    eventqueue.clear()
   }
 }
 

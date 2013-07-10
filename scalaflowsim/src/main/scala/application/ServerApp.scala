@@ -5,6 +5,7 @@ import application.PermuMatrixApp
 
 abstract class ServerApp(protected val servers : HostContainer) {
   def run()
+  def reset()
 }
 
 object ServerApp {

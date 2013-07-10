@@ -4,11 +4,10 @@ import scalasim.XmlParser
 import network.topo.builder.{LanBuilder, IPInstaller}
 ;
 
-class Pod (private val cellID : Int) {
-
-  private val aggregateRouterNumber = XmlParser.getInt("scalasim.topology.cell.aggregaterouternum", 2)
-  private val rackNumber = XmlParser.getInt("scalasim.topology.cell.racknum", 4)
-  private val rackSize = XmlParser.getInt("scalasim.topology.cell.racksize", 20)
+class Pod (private val cellID : Int,
+           private val aggregateRouterNumber : Int = XmlParser.getInt("scalasim.topology.cell.aggregaterouternum", 2),
+           private val rackNumber : Int = XmlParser.getInt("scalasim.topology.cell.racknum", 4),
+           private val rackSize : Int = XmlParser.getInt("scalasim.topology.cell.racksize", 20)) {
 
   private val aggContainer = new RouterContainer()
   private val torContainer = new RouterContainer()

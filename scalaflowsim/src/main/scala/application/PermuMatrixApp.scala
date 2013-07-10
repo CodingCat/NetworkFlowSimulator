@@ -2,7 +2,7 @@ package application
 
 import scalasim.application.ServerApp
 import network.topo.{Host, HostContainer}
-import scala.collection.mutable
+import scala.collection.mutable.{ListMap, MultiMap, HashMap, Set}
 import scala.util.Random
 import scalasim.simengine.SimulationEngine
 import network.events.StartNewFlowEvent
@@ -13,8 +13,8 @@ import network.data.Flow
 //each machine should be selected for only once
 //and do not allow to send to itself
 class PermuMatrixApp (servers : HostContainer) extends ServerApp (servers) {
-  private val selectedPair = new mutable.HashMap[String, String]//destination ip -> src ip
-  private val ipHostMap = new mutable.HashMap[String, Host]//ip -> host
+  private val selectedPair = new HashMap[String, String] //src ip -> dst ip
+  private val ipHostMap = new HashMap[String, Host]//ip -> host
 
   def init() {
     for (i <- 0 until servers.size) {
@@ -25,11 +25,11 @@ class PermuMatrixApp (servers : HostContainer) extends ServerApp (servers) {
   private def selectMachinePairs() {
     for (i <- 0 until servers.size) {
       var proposedIdx = Random.nextInt(servers.size)
-      while (selectedPair.contains(servers(proposedIdx).ip_addr(0)) ||
-        proposedIdx == i) {
+      //currently, we allow a node to be selected for multiple times
+      while (proposedIdx == i) {
         proposedIdx = Random.nextInt(servers.size)
       }
-      selectedPair += servers(proposedIdx).ip_addr(0) -> servers(i).ip_addr(0)
+      selectedPair += (servers(i).ip_addr(0) -> servers(proposedIdx).ip_addr(0))
     }
   }
 
@@ -42,6 +42,11 @@ class PermuMatrixApp (servers : HostContainer) extends ServerApp (servers) {
         SimulationEngine.currentTime)
       SimulationEngine.addEvent(newflowevent)
     }
+  }
+
+  def reset() {
+    selectedPair.clear()
+    ipHostMap.clear()
   }
 
   init()

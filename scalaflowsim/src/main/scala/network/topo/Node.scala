@@ -3,7 +3,6 @@ package network.topo
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
 import network.controlplane.ControlPlane
-import network.data.Flow
 
 
 abstract class NodeType
@@ -19,6 +18,8 @@ class Node (val nodetype : NodeType) {
   val controlPlane = new ControlPlane(this)
   def assignIP(ip : String) = ip_addr += ip
   def addLink(l : Link) = outlink += (l.end_to.ip_addr(0) -> l)
+
+  override def toString = ip_addr(0)
 }
 
 trait NodeContainer {

@@ -1,6 +1,6 @@
 package network.controlplane.routing
 
-import network.topo.{Node, Router}
+import network.topo.Node
 
 
 private [controlplane] object RoutingProtocolFactory {

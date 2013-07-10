@@ -1,10 +1,6 @@
 package network.topo
 
 import scala.collection.mutable.HashMap
-import scalasim.XmlParser
-import network.data.Flow
-import network.controlplane.routing.RoutingProtocolFactory
-import network.controlplane.ControlPlane
 
 class Router (nodetype : NodeType) extends Node(nodetype) {
   val inLinks = new HashMap[String, Link]() //if the other end is a host, then the key is the ip of the host,

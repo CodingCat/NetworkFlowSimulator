@@ -24,5 +24,8 @@ object ApplicationRunner {
 
   def apply(name : String) : ServerApp = apps(name)
 
+  def reset() {
+    for (app <- apps.values) app.reset
+  }
 
 }

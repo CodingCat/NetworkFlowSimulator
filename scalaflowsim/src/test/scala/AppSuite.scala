@@ -10,9 +10,10 @@ import org.scalatest.FunSuite
 class AppSuite extends FunSuite {
 
   test ("PermuMatrixApp can build the matrix correctly") {
-    SimulationEngine.clear
     XmlParser.loadConf("config.xml")
     val cellnet = new Pod(1)
+    SimulationEngine.reset()
+    ApplicationRunner.reset()
     ApplicationRunner.setResource(cellnet.getAllHostsInPod)
     ApplicationRunner.installApplication()
     ApplicationRunner.run()

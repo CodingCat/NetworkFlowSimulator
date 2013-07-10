@@ -20,23 +20,21 @@ private [controlplane] class SimpleSymmetricRouting (node : Node) extends Routin
   private def selectRandomOutlink(flow : Flow) : Link = {
     val selectidx = Math.max(flow.DstIP.hashCode(), flow.DstIP.hashCode() * -1) % node.outlink.size
     var i = 0
-    var selectedlink : Link = null
-    def selectLink() {
+    def selectLink() : Link = {
       for (link <- node.outlink.values) {
         if (i == selectidx) {
-          selectedlink = link
-          return
+          return link
         }
         i = i + 1
       }
+      return null
     }
     selectLink()
-    selectedlink
   }
 
   private def getDstParameters(flow : Flow) {
-    dstRange = flow.DstIP.substring(0, flow.DstIP.lastIndexOf('.') + 1) + ".1"
-    localRange = node.ip_addr(0).substring(0, node.ip_addr(0).lastIndexOf('.') + 1) + ".1"
+    dstRange = flow.DstIP.substring(0, flow.DstIP.lastIndexOf('.') + 1) + "1"
+    localRange = node.ip_addr(0).substring(0, node.ip_addr(0).lastIndexOf('.') + 1) + "1"
     dstCellID = getCellID(flow.DstIP)
   }
 
@@ -51,13 +49,13 @@ private [controlplane] class SimpleSymmetricRouting (node : Node) extends Routin
           return router.inLinks(flow.DstIP)
         }
         else {
-          //send through arbitrary outlinks to aggregate layer
-          return selectRandomOutlink(flow)
+          throw new Exception("topology error, tor router cannot find a host, " +
+            "dstIP:" + flow.DstIP + "\tsrcIP:" + flow.SrcIP + "\tlocalIP:" + localRange)
         }
       }
       else {
-        throw new Exception("topology error, tor router cannot find a router, " +
-          "dstRange:" + dstRange + "\tlocalRange:" + localRange)
+        //send through arbitrary outlinks to aggregate layer
+        return selectRandomOutlink(flow)
       }
     }
     case AggregateRouterType() => {
@@ -70,11 +68,14 @@ private [controlplane] class SimpleSymmetricRouting (node : Node) extends Routin
           return router.inLinks(dstRange)
         }
         else {
-          //send through arbitrary link to the code
-          return selectRandomOutlink(flow)
+          throw new Exception("topology error, agg router cannot find a router, " +
+            "dstIP:" + flow.DstIP + "\tsrcIP:" + flow.SrcIP + "\tlocalIP:" + localRange)
         }
       }
-      return null
+      else {
+        //send through arbitrary link to the core
+        return selectRandomOutlink(flow)
+      }
     }
     case CoreRouterType() => {
       if (flowPathMap.contains(flow)) return flowPathMap(flow)
@@ -88,7 +89,10 @@ private [controlplane] class SimpleSymmetricRouting (node : Node) extends Routin
         val selectIdx = flow.DstIP.hashCode % routepaths.size
         return routepaths(Math.max(selectIdx, selectIdx * -1))
       }
-      return null
+      else {
+        throw new Exception("topology error, core router cannot find a router, " +
+          "dstIP:" + flow.DstIP + "\tsrcIP:" + flow.SrcIP + "\tlocalIP:" + localRange)
+      }
     }
     case _ => {
       if (flowPathMap.contains(flow)) return flowPathMap(flow)

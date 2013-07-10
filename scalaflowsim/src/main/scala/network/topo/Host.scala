@@ -1,7 +1,5 @@
 package network.topo
 
-import network.data.Flow
-
 
 class Host (hosttype : NodeType) extends Node (hosttype) {
 

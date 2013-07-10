@@ -12,4 +12,8 @@ class MapReduceApp (servers : HostContainer) extends ServerApp (servers) {
   def run() {
 
   }
+
+  def reset() {
+
+  }
 }
