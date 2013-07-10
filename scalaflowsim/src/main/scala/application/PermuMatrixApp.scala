@@ -22,6 +22,10 @@ class PermuMatrixApp (servers : HostContainer) extends ServerApp (servers) {
     }
   }
 
+  def insertTrafficPair(src : String, dst : String) {
+    selectedPair += src -> dst
+  }
+
   private def selectMachinePairs() {
     for (i <- 0 until servers.size) {
       var proposedIdx = Random.nextInt(servers.size)
@@ -36,9 +40,9 @@ class PermuMatrixApp (servers : HostContainer) extends ServerApp (servers) {
   def selectedPairSize = selectedPair.size
 
   def run() {
-    selectMachinePairs()
+    if (selectedPair.size == 0) selectMachinePairs()
     for (srcdstPair <- selectedPair) {
-      val newflowevent = new StartNewFlowEvent(Flow(srcdstPair._1, srcdstPair._2, 100000), ipHostMap(srcdstPair._1),
+      val newflowevent = new StartNewFlowEvent(Flow(srcdstPair._1, srcdstPair._2, 1), ipHostMap(srcdstPair._1),
         SimulationEngine.currentTime)
       SimulationEngine.addEvent(newflowevent)
     }

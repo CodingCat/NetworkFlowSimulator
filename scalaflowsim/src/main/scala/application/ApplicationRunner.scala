@@ -3,6 +3,7 @@ package scalasim.application
 import scalasim.XmlParser
 import network.topo.HostContainer
 import scala.collection.mutable
+import application.PermuMatrixApp
 
 object ApplicationRunner {
 
@@ -22,7 +23,9 @@ object ApplicationRunner {
 
   def run(appname : String) = apps(appname).run()
 
-  def apply(name : String) : ServerApp = apps(name)
+  def apply(name : String) = name match {
+    case "PermuMatrixApp" => apps(name).asInstanceOf[PermuMatrixApp]
+  }
 
   def reset() {
     for (app <- apps.values) app.reset

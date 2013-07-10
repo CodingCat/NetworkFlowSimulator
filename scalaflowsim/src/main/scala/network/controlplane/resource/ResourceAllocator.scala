@@ -2,18 +2,17 @@ package network.controlplane.resource
 
 import network.data.Flow
 import network.topo.{Node, Link}
-import scala.collection.mutable.{HashMap, HashSet}
-
+import scala.collection.mutable.{ListBuffer, HashMap, HashSet}
 
 abstract private [controlplane] class ResourceAllocator (node : Node) {
 
-  protected val linkFlowMap = new HashMap[Link, HashSet[Flow]]
+  protected val linkFlowMap = new HashMap[Link, ListBuffer[Flow]]
 
-  def allocate(flow : Flow, link : Link) : Double
+  def allocateForNewFlow(flow : Flow, link : Link)
 
   def insertNewLinkFlowPair(link : Link, flow : Flow) {
     if (linkFlowMap.contains(link) == false) {
-      linkFlowMap += (link -> new HashSet[Flow])
+      linkFlowMap += (link -> new ListBuffer[Flow])
     }
     linkFlowMap(link) += flow
   }
@@ -23,5 +22,4 @@ abstract private [controlplane] class ResourceAllocator (node : Node) {
     for (f <- linkFlowMap(l)) usedBandwidth += f.Rate
     l.bandwidth - usedBandwidth
   }
-
 }

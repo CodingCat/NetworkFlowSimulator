@@ -2,6 +2,7 @@ package scalasim.test
 
 import org.scalatest.FunSuite
 import scalasim.simengine.{SimulationEngine, EventOfSingleEntity}
+import scalasim.SimulationRunner
 
 
 class SimEngineSuite extends FunSuite{
@@ -17,10 +18,10 @@ class SimEngineSuite extends FunSuite{
   }
 
   test ("Events should be ordered with their timestamp") {
+    SimulationRunner.reset
     val e1 = new DummySingleEntity("e1", 10)
     val e2 = new DummySingleEntity("e2", 5)
     val e3 = new DummySingleEntity("e3", 20)
-    SimulationEngine.reset()
     SimulationEngine.addEvent(e1)
     SimulationEngine.addEvent(e2)
     SimulationEngine.addEvent(e3)
@@ -37,7 +38,7 @@ class SimEngineSuite extends FunSuite{
     val e1 = new DummySingleEntity("e1", 10)
     val e2 = new DummySingleEntity("e2", 5)
     val e3 = new DummySingleEntity("e3", 20)
-    SimulationEngine.reset()
+    SimulationRunner.reset
     SimulationEngine.addEvent(e1)
     SimulationEngine.addEvent(e2)
     SimulationEngine.addEvent(e3)
@@ -49,10 +50,10 @@ class SimEngineSuite extends FunSuite{
   }
 
   test ("eventqueue can be dynamically modified") {
+    SimulationRunner.reset
     val e1 = new DummySingleEntity("e1", 10)
     val e2 = new DummySingleEntity("e2", 5)
     val e3 = new DummySingleEntity("e3", 20)
-    SimulationEngine.reset()
     SimulationEngine.addEvent(e1)
     SimulationEngine.addEvent(e2)
     SimulationEngine.addEvent(e3)

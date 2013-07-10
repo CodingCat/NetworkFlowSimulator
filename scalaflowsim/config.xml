@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration SYSTEM "config.dtd" >
+<configuration>
+	<property>
+		<name>scalasim.topology.cell.aggregaterouternum</name>
+		<value>0</value>
+	</property>
+    <property>
+        <name>scalasim.topology.cell.racknum</name>
+        <value>1</value>
+    </property>
+    <property>
+        <name>scalasim.topology.cell.racksize</name>
+        <value>2</value>
+    </property>
+
+</configuration>

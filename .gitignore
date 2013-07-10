@@ -2,7 +2,6 @@
 *.html
 .classpath
 .project
-*.xml
 *.jar
 target/
 scalaflowsim/.DS_Store

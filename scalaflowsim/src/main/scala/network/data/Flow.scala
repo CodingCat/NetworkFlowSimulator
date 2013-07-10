@@ -2,6 +2,7 @@ package network.data
 
 import scala.collection.mutable.ListBuffer
 
+
 /**
  *
  * @param srcIP
@@ -11,8 +12,10 @@ import scala.collection.mutable.ListBuffer
 class Flow (
   private val srcIP : String,
   private val dstIP : String,
-  private val demand : Double//in bytes
+  private val demand : Double//in MB
   ) {
+
+  var status : FlowStatus = NewStartFlow
 
   def DstIP = dstIP
   def SrcIP = srcIP
@@ -20,13 +23,17 @@ class Flow (
   private var rate : Double = 0.0
   private var tempRate : Double = Double.MaxValue
 
-  def setRate(r : Double) {
-    rate = r
+  def changeRate (model : Char, r : Double) = model match {
+    case '+' => rate += r
+    case '-' => rate -= r
   }
 
-  def setTempRate(tr : Double) {
-    tempRate = tr
+  def changeTempRate(model : Char, tr : Double) = model match {
+    case '+' => tempRate += tr
+    case '-' => tempRate -= tr
   }
+
+  def setTempRate(tr : Double) = {tempRate = tr}
 
   def Demand = demand
 
@@ -36,8 +43,10 @@ class Flow (
 
   def sync() {
     rate = tempRate
+    status = RunningFlow
   }
 
+  override def toString() : String = ("Flow-" + srcIP + "-" + dstIP)
 }
 
 

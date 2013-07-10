@@ -2,7 +2,11 @@ name := "scalaflowsim"
 
 version := "1.0"
 
-libraryDependencies += "org.scalatest" % "scalatest_2.10" % "1.9.1" % "test"
+libraryDependencies ++= Seq(
+			"org.scalatest" % "scalatest_2.10" % "1.9.1" % "test",
+			"ch.qos.logback" % "logback-classic" % "1.0.13")
+
+resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 
 scalaVersion := "2.10.2"
 

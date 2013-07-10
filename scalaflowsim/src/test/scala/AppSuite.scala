@@ -17,7 +17,7 @@ class AppSuite extends FunSuite {
     ApplicationRunner.setResource(cellnet.getAllHostsInPod)
     ApplicationRunner.installApplication()
     ApplicationRunner.run()
-    assert(ApplicationRunner("PermuMatrixApp").asInstanceOf[PermuMatrixApp].selectedPairSize ===
+    assert(ApplicationRunner("PermuMatrixApp").selectedPairSize ===
       cellnet.numMachinesPerRack * cellnet.numRacks)
   }
 }

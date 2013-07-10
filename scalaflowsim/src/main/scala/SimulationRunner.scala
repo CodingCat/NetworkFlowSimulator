@@ -1,6 +1,17 @@
-package scalasim;
+package scalasim
+
+import network.data.Flow
+import scalasim.application.ApplicationRunner
+import scalasim.simengine.SimulationEngine
+
 
 object SimulationRunner {
+
+  def reset() {
+    Flow.reset()
+    SimulationEngine.reset()
+    ApplicationRunner.reset()
+  }
 
   def main(args:Array[String]) = {
    /* if (args.length != 1) {

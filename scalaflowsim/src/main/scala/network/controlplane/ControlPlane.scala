@@ -3,7 +3,7 @@ package network.controlplane
 import scalasim.simengine.SimulationEngine
 import scalasim.XmlParser
 import network.topo.{Link, Node}
-import network.controlplane.routing.RoutingProtocolFactory
+import network.controlplane.routing.{RoutingProtocol, RoutingProtocolFactory}
 import network.data.Flow
 import network.controlplane.resource.ResourceAllocatorFactory
 import network.events.CompleteFlowEvent
@@ -22,22 +22,32 @@ class ControlPlane(node : Node) {
     else link.end_to
   }
 
-  def allocate(flow : Flow, link : Link) : Double = resourceModule.allocate(flow, link)
-
-  def getLinkAvailableBandwidth(l : Link) : Double = {
-    resourceModule.getLinkAvailableBandwidth(l)
-  }
-
-  def decide(flow : Flow) : Unit = {
+  def allocateForNewFlow (flow : Flow) {
     val nextlink = routingModule.selectNextLink(flow)
     val nextnode = nextNode(nextlink)
-    routingModule.insertFlowPath(flow, nextlink)
-    if (nextnode.ip_addr(0) != flow.DstIP) {
-      nextnode.controlPlane.decide(flow)
+    resourceModule.insertNewLinkFlowPair(nextlink, flow)
+    resourceModule.allocateForNewFlow(flow, nextlink)
+    if (node.ip_addr(0) == flow.DstIP) {
+      flow.sync
     }
     else {
-      //determine the final flow
-      flow.sync()
+      nextnode.controlPlane.allocateForNewFlow(flow)
+    }
+  }
+
+  def getLinkAvailableBandwidth(l : Link) : Double = resourceModule.getLinkAvailableBandwidth(l)
+
+  def routing (flow : Flow) : Unit = {
+    if (node.ip_addr(0) != flow.DstIP) {
+      val nextlink = routingModule.selectNextLink(flow)
+      val nextnode = nextNode(nextlink)
+      routingModule.insertFlowPath(flow, nextlink)
+      nextnode.controlPlane.routing(flow)
+    }
+    else {
+      //arrive the destination
+      //start resource allocation process
+      RoutingProtocol.getFlowStarter(flow.SrcIP).controlPlane.allocateForNewFlow(flow)
       val completeEvent = new CompleteFlowEvent(flow, SimulationEngine.currentTime + flow.Demand / flow.Rate)
       SimulationEngine.addEvent(completeEvent)
     }
