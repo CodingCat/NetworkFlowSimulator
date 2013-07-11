@@ -106,4 +106,6 @@ class TopologySuite extends FunSuite {
       assert(cellnet.getHost(i, j).outlink.contains("10.1." + i + ".1") === true)
     }
   }
+
+
 }

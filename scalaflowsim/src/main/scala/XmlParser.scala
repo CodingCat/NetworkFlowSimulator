@@ -7,6 +7,10 @@ object XmlParser {
 
   private val properties = new HashMap[String, String]()
 
+  def addProperties(key : String, value : String) {
+    properties += key -> value
+  }
+
   def loadConf(confPath:String) = {
     val xmldata = XML.loadFile(confPath)
     for (ele <- xmldata \\ "property" ) {

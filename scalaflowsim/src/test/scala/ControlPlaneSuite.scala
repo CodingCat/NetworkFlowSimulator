@@ -9,7 +9,7 @@ import network.data._
 import scala.collection.mutable.ListBuffer
 import network.topo.ToRRouterType
 import scala.util.Sorting
-import scalasim.SimulationRunner
+import scalasim.{XmlParser, SimulationRunner}
 
 class ControlPlaneSuite extends FunSuite {
 
@@ -66,5 +66,53 @@ val torrouter = new Router(new ToRRouterType)
     ApplicationRunner("PermuMatrixApp").run()
     SimulationEngine.run()
     for (flow <- Flow.finishedFlows) assert(flow.Rate === 50)
+  }
+
+  test("flow can be allocated with correct bandwidth (within the agg router)") {
+    val pod = new Pod(1, 1, 2, 4)
+    SimulationRunner.reset
+    ApplicationRunner.setResource(pod.getAllHostsInPod)
+    ApplicationRunner.installApplication
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.0.2", "10.1.1.2")
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.0.3", "10.1.1.3")
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.0.4", "10.1.1.4")
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.0.5", "10.1.1.5")
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.1.2", "10.1.0.4")
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.1.3", "10.1.0.4")
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.1.4", "10.1.0.3")
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.1.5", "10.1.0.2")
+    ApplicationRunner("PermuMatrixApp").run()
+    SimulationEngine.run()
+    for (flow <- Flow.finishedFlows) {
+      if (flow.SrcIP == "10.1.1.2" || flow.SrcIP == "10.1.1.3" || flow.SrcIP == "10.1.0.4") {
+        assert(flow.Rate === 100.0 / 3.0)
+      }
+      else{
+        assert(flow.Rate === 50)
+      }
+    }
+  }
+
+
+  test("flow can be allocated with correct bandwidth (within the agg router, and agg link is congested)") {
+    XmlParser.loadConf("config.xml")
+    XmlParser.addProperties("scalasim.topology.crossrouterlinkrate", "100.0")
+    val pod = new Pod(1, 1, 2, 4)
+    SimulationRunner.reset
+    ApplicationRunner.setResource(pod.getAllHostsInPod)
+    ApplicationRunner.installApplication
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.0.2", "10.1.1.2")
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.0.3", "10.1.1.3")
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.0.4", "10.1.1.4")
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.0.5", "10.1.1.5")
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.1.2", "10.1.0.4")
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.1.3", "10.1.0.4")
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.1.4", "10.1.0.3")
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.1.5", "10.1.0.2")
+    ApplicationRunner("PermuMatrixApp").run()
+    SimulationEngine.run()
+    for (flow <- Flow.finishedFlows) {
+      assert(flow.Rate === 25)
+    }
   }
 }

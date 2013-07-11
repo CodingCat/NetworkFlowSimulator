@@ -6,11 +6,9 @@ import network.topo.{RouterContainer, Router, Link, HostContainer}
 
 object LanBuilder {
 
-  var locallinkBandwidth = XmlParser.getDouble("scalasim.topology.locallinkrate", 100.0)
-  var crossrouterlinkBandwidth = XmlParser.getDouble("scalasim.topology.crossrouterlinkrate", 1000.0)
-
   def buildLan(router: Router, hosts : HostContainer, startIdx : Int, endIdx : Int) {
     try {
+      var locallinkBandwidth = XmlParser.getDouble("scalasim.topology.locallinkrate", 100.0)
       if (router.ip_addr.length == 0) throw new RuntimeException("Engress Router hasn't got ipaddress")
       for (i <- startIdx to endIdx) {
         if (hosts(i).ip_addr.length == 0)  {
@@ -28,6 +26,7 @@ object LanBuilder {
 
   def buildLan(aggRouter: Router, routers : RouterContainer, startIdx : Int, endIdx : Int) {
     try {
+      var crossrouterlinkBandwidth = XmlParser.getDouble("scalasim.topology.crossrouterlinkrate", 1000.0)
       if (aggRouter.ip_addr.length == 0) throw new RuntimeException("AggRouter hasn't got ipaddress")
       for (i <- startIdx to endIdx) {
         if (routers(i).ip_addr.length == 0) {

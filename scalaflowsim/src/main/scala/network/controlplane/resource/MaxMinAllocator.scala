@@ -13,7 +13,7 @@ private [controlplane] class MaxMinAllocator (node : Node) extends ResourceAlloc
       var demandingflows = linkFlowMap(link).clone()
       var remainingBandwidth = link.bandwidth
       var avrRate = link.bandwidth / linkFlowMap(link).size
-      logInfo("avrRate on " + link + " is " + avrRate)
+      //logInfo("avrRate on " + link + " is " + avrRate)
       demandingflows = demandingflows.sorted(FlowRateOrdering)
       while (demandingflows.size != 0 && remainingBandwidth != 0) {
         val currentflow = demandingflows.head
