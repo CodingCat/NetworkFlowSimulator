@@ -20,6 +20,7 @@ abstract private [controlplane] class ResourceAllocator (node : Node) {
   def getLinkAvailableBandwidth(l : Link) : Double = {
     var usedBandwidth = 0.0
     for (f <- linkFlowMap(l)) usedBandwidth += f.Rate
-    l.bandwidth - usedBandwidth
+    //for double precision problem
+    Math.max(l.bandwidth - usedBandwidth, 0)
   }
 }
