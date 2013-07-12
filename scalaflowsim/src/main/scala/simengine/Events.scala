@@ -1,6 +1,8 @@
 package scalasim.simengine
 
-abstract class Event (protected var timestamp : Double) {
+import simengine.utils.Logging
+
+abstract class Event (protected var timestamp : Double) extends Logging {
   def setTimeStamp(t : Double) {
     timestamp = t
   }

@@ -31,9 +31,9 @@ object SimulationEngine {
         throw new Exception("cannot execute an event happened before, event timestamp: " +
           event.getTimeStamp + ", currentTime:" + currentTime)
       }
+      currentTime = event.getTimeStamp
       event.process
       numPassedEvents += 1
-      currentTime = event.getTimeStamp
       eventqueue -= event
     }
   }

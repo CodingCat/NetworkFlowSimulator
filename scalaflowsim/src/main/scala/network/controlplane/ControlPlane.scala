@@ -7,30 +7,37 @@ import network.controlplane.routing.{RoutingProtocol, RoutingProtocolFactory}
 import network.data.Flow
 import network.controlplane.resource.ResourceAllocatorFactory
 import network.events.CompleteFlowEvent
+import simengine.utils.Logging
 
 
-class ControlPlane(node : Node) {
-  protected val routingModule = RoutingProtocolFactory.getRoutingProtocol(
+class ControlPlane(node : Node) extends Logging {
+  private [controlplane] val routingModule = RoutingProtocolFactory.getRoutingProtocol(
     XmlParser.getString("scalasim.router.routing", "SimpleSymmetricRouting"), node)
-  protected val resourceModule = ResourceAllocatorFactory.getResourceAllocator(
+  private [controlplane] val resourceModule = ResourceAllocatorFactory.getResourceAllocator(
     XmlParser.getString("scalasim.router.resource", "MaxMin"), node)
 
 
 
-  def nextNode(link : Link) : Node = {
+  private def nextNode(link : Link) : Node = {
     if (link.end_to == node) link.end_from
     else link.end_to
   }
 
   def allocateForNewFlow (flow : Flow) {
-    val nextlink = routingModule.selectNextLink(flow)
-    val nextnode = nextNode(nextlink)
-    resourceModule.insertNewLinkFlowPair(nextlink, flow)
-    resourceModule.allocateForNewFlow(flow, nextlink)
     if (node.ip_addr(0) == flow.DstIP) {
       flow.sync
+      logTrace("schedule complete event for " + flow + " at " +
+        (SimulationEngine.currentTime + flow.Demand / flow.Rate))
+      val completeEvent = new CompleteFlowEvent(flow, SimulationEngine.currentTime + flow.Demand / flow.Rate)
+      SimulationEngine.addEvent(completeEvent)
     }
     else {
+      val nextlink = routingModule.selectNextLink(flow)
+      val nextnode = nextNode(nextlink)
+      var rpcorlocal = node
+      if (nextlink.end_from != node) rpcorlocal = nextnode
+      rpcorlocal.controlPlane.resourceModule.insertNewLinkFlowPair(nextlink, flow)
+      rpcorlocal.controlPlane.resourceModule.allocateForNewFlow(flow, nextlink)
       nextnode.controlPlane.allocateForNewFlow(flow)
     }
   }
@@ -38,9 +45,11 @@ class ControlPlane(node : Node) {
   def getLinkAvailableBandwidth(l : Link) : Double = resourceModule.getLinkAvailableBandwidth(l)
 
   def routing (flow : Flow) : Unit = {
+    logInfo("arrive at " + node.ip_addr(0))
     if (node.ip_addr(0) != flow.DstIP) {
       val nextlink = routingModule.selectNextLink(flow)
       val nextnode = nextNode(nextlink)
+      logDebug("send through " + nextlink)
       routingModule.insertFlowPath(flow, nextlink)
       nextnode.controlPlane.routing(flow)
     }
@@ -48,8 +57,6 @@ class ControlPlane(node : Node) {
       //arrive the destination
       //start resource allocation process
       RoutingProtocol.getFlowStarter(flow.SrcIP).controlPlane.allocateForNewFlow(flow)
-      val completeEvent = new CompleteFlowEvent(flow, SimulationEngine.currentTime + flow.Demand / flow.Rate)
-      SimulationEngine.addEvent(completeEvent)
     }
   }
 }

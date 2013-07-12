@@ -1,6 +1,7 @@
 package network.data
 
 import scala.collection.mutable.ListBuffer
+import simengine.utils.Logging
 
 
 /**
@@ -13,9 +14,10 @@ class Flow (
   private val srcIP : String,
   private val dstIP : String,
   private val demand : Double//in MB
-  ) {
+  ) extends Logging {
 
   var status : FlowStatus = NewStartFlow
+  private var hop : Int = 0
 
   def DstIP = dstIP
   def SrcIP = srcIP
@@ -42,9 +44,15 @@ class Flow (
   def Rate = rate
 
   def sync() {
+    logDebug("determine " + this + " rate to " + tempRate)
     rate = tempRate
     status = RunningFlow
   }
+
+  def increaseHop() {
+    hop += 1
+  }
+  def Hop() = hop
 
   override def toString() : String = ("Flow-" + srcIP + "-" + dstIP)
 }

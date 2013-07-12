@@ -3,6 +3,7 @@ package scalasim.test
 import org.scalatest.FunSuite
 import scalasim.simengine.{SimulationEngine, EventOfSingleEntity}
 import scalasim.SimulationRunner
+import scala.collection.mutable.ListBuffer
 
 
 class SimEngineSuite extends FunSuite{
@@ -11,34 +12,41 @@ class SimEngineSuite extends FunSuite{
       if (entity == "e1") {
         SimulationEngine.addEvent(new DummySingleEntity("e4", 15))
       }
-      //print(entity + "\t")
+      DummySingleEntity.finishedStamp += this.timestamp
     }
-
     override def toString() = entity
   }
 
+  object DummySingleEntity {
+    val finishedStamp = new ListBuffer[Double]
+    def reset() = finishedStamp.clear
+  }
+
+
   test ("Events should be ordered with their timestamp") {
     SimulationRunner.reset
-    val e1 = new DummySingleEntity("e1", 10)
-    val e2 = new DummySingleEntity("e2", 5)
-    val e3 = new DummySingleEntity("e3", 20)
+    DummySingleEntity.reset
+    val e1 = new DummySingleEntity("e1", 0)
+    val e2 = new DummySingleEntity("e2", 0)
+    val e3 = new DummySingleEntity("e3", 0)
     SimulationEngine.addEvent(e1)
     SimulationEngine.addEvent(e2)
     SimulationEngine.addEvent(e3)
+    SimulationEngine.run
     var r = -1.0
-    assert(SimulationEngine.Events().size === 3)
-    for (e <- SimulationEngine.Events) {
-     // println(e.getTimeStamp())
-      assert((r <= e.asInstanceOf[DummySingleEntity].getTimeStamp) === true)
-      r = e.asInstanceOf[DummySingleEntity].getTimeStamp
+    assert(DummySingleEntity.finishedStamp.size === 4)
+    for (e <- DummySingleEntity.finishedStamp) {
+      assert((r <= e) === true)
+      r = e
     }
   }
 
   test ("Events can be rescheduled") {
+    SimulationRunner.reset
+    DummySingleEntity.reset
     val e1 = new DummySingleEntity("e1", 10)
     val e2 = new DummySingleEntity("e2", 5)
     val e3 = new DummySingleEntity("e3", 20)
-    SimulationRunner.reset
     SimulationEngine.addEvent(e1)
     SimulationEngine.addEvent(e2)
     SimulationEngine.addEvent(e3)
@@ -51,6 +59,7 @@ class SimEngineSuite extends FunSuite{
 
   test ("eventqueue can be dynamically modified") {
     SimulationRunner.reset
+    DummySingleEntity.reset
     val e1 = new DummySingleEntity("e1", 10)
     val e2 = new DummySingleEntity("e2", 5)
     val e3 = new DummySingleEntity("e3", 20)
@@ -59,5 +68,18 @@ class SimEngineSuite extends FunSuite{
     SimulationEngine.addEvent(e3)
     SimulationEngine.run()
     assert(SimulationEngine.numFinishedEvents === 4)
+  }
+
+  test ("SimEngine can update the current system time") {
+    SimulationRunner.reset
+    DummySingleEntity.reset
+    val e1 = new DummySingleEntity("e1", 10)
+    val e2 = new DummySingleEntity("e2", 5)
+    val e3 = new DummySingleEntity("e3", 20)
+    SimulationEngine.addEvent(e1)
+    SimulationEngine.addEvent(e2)
+    SimulationEngine.addEvent(e3)
+    SimulationEngine.run()
+    assert(SimulationEngine.currentTime === 20)
   }
 }

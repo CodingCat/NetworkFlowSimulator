@@ -11,6 +11,7 @@ object SimulationRunner {
     Flow.reset()
     SimulationEngine.reset()
     ApplicationRunner.reset()
+    XmlParser.reset()
   }
 
   def main(args:Array[String]) = {

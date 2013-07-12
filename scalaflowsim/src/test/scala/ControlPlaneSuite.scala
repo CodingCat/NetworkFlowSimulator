@@ -10,12 +10,13 @@ import scala.collection.mutable.ListBuffer
 import network.topo.ToRRouterType
 import scala.util.Sorting
 import scalasim.{XmlParser, SimulationRunner}
+import simengine.utils.Logging
 
-class ControlPlaneSuite extends FunSuite {
+class ControlPlaneSuite extends FunSuite with Logging {
 
   test("flow can be routed within a rack") {
     SimulationRunner.reset
-val torrouter = new Router(new ToRRouterType)
+    val torrouter = new Router(new ToRRouterType)
     val rackservers = new HostContainer()
     rackservers.create(40)
     IPInstaller.assignIPAddress(torrouter, "10.0.0.1")
@@ -26,6 +27,7 @@ val torrouter = new Router(new ToRRouterType)
     ApplicationRunner("PermuMatrixApp").run()
     SimulationEngine.run()
     assert(Flow.finishedFlows.size === rackservers.size)
+    for (flow <- Flow.finishedFlows) assert(flow.Hop() === 2)
   }
 
   test("flow can be routed across racks") {
@@ -57,6 +59,7 @@ val torrouter = new Router(new ToRRouterType)
   }
 
   test("flow can be allocated with correct bandwidth (within the same rack)") {
+    logInfo("flow can be allocated with correct bandwidth (within the same rack)")
     val pod = new Pod(1, 0, 1, 2)
     SimulationRunner.reset
     ApplicationRunner.setResource(pod.getAllHostsInPod)
@@ -68,7 +71,8 @@ val torrouter = new Router(new ToRRouterType)
     for (flow <- Flow.finishedFlows) assert(flow.Rate === 50)
   }
 
-  test("flow can be allocated with correct bandwidth (within the agg router)") {
+  test("flow can be allocated with correct bandwidth (within the agg router) (case 1)") {
+    logInfo("flow can be allocated with correct bandwidth (within the agg router) (case 1)")
     val pod = new Pod(1, 1, 2, 4)
     SimulationRunner.reset
     ApplicationRunner.setResource(pod.getAllHostsInPod)
@@ -93,6 +97,33 @@ val torrouter = new Router(new ToRRouterType)
     }
   }
 
+  test("flow can be allocated with correct bandwidth (within the agg router) (case 2)") {
+    logInfo("start flow can be allocated with correct bandwidth (within the agg router) (when a flow decrease" +
+      " its rate, the other should take the margin) ")
+    val pod = new Pod(1, 1, 2, 4)
+    SimulationRunner.reset
+    ApplicationRunner.setResource(pod.getAllHostsInPod)
+    ApplicationRunner.installApplication
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.0.2", "10.1.1.2")
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.0.2", "10.1.1.3")
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.0.2", "10.1.1.4")
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.0.2", "10.1.1.5")
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.1.3", "10.1.0.3")
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.1.4", "10.1.0.4")
+    ApplicationRunner("PermuMatrixApp").insertTrafficPair("10.1.1.5", "10.1.0.5")
+    ApplicationRunner("PermuMatrixApp").run()
+    SimulationEngine.run()
+    for (flow <- Flow.finishedFlows) {
+      println(flow)
+      if (flow.SrcIP == "10.1.0.2" ) {
+        assert(flow.Rate === 25)
+      }
+      else{
+        assert(flow.Rate === 75)
+      }
+    }
+  }
+
 
   test("flow can be allocated with correct bandwidth (within the agg router, and agg link is congested)") {
     XmlParser.loadConf("config.xml")
@@ -112,7 +143,7 @@ val torrouter = new Router(new ToRRouterType)
     ApplicationRunner("PermuMatrixApp").run()
     SimulationEngine.run()
     for (flow <- Flow.finishedFlows) {
-      assert(flow.Rate === 25)
+      assert(flow.Rate === 12.5)
     }
   }
 }

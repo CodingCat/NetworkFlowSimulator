@@ -40,7 +40,10 @@ private [controlplane] class SimpleSymmetricRouting (node : Node) extends Routin
 
   def selectNextLink(flow: Flow) : Link = node.nodetype match {
     case ToRRouterType() => {
-      if (flowPathMap.contains(flow)) return flowPathMap(flow)
+      if (flowPathMap.contains(flow)) {
+        return flowPathMap(flow)
+      }
+      flow.increaseHop()
       getDstParameters(flow)
       val router = node.asInstanceOf[Router]
       if (dstRange == localRange) {
@@ -60,6 +63,7 @@ private [controlplane] class SimpleSymmetricRouting (node : Node) extends Routin
     }
     case AggregateRouterType() => {
       if (flowPathMap.contains(flow)) return flowPathMap(flow)
+      flow.increaseHop()
       getDstParameters(flow)
       val router = node.asInstanceOf[Router]
       if (getCellID(node.ip_addr(0)) == dstCellID) {
@@ -79,6 +83,7 @@ private [controlplane] class SimpleSymmetricRouting (node : Node) extends Routin
     }
     case CoreRouterType() => {
       if (flowPathMap.contains(flow)) return flowPathMap(flow)
+      flow.increaseHop()
       getDstParameters(flow)
       val router = node.asInstanceOf[Router]
       val routepaths = new ListBuffer[Link]
@@ -99,6 +104,7 @@ private [controlplane] class SimpleSymmetricRouting (node : Node) extends Routin
       //it's a host
       val l =  selectRandomOutlink(flow)
       if (l == null) throw new Exception("failed on the first hop")
+      flow.increaseHop()
       l
     }
   }

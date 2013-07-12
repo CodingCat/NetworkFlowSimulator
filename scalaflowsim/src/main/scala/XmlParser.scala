@@ -18,6 +18,8 @@ object XmlParser {
     }
   }
 
+  def reset() = properties.clear()
+
   def getString(key:String, defaultValue:String) : String = {
     properties.getOrElse(key, defaultValue)
   }
