@@ -30,7 +30,6 @@ class Flow (
   private var tempRate : Double = Double.MaxValue
 
   def bindEvent(ce : CompleteFlowEvent) {
-    if (ce == null) throw new Exception("")
     bindedCompleteEvent = ce
   }
 
@@ -52,7 +51,6 @@ class Flow (
     if (bindedCompleteEvent == null) {
       throw new Exception("bindedCompleteEvent is null")
     }
-    if (!SimulationEngine.contains(bindedCompleteEvent)) println("fuck " + bindedCompleteEvent)
     SimulationEngine.reschedule(bindedCompleteEvent,
       SimulationEngine.currentTime + demand / rate)
   }

@@ -116,7 +116,6 @@ class ControlPlaneSuite extends FunSuite with Logging {
     ApplicationRunner("PermuMatrixApp").run()
     SimulationEngine.run()
     for (flow <- Flow.finishedFlows) {
-      println(flow)
       if (flow.SrcIP == "10.1.0.2" ) {
         assert(flow.Rate === 25)
       }
