@@ -90,7 +90,8 @@ class ControlPlaneSuite extends FunSuite with Logging {
     SimulationEngine.run()
     for (flow <- Flow.finishedFlows) {
       if (flow.SrcIP == "10.1.1.2" || flow.SrcIP == "10.1.1.3" || flow.SrcIP == "10.1.0.4") {
-        assert(flow.Rate === 100.0 / 3.0)
+        assert(BigDecimal(flow.Rate).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble ===
+          BigDecimal(100.0 / 3.0).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble)
       }
       else{
         assert(flow.Rate === 50)

@@ -32,7 +32,7 @@ private [controlplane] class MaxMinAllocator (node : Node) extends ResourceAlloc
           remainingBandwidth -= avrRate
         }
         demandingflows.remove(0)
-        if (demandingflows.size == 0) avrRate = remainingBandwidth / demandingflows.size
+        if (demandingflows.size != 0) avrRate = remainingBandwidth / demandingflows.size
       }
     }
   }
