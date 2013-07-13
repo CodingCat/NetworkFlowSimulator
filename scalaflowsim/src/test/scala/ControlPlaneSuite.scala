@@ -41,16 +41,17 @@ class ControlPlaneSuite extends FunSuite with Logging {
   }
 
   test ("flows in a collection can be ordered according to their rate or temprate") {
+    SimulationEngine.reset
     var flowset = new ListBuffer[Flow]
     flowset += new Flow("10.0.0.1", "10.0.0.2", 1000)
-    flowset(0).status = RunningFlow
+    flowset(0).status = NewStartFlow
     flowset(0).changeRate('+', 10)
     flowset += new Flow("10.0.0.2", "10.0.0.3", 1000)
     flowset(1).status = NewStartFlow
     flowset(1).changeTempRate('-', Double.MaxValue)
     flowset(1).changeTempRate('+', 5)
     flowset += new Flow("10.0.0.3", "10.0.0.4", 1000)
-    flowset(2).status = RunningFlow
+    flowset(2).status = NewStartFlow
     flowset(2).changeRate('+', 20)
     flowset = flowset.sorted(FlowRateOrdering)
     assert(flowset(0).SrcIP === "10.0.0.2")
@@ -146,4 +147,5 @@ class ControlPlaneSuite extends FunSuite with Logging {
       assert(flow.Rate === 12.5)
     }
   }
+
 }

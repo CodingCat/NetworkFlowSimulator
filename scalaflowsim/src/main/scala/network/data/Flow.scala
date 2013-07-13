@@ -1,7 +1,9 @@
 package network.data
 
 import scala.collection.mutable.ListBuffer
+import scalasim.simengine.SimulationEngine
 import simengine.utils.Logging
+import network.events.CompleteFlowEvent
 
 
 /**
@@ -13,11 +15,13 @@ import simengine.utils.Logging
 class Flow (
   private val srcIP : String,
   private val dstIP : String,
-  private val demand : Double//in MB
+  private var demand : Double//in MB
   ) extends Logging {
 
   var status : FlowStatus = NewStartFlow
   private var hop : Int = 0
+  private var bindedCompleteEvent : CompleteFlowEvent = null
+  private var lastChangePoint  = 0.0
 
   def DstIP = dstIP
   def SrcIP = srcIP
@@ -25,14 +29,32 @@ class Flow (
   private var rate : Double = 0.0
   private var tempRate : Double = Double.MaxValue
 
-  def changeRate (model : Char, r : Double) = model match {
-    case '+' => rate += r
-    case '-' => rate -= r
+  def bindEvent(ce : CompleteFlowEvent) {
+    if (ce == null) throw new Exception("")
+    bindedCompleteEvent = ce
+  }
+
+  def changeRate (model : Char, r : Double) {
+    demand -= rate * (SimulationEngine.currentTime - lastChangePoint)
+    lastChangePoint = SimulationEngine.currentTime
+    if (model == '+') rate += r
+    if (model == '-') rate -= r
+    if (status == RunningFlow) rescheduleBindedEvent
   }
 
   def changeTempRate(model : Char, tr : Double) = model match {
     case '+' => tempRate += tr
     case '-' => tempRate -= tr
+  }
+
+  //TODO: shall I move this method to the control plane or simulationEngine?
+  private def rescheduleBindedEvent {
+    if (bindedCompleteEvent == null) {
+      throw new Exception("bindedCompleteEvent is null")
+    }
+    if (!SimulationEngine.contains(bindedCompleteEvent)) println("fuck " + bindedCompleteEvent)
+    SimulationEngine.reschedule(bindedCompleteEvent,
+      SimulationEngine.currentTime + demand / rate)
   }
 
   def setTempRate(tr : Double) = {tempRate = tr}

@@ -1,26 +1,16 @@
 package scalasim.simengine
 
-import scala.collection.mutable.{TreeSet, SynchronizedSet}
+import scala.collection.mutable.{ListBuffer, HashSet, TreeSet, SynchronizedSet}
+import simengine.utils.Logging
 import scala.collection.mutable
 
 
-object SimulationEngine {
-
-  implicit object EventOrder extends Ordering[Event] {
-    def compare(x : Event, y : Event) = x.getTimeStamp > y.getTimeStamp match {
-      case true => 1
-      case false => {
-        x == y match {
-          case true => 0
-          case false => -1
-        }
-      }
-    }
-  }
+object SimulationEngine extends Logging {
 
   var currentTime : Double = 0.0
 
-  private var eventqueue = new TreeSet[Event]()(EventOrder)
+  //TODO:any more performant implementation?
+  private var eventqueue = new ListBuffer[Event]()
 
   private var numPassedEvents = 0
 
@@ -42,17 +32,27 @@ object SimulationEngine {
 
   def numFinishedEvents = numPassedEvents
 
-  def addEvent(e : Event) = {
+  def addEvent(e : Event) {
     eventqueue += e
+    eventqueue = eventqueue.sortWith(_.getTimeStamp < _.getTimeStamp)
   }
 
-  def cancelEvent(e : Event) {
+  def contains(e : Event) = eventqueue.contains(e)
+
+  private def cancelEvent(e : Event) {
     if (eventqueue.contains(e)) {
       eventqueue -= e
     }
     else {
       throw new Exception("no such an event to cancel")
     }
+  }
+
+  def reschedule(e : Event, time : Double) {
+    if (time < currentTime) throw new Exception("cannot reschedule a event to the before")
+    cancelEvent(e)
+    e.setTimeStamp(time)
+    addEvent(e)
   }
 
   def reset () {

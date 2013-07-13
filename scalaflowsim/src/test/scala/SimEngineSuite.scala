@@ -22,12 +22,11 @@ class SimEngineSuite extends FunSuite{
     def reset() = finishedStamp.clear
   }
 
-
   test ("Events should be ordered with their timestamp") {
     SimulationRunner.reset
     DummySingleEntity.reset
-    val e1 = new DummySingleEntity("e1", 0)
-    val e2 = new DummySingleEntity("e2", 0)
+    val e1 = new DummySingleEntity("e1", 2)
+    val e2 = new DummySingleEntity("e2", 1)
     val e3 = new DummySingleEntity("e3", 0)
     SimulationEngine.addEvent(e1)
     SimulationEngine.addEvent(e2)
@@ -50,9 +49,10 @@ class SimEngineSuite extends FunSuite{
     SimulationEngine.addEvent(e1)
     SimulationEngine.addEvent(e2)
     SimulationEngine.addEvent(e3)
-    SimulationEngine.cancelEvent(e3)
-    e3.setTimeStamp(1)
-    SimulationEngine.addEvent(e3)
+    SimulationEngine.reschedule(e3, 1)
+    SimulationEngine.reschedule(e3, 2)
+    SimulationEngine.reschedule(e3, 3)
+    assert(SimulationEngine.contains(e3) === true)
     assert(SimulationEngine.Events.size === 3)
     assert(SimulationEngine.Events.head === e3)
   }

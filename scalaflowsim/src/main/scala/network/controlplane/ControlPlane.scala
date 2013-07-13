@@ -16,8 +16,6 @@ class ControlPlane(node : Node) extends Logging {
   private [controlplane] val resourceModule = ResourceAllocatorFactory.getResourceAllocator(
     XmlParser.getString("scalasim.router.resource", "MaxMin"), node)
 
-
-
   private def nextNode(link : Link) : Node = {
     if (link.end_to == node) link.end_from
     else link.end_to
@@ -26,9 +24,10 @@ class ControlPlane(node : Node) extends Logging {
   def allocateForNewFlow (flow : Flow) {
     if (node.ip_addr(0) == flow.DstIP) {
       flow.sync
-      logTrace("schedule complete event for " + flow + " at " +
-        (SimulationEngine.currentTime + flow.Demand / flow.Rate))
       val completeEvent = new CompleteFlowEvent(flow, SimulationEngine.currentTime + flow.Demand / flow.Rate)
+      logTrace("schedule complete event " + completeEvent +  " for " + flow + " at " +
+        (SimulationEngine.currentTime + flow.Demand / flow.Rate))
+      flow.bindEvent(completeEvent)
       SimulationEngine.addEvent(completeEvent)
     }
     else {
