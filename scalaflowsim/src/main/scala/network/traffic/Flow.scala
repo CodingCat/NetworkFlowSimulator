@@ -12,7 +12,7 @@ import network.events.CompleteFlowEvent
  * @param dstIP
  * @param demand
  */
-class Flow (
+class Flow private (
   private val srcIP : String,
   private val dstIP : String,
   private var demand : Double//in MB
