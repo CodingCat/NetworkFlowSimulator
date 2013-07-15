@@ -1,13 +1,13 @@
 package scalasim.test
 
 import org.scalatest.FunSuite
-import network.topo.{Pod, HostContainer, ToRRouterType, Router}
-import network.topo.builder.{LanBuilder, IPInstaller}
+import network.component.{Pod, HostContainer, ToRRouterType, Router}
+import network.component.builder.{LanBuilder, IPInstaller}
 import scalasim.application.ApplicationRunner
 import scalasim.simengine.SimulationEngine
 import network.data._
 import scala.collection.mutable.ListBuffer
-import network.topo.ToRRouterType
+import network.component.ToRRouterType
 import scala.util.Sorting
 import scalasim.{XmlParser, SimulationRunner}
 import simengine.utils.Logging
@@ -16,9 +16,9 @@ class ControlPlaneSuite extends FunSuite with Logging {
 
   test("flow can be routed within a rack") {
     SimulationRunner.reset
-    val torrouter = new Router(new ToRRouterType)
+    val torrouter = new Router(ToRRouterType)
     val rackservers = new HostContainer()
-    rackservers.create(40)
+    rackservers.create(2)
     IPInstaller.assignIPAddress(torrouter, "10.0.0.1")
     IPInstaller.assignIPAddress(torrouter.ip_addr(0), 2, rackservers, 0, rackservers.size - 1)
     LanBuilder.buildLan(torrouter, rackservers, 0, rackservers.size - 1)
@@ -29,7 +29,7 @@ class ControlPlaneSuite extends FunSuite with Logging {
     assert(Flow.finishedFlows.size === rackservers.size)
     for (flow <- Flow.finishedFlows) assert(flow.Hop() === 2)
   }
-
+/*
   test("flow can be routed across racks") {
     SimulationRunner.reset
     val pod = new Pod(1, 2, 4, 20)
@@ -57,9 +57,9 @@ class ControlPlaneSuite extends FunSuite with Logging {
     assert(flowset(0).SrcIP === "10.0.0.2")
     assert(flowset(1).SrcIP === "10.0.0.1")
     assert(flowset(2).SrcIP === "10.0.0.3")
-  }
-
-  test("flow can be allocated with correct bandwidth (within the same rack)") {
+  }*/
+   /*
+  test("flow can be allocated with correct bandwidth (within the same rack, testing startevent)") {
     logInfo("flow can be allocated with correct bandwidth (within the same rack)")
     val pod = new Pod(1, 0, 1, 2)
     SimulationRunner.reset
@@ -146,6 +146,6 @@ class ControlPlaneSuite extends FunSuite with Logging {
     for (flow <- Flow.finishedFlows) {
       assert(flow.Rate === 12.5)
     }
-  }
+  }    */
 
 }

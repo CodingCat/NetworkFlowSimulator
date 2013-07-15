@@ -2,7 +2,7 @@ package network.events
 
 import scalasim.simengine.{SimulationEngine, EventOfTwoEntities}
 import network.data.Flow
-import network.topo.Host
+import network.component.Host
 import simengine.utils.Logging
 
 class StartNewFlowEvent (flow : Flow, host : Host, timestamp : Double)

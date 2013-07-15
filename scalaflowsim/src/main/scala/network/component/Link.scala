@@ -1,4 +1,4 @@
-package network.topo
+package network.component
 
 
 class Link (val end_from : Node,

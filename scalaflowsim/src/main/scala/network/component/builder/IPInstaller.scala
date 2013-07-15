@@ -1,6 +1,6 @@
-package network.topo.builder
+package network.component.builder
 
-import network.topo.{NodeContainer, Node}
+import network.component.{NodeContainer, Node}
 
 object IPInstaller {
 

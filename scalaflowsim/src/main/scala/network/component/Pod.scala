@@ -1,7 +1,7 @@
-package network.topo
+package network.component
 
 import scalasim.XmlParser
-import network.topo.builder.{LanBuilder, IPInstaller}
+import network.component.builder.{LanBuilder, IPInstaller}
 ;
 
 class Pod (private val cellID : Int,
@@ -61,8 +61,8 @@ class Pod (private val cellID : Int,
   def getAllHostsInPod() : HostContainer = hostsContainer
 
   hostsContainer.create(rackNumber * rackSize)
-  torContainer.create(rackNumber, new ToRRouterType)
-  aggContainer.create(aggregateRouterNumber, new AggregateRouterType)
+  torContainer.create(rackNumber, ToRRouterType)
+  aggContainer.create(aggregateRouterNumber, AggregateRouterType)
 
   buildNetwork()
 }

@@ -1,10 +1,12 @@
 package network.controlplane.routing
 
-import network.topo.Node
+import network.component.Node
+import network.controlplane.ControlPlane
 
 
 private [controlplane] object RoutingProtocolFactory {
-  def getRoutingProtocol (name : String, node : Node) : RoutingProtocol = name match {
-    case "SimpleSymmetricRouting" => new SimpleSymmetricRouting(node)
+  def getRoutingProtocol (name : String, controlPlane : ControlPlane) : RoutingProtocol = name match {
+    case "SimpleSymmetricRouting" => new SimpleSymmetricRouting(controlPlane)
+    case _ => throw new Exception("unrecognizable routing protocol type")
   }
 }

@@ -1,6 +1,6 @@
 package scalasim.application
 
-import network.topo.HostContainer
+import network.component.HostContainer
 import application.PermuMatrixApp
 
 abstract class ServerApp(protected val servers : HostContainer) {

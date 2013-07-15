@@ -1,7 +1,7 @@
 package application
 
 import scalasim.application.ServerApp
-import network.topo.{Host, HostContainer}
+import network.component.{Host, HostContainer}
 import scala.collection.mutable.{HashSet, MultiMap, HashMap, Set}
 import scala.util.Random
 import scalasim.simengine.SimulationEngine

@@ -41,10 +41,14 @@ class Flow (
     if (status == RunningFlow) rescheduleBindedEvent
   }
 
+  def setRate(r : Double) = {rate = r}
+
   def changeTempRate(model : Char, tr : Double) = model match {
     case '+' => tempRate += tr
     case '-' => tempRate -= tr
   }
+
+  def setTempRate(tr : Double) = {tempRate = tr}
 
   //TODO: shall I move this method to the control plane or simulationEngine?
   private def rescheduleBindedEvent {
@@ -54,8 +58,6 @@ class Flow (
     SimulationEngine.reschedule(bindedCompleteEvent,
       SimulationEngine.currentTime + demand / rate)
   }
-
-  def setTempRate(tr : Double) = {tempRate = tr}
 
   def Demand = demand
 

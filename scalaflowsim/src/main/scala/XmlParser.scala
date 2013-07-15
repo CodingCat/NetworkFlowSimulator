@@ -20,6 +20,11 @@ object XmlParser {
 
   def reset() = properties.clear()
 
+  def getBoolean(key:String, defaultValue : Boolean) : Boolean = {
+    properties.getOrElse(key, defaultValue.toString).toBoolean
+  }
+
+
   def getString(key:String, defaultValue:String) : String = {
     properties.getOrElse(key, defaultValue)
   }

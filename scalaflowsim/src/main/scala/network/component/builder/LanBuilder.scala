@@ -1,7 +1,7 @@
-package network.topo.builder
+package network.component.builder
 
 import scalasim.XmlParser
-import network.topo.{RouterContainer, Router, Link, HostContainer}
+import network.component.{RouterContainer, Router, Link, HostContainer}
 
 
 object LanBuilder {
@@ -15,8 +15,8 @@ object LanBuilder {
           throw new RuntimeException("Hosts haven't got ipaddress, the idx is " + i)
         }
         val newlink = new Link(hosts(i), router, locallinkBandwidth)
-        hosts(i).addLink(newlink)
-        router.registerIncomeLink(newlink)
+        hosts(i).controlPlane.registerOutgoingLink(newlink)
+        router.controlPlane.registerIncomeLink(newlink)
       }
     }
     catch {
@@ -33,8 +33,8 @@ object LanBuilder {
           throw new RuntimeException("ToRRouters haven't got ipaddress, the idx is " + i)
         }
         val newlink = new Link(routers(i), aggRouter, crossrouterlinkBandwidth)
-        routers(i).addLink(newlink)
-        aggRouter.registerIncomeLink(newlink)
+        routers(i).controlPlane.registerOutgoingLink(newlink)
+        aggRouter.controlPlane.registerIncomeLink(newlink)
       }
     }
     catch {

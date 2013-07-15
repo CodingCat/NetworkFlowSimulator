@@ -1,4 +1,4 @@
-package network.topo
+package network.component
 
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
@@ -7,19 +7,17 @@ import network.controlplane.ControlPlane
 
 abstract class NodeType
 
-case class AggregateRouterType() extends NodeType
-case class ToRRouterType() extends  NodeType
-case class CoreRouterType() extends NodeType
-case class HostType() extends NodeType
+case object AggregateRouterType extends NodeType
+case object ToRRouterType extends  NodeType
+case object CoreRouterType extends NodeType
+case object HostType extends NodeType
 
 class Node (val nodetype : NodeType) {
   val ip_addr : ListBuffer[String] = new ListBuffer[String]
-  val outlink = new HashMap[String, Link]() // key -> destination ip
   val controlPlane = new ControlPlane(this)
   def assignIP(ip : String) = ip_addr += ip
-  def addLink(l : Link) = outlink += (l.end_to.ip_addr(0) -> l)
-
   override def toString = ip_addr(0)
+  def getLink(destinationIP : String) {}
 }
 
 trait NodeContainer {

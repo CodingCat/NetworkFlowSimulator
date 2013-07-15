@@ -1,29 +1,33 @@
 package network.controlplane.routing
 
-import network.topo.{Host, Link, Node}
+import network.component.{Host, Link, Node}
 import network.data.Flow
 import scala.collection.mutable.HashMap
 import scala.collection.mutable
 import simengine.utils.Logging
+import network.controlplane.ControlPlane
 
 
-abstract private [controlplane] class RoutingProtocol (val node : Node) extends Logging {
+abstract private [controlplane] class RoutingProtocol (protected val controlPlane : ControlPlane)
+  extends Logging {
   protected val flowPathMap = new HashMap[Flow, Link]
 
   def selectNextLink(flow : Flow) : Link
 
+  def fetchRoutingEntry(flow : Flow) : Link = flowPathMap(flow)
+
   def insertFlowPath (flow : Flow, link : Link) {
-    logTrace(node + " insert entry " + node + "->" + flow.DstIP)
+    logTrace(controlPlane + " insert entry " + controlPlane + "->" + flow.DstIP)
     flowPathMap += (flow -> link)
-    if (node.ip_addr(0) == flow.SrcIP) {
-      RoutingProtocol.globalFlowStarterMap += flow.SrcIP -> node.asInstanceOf[Host]
+    if (controlPlane.IP == flow.SrcIP) {
+      RoutingProtocol.globalFlowStarterMap += flow.SrcIP -> controlPlane.node.asInstanceOf[Host]
     }
   }
 
-  def getLink(flow : Flow) : Link = flowPathMap(flow)
+  def deleteEntry(flow : Flow) {flowPathMap -= flow}
 }
 
-object RoutingProtocol {
+private [network] object RoutingProtocol {
   protected val globalFlowStarterMap = new HashMap[String, Host]
 
   def getFlowStarter (ip : String) = globalFlowStarterMap(ip)
