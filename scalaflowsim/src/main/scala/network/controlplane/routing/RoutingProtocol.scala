@@ -31,4 +31,9 @@ private [network] object RoutingProtocol {
   protected val globalFlowStarterMap = new HashMap[String, Host]
 
   def getFlowStarter (ip : String) = globalFlowStarterMap(ip)
+
+  def apply (name : String, controlPlane : ControlPlane) : RoutingProtocol = name match {
+    case "SimpleSymmetricRouting" => new SimpleSymmetricRouting(controlPlane)
+    case _ => throw new Exception("unrecognizable routing protocol type")
+  }
 }

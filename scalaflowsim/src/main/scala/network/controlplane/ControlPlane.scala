@@ -3,19 +3,19 @@ package network.controlplane
 import scalasim.simengine.SimulationEngine
 import scalasim.XmlParser
 import network.component.{Link, Node}
-import network.controlplane.routing.{RoutingProtocol, RoutingProtocolFactory}
+import network.controlplane.routing.{RoutingProtocol}
 import network.traffic.{CompletedFlow, RunningFlow, NewStartFlow, Flow}
-import network.controlplane.resource.ResourceAllocatorFactory
 import network.events.CompleteFlowEvent
 import simengine.utils.Logging
 import scala.collection.mutable.HashMap
 import network.controlplane.topology.TopologyManager
+import network.controlplane.resource.ResourceAllocator
 
 
 class ControlPlane(private [controlplane] val node : Node) extends Logging {
-  private [controlplane] val routingModule = RoutingProtocolFactory.getRoutingProtocol(
+  private [controlplane] val routingModule = RoutingProtocol(
     XmlParser.getString("scalasim.router.routing", "SimpleSymmetricRouting"), this)
-  private [controlplane] val resourceModule = ResourceAllocatorFactory.getResourceAllocator(
+  private [controlplane] val resourceModule = ResourceAllocator(
     XmlParser.getString("scalasim.router.resource", "MaxMin"), this)
   private [controlplane] val topoModule = new TopologyManager(this)
 

@@ -35,3 +35,10 @@ abstract private [controlplane] class ResourceAllocator (controlPlane : ControlP
 
   def apply(link : Link) : ListBuffer[Flow] = linkFlowMap(link)
 }
+
+object ResourceAllocator {
+  def apply (name : String, controlPlane : ControlPlane) : ResourceAllocator = name match {
+    case "MaxMin" => new MaxMinAllocator(controlPlane)
+    case _ => throw new Exception("unrecognizable ResourceAllocator type")
+  }
+}
