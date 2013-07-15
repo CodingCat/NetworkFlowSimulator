@@ -1,4 +1,4 @@
-package network.data
+package network.traffic
 
 
 abstract class FlowStatus

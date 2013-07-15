@@ -15,4 +15,6 @@ class HostContainer extends NodeContainer {
   def addHost(servers : HostContainer) {
     for (i <- 0 until servers.size) nodecontainer += servers(i)
   }
+
+  override def apply(i : Int) = nodecontainer(i).asInstanceOf[Host]
 }

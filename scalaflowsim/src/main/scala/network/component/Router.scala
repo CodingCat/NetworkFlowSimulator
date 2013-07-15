@@ -14,5 +14,7 @@ class RouterContainer () extends NodeContainer {
   def create(nodeN : Int) {
     throw new RuntimeException("you have to specify the router type")
   }
+
+  override def apply(i : Int) = nodecontainer(i).asInstanceOf[Router]
 }
 

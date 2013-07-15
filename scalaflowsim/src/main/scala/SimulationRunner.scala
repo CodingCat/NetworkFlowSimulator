@@ -1,6 +1,6 @@
 package scalasim
 
-import network.data.Flow
+import network.traffic.Flow
 import scalasim.application.ApplicationRunner
 import scalasim.simengine.SimulationEngine
 
@@ -8,7 +8,6 @@ import scalasim.simengine.SimulationEngine
 object SimulationRunner {
 
   def reset() {
-    Flow.reset()
     SimulationEngine.reset()
     ApplicationRunner.reset()
     XmlParser.reset()

@@ -4,7 +4,7 @@ import scalasim.simengine.SimulationEngine
 import scalasim.XmlParser
 import network.component.{Link, Node}
 import network.controlplane.routing.{RoutingProtocol, RoutingProtocolFactory}
-import network.data.{CompletedFlow, RunningFlow, NewStartFlow, Flow}
+import network.traffic.{CompletedFlow, RunningFlow, NewStartFlow, Flow}
 import network.controlplane.resource.ResourceAllocatorFactory
 import network.events.CompleteFlowEvent
 import simengine.utils.Logging
@@ -24,16 +24,18 @@ class ControlPlane(private [controlplane] val node : Node) extends Logging {
     else link.end_to
   }
 
-  def allocateForNewFlow (flow : Flow) {
+  def allocate (flow : Flow) {
     if (node.ip_addr(0) == flow.DstIP) {
       if (flow.status != RunningFlow && flow.status != CompletedFlow){
-        flow.sync
-        val completeEvent = new CompleteFlowEvent(flow, RoutingProtocol.getFlowStarter(flow.SrcIP),
-          SimulationEngine.currentTime + flow.Demand / flow.Rate)
-        logTrace("schedule complete event " + completeEvent +  " for " + flow + " at " +
-          (SimulationEngine.currentTime + flow.Demand / flow.Rate))
-        flow.bindEvent(completeEvent)
-        SimulationEngine.addEvent(completeEvent)
+        if (flow.status == NewStartFlow) {
+          val completeEvent = new CompleteFlowEvent(flow, RoutingProtocol.getFlowStarter(flow.SrcIP),
+            SimulationEngine.currentTime + flow.Demand / flow.getTempRate)
+          logTrace("schedule complete event " + completeEvent + " for " + flow + " at " +
+            (SimulationEngine.currentTime + flow.Demand / flow.getTempRate))
+          flow.bindEvent(completeEvent)
+          SimulationEngine.addEvent(completeEvent)
+        }
+        flow.run
       }
     }
     else {
@@ -45,28 +47,24 @@ class ControlPlane(private [controlplane] val node : Node) extends Logging {
       }
       if (flow.status == NewStartFlow)
         rpccontrolplane.resourceModule.insertNewLinkFlowPair(nextlink, flow)
-      rpccontrolplane.resourceModule.allocateForNewFlow(flow, nextlink)
-      nextnode.controlPlane.allocateForNewFlow(flow)
+      rpccontrolplane.resourceModule.allocate(nextlink)
+      nextnode.controlPlane.allocate(flow)
     }
   }
 
   def finishFlow(flow : Flow) {
     if (node.ip_addr(0) != flow.DstIP) {
+      logTrace("flow ended at " + node.ip_addr(0))
       val nextlink = routingModule.fetchRoutingEntry(flow)
       val nextnode = nextNode(nextlink)
       val rpccontrolplane = {
         if (nextlink.end_from == node) node.controlPlane
         else nextnode.controlPlane
       }
-      //TODO: OK, this calling of deleteFlow may do nothing for some nodes
-      //TODO: necessary to remove it?
       rpccontrolplane.resourceModule.deleteFlow(flow)
       nextnode.controlPlane.finishFlow(flow)
       //reallocate resource to other flows
-      for (changingflow <- rpccontrolplane.resourceModule(nextlink)) {
-        logTrace("reallocate resource to flows at " + nextlink)
-        RoutingProtocol.getFlowStarter(changingflow.SrcIP).controlPlane.allocateForNewFlow(changingflow)
-      }
+      rpccontrolplane.resourceModule.reallocate(nextlink)
       logTrace("delete route table entry:" + flow + " at " + node.ip_addr(0))
       routingModule.deleteEntry(flow)
     }
@@ -95,7 +93,7 @@ class ControlPlane(private [controlplane] val node : Node) extends Logging {
     else {
       //arrive the destination
       //start resource allocation process
-      RoutingProtocol.getFlowStarter(flow.SrcIP).controlPlane.allocateForNewFlow(flow)
+      RoutingProtocol.getFlowStarter(flow.SrcIP).controlPlane.allocate(flow)
     }
   }
 

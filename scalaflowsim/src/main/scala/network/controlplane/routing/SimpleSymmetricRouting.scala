@@ -1,7 +1,7 @@
 package network.controlplane.routing
 
 import network.component._
-import network.data.Flow
+import network.traffic.Flow
 import network.component.ToRRouterType
 import scala.collection.mutable.ListBuffer
 import network.controlplane.ControlPlane

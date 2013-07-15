@@ -12,6 +12,6 @@
 		</encoder>
 	</appender>
 	<root level="trace">
-		<appender-ref ref="STDOUT" />
+		<appender-ref ref="FileChannel" />
 	</root>
 </configuration>

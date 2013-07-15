@@ -1,6 +1,6 @@
 package network.controlplane.resource
 
-import network.data.Flow
+import network.traffic.Flow
 import network.component.{Node, Link}
 import scala.collection.mutable.{ListBuffer, HashMap, HashSet}
 import network.controlplane.ControlPlane
@@ -9,7 +9,7 @@ abstract private [controlplane] class ResourceAllocator (controlPlane : ControlP
 
   protected val linkFlowMap = new HashMap[Link, ListBuffer[Flow]]
 
-  def allocateForNewFlow(flow : Flow, link : Link)
+  def allocate(link : Link)
 
   def reallocate(link : Link)
 

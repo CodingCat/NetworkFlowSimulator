@@ -1,4 +1,4 @@
-package network.data
+package network.traffic
 
 import scala.collection.mutable.ListBuffer
 import scalasim.simengine.SimulationEngine
@@ -30,34 +30,19 @@ class Flow (
   private var tempRate : Double = Double.MaxValue
 
   def bindEvent(ce : CompleteFlowEvent) {
+    logDebug("bind completeEvent for " + this)
     bindedCompleteEvent = ce
   }
 
-  def changeRate (model : Char, r : Double) {
+  def setRate(r : Double) {
     demand -= rate * (SimulationEngine.currentTime - lastChangePoint)
     lastChangePoint = SimulationEngine.currentTime
-    if (model == '+') rate += r
-    if (model == '-') rate -= r
-    if (status == RunningFlow) rescheduleBindedEvent
+    rate = r
+    //TODO: may causing some duplicated rescheduling in successive links
+    if ((status == RunningFlow || status == ChangingRateFlow) && demand > 0) rescheduleBindedEvent
   }
 
-  def setRate(r : Double) = {rate = r}
-
-  def changeTempRate(model : Char, tr : Double) = model match {
-    case '+' => tempRate += tr
-    case '-' => tempRate -= tr
-  }
-
-  def setTempRate(tr : Double) = {tempRate = tr}
-
-  //TODO: shall I move this method to the control plane or simulationEngine?
-  private def rescheduleBindedEvent {
-    if (bindedCompleteEvent == null) {
-      throw new Exception("bindedCompleteEvent is null")
-    }
-    SimulationEngine.reschedule(bindedCompleteEvent,
-      SimulationEngine.currentTime + demand / rate)
-  }
+  def setTempRate(tr : Double) {tempRate = tr}
 
   def Demand = demand
 
@@ -65,11 +50,34 @@ class Flow (
 
   def Rate = rate
 
-  def sync() {
-    logDebug("determine " + this + " rate to " + tempRate)
-    rate = tempRate
+
+
+  //TODO: shall I move this method to the control plane or simulationEngine?
+  private def rescheduleBindedEvent {
+    //TODO: in test ControlPlaneSuite "ordering" test, bindedCompleteEvent can be true
+    //TODO: that test case need to be polished, but not that urgent
+    if (bindedCompleteEvent != null) {
+      logTrace("reschedule " + toString + " completeEvent to " + (SimulationEngine.currentTime + demand / rate) +
+        " current time:" + SimulationEngine.currentTime)
+      SimulationEngine.reschedule(bindedCompleteEvent,
+        SimulationEngine.currentTime + demand / rate)
+    }
+  }
+
+  def run () {
+    logTrace("determine " + this + " rate to " + tempRate)
+    setRate(tempRate)
     status = RunningFlow
   }
+
+  def close() {
+    logTrace(this + " finishes at " + SimulationEngine.currentTime)
+    lastChangePoint = SimulationEngine.currentTime
+    status = CompletedFlow
+    setRate(0)
+  }
+
+  def LastCheckPoint : Double = lastChangePoint
 
   def increaseHop() {
     hop += 1
@@ -81,7 +89,5 @@ class Flow (
 
 
 object Flow {
-  val finishedFlows = new ListBuffer[Flow]
   def apply(srcIP : String, dstIP : String, size : Double) : Flow = new Flow(srcIP, dstIP, size)
-  def reset() {finishedFlows.clear()}
 }

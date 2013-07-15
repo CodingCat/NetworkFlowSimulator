@@ -1,10 +1,16 @@
 package network.events
 
 import scalasim.simengine.{SimulationEngine, EventOfTwoEntities}
-import network.data.Flow
+import network.traffic.Flow
 import network.component.Host
 import simengine.utils.Logging
 
+/**
+ *
+ * @param flow the new start flow
+ * @param host the invoker of the flow
+ * @param timestamp the timestamp of the event
+ */
 class StartNewFlowEvent (flow : Flow, host : Host, timestamp : Double)
   extends EventOfTwoEntities [Flow, Host] (flow, host, timestamp) {
 
