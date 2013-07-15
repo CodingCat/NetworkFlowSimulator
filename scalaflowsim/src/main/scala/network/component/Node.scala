@@ -1,6 +1,5 @@
 package network.component
 
-import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
 import network.controlplane.ControlPlane
 

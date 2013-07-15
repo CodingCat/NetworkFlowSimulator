@@ -1,9 +1,8 @@
 package network.controlplane.routing
 
-import network.component.{Host, Link, Node}
+import network.component.{Host, Link}
 import network.traffic.Flow
 import scala.collection.mutable.HashMap
-import scala.collection.mutable
 import simengine.utils.Logging
 import network.controlplane.ControlPlane
 

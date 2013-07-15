@@ -1,8 +1,7 @@
 package scalasim.simengine
 
-import scala.collection.mutable.{ListBuffer, HashSet, TreeSet, SynchronizedSet}
+import scala.collection.mutable.ListBuffer
 import simengine.utils.Logging
-import scala.collection.mutable
 
 
 object SimulationEngine extends Logging {

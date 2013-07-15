@@ -1,6 +1,5 @@
 package scalasim
 
-import network.traffic.Flow
 import scalasim.application.ApplicationRunner
 import scalasim.simengine.SimulationEngine
 

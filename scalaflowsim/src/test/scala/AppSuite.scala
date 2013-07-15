@@ -4,7 +4,6 @@ import network.component.Pod
 import scalasim.application.ApplicationRunner
 import scalasim.simengine.SimulationEngine
 import scalasim.XmlParser
-import application.PermuMatrixApp
 import org.scalatest.FunSuite
 
 class AppSuite extends FunSuite {

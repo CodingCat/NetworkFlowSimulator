@@ -1,6 +1,5 @@
 package network.traffic
 
-import scala.collection.mutable.ListBuffer
 import scalasim.simengine.SimulationEngine
 import simengine.utils.Logging
 import network.events.CompleteFlowEvent

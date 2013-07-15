@@ -1,6 +1,5 @@
 package network.component
 
-import network.controlplane.{ControlPlane}
 
 class Router (nodetype : NodeType) extends Node(nodetype) {
 

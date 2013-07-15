@@ -3,7 +3,6 @@ package network.events
 import scalasim.simengine.{SimulationEngine, EventOfTwoEntities}
 import network.traffic.Flow
 import network.component.Host
-import simengine.utils.Logging
 
 /**
  *

@@ -7,7 +7,6 @@ import scala.util.Random
 import scalasim.simengine.SimulationEngine
 import network.events.StartNewFlowEvent
 import network.traffic.Flow
-import scala.collection.mutable
 
 
 //build a permulate matrix between all machines,

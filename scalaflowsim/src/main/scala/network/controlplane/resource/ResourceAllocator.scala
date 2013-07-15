@@ -1,8 +1,8 @@
 package network.controlplane.resource
 
 import network.traffic.Flow
-import network.component.{Node, Link}
-import scala.collection.mutable.{ListBuffer, HashMap, HashSet}
+import network.component.Link
+import scala.collection.mutable.{ListBuffer, HashMap}
 import network.controlplane.ControlPlane
 
 abstract private [controlplane] class ResourceAllocator (controlPlane : ControlPlane) {

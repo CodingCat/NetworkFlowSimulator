@@ -1,8 +1,7 @@
 package network.events
 
-import scalasim.simengine.{EventOfTwoEntities, SimulationEngine, EventOfSingleEntity}
-import network.traffic.{CompletedFlow, Flow}
-import scalasim.XmlParser
+import scalasim.simengine.{EventOfTwoEntities, SimulationEngine}
+import network.traffic.Flow
 import network.component.Node
 
 /**

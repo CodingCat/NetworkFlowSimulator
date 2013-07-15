@@ -3,7 +3,7 @@ package network.controlplane
 import scalasim.simengine.SimulationEngine
 import scalasim.XmlParser
 import network.component.{Link, Node}
-import network.controlplane.routing.{RoutingProtocol}
+import network.controlplane.routing.RoutingProtocol
 import network.traffic.{CompletedFlow, RunningFlow, NewStartFlow, Flow}
 import network.events.CompleteFlowEvent
 import simengine.utils.Logging

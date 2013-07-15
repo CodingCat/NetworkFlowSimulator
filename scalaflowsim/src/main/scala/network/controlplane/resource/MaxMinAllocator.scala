@@ -1,7 +1,7 @@
 package network.controlplane.resource
 
 import network.traffic._
-import network.component.{Node, Link}
+import network.component.Link
 import simengine.utils.Logging
 import network.controlplane.ControlPlane
 import network.controlplane.routing.RoutingProtocol
