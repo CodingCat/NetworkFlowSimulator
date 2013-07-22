@@ -7,6 +7,7 @@ class OpenFlowMsgPipelineFactory extends ChannelPipelineFactory {
     val p = Channels.pipeline()
     p.addLast("msg decoder", new OpenFlowMsgDecoder)
     p.addLast("msg handler", new OpenFlowChannelHandler)
+    p.addLast("msg encoder", new OpenFlowMsgEncoder)
     p
   }
 }
