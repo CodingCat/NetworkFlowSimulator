@@ -1,8 +1,9 @@
 package scalasim
 
-import _root_.simengine.openflow.OpenFlowMsgDispatcher
+import scalasim.simengine.openflow.OpenFlowMsgDispatcher
 import scalasim.application.ApplicationRunner
 import scalasim.simengine.SimulationEngine
+import scalasim.network.component.Pod
 
 
 object SimulationRunner {
@@ -14,6 +15,8 @@ object SimulationRunner {
   }
 
   def main(args:Array[String]) = {
+    val pod = new Pod(1)
+    OpenFlowMsgDispatcher.addPod(pod)
     OpenFlowMsgDispatcher.initChannel()
   }
 }

@@ -1,10 +1,10 @@
-package network.controlplane.routing
+package scalasim.network.controlplane.routing
 
-import network.component.{Host, Link}
-import network.traffic.Flow
+import scalasim.network.component.{Host, Link}
+import scalasim.network.traffic.Flow
 import scala.collection.mutable.HashMap
-import simengine.utils.Logging
-import network.controlplane.ControlPlane
+import scalasim.simengine.utils.Logging
+import scalasim.network.controlplane.ControlPlane
 
 
 abstract private [controlplane] class RoutingProtocol (protected val controlPlane : ControlPlane)

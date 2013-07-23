@@ -1,7 +1,7 @@
-package network.component
+package scalasim.network.component
 
 import scala.collection.mutable.ListBuffer
-import network.controlplane.ControlPlane
+import scalasim.network.controlplane.ControlPlane
 
 
 abstract class NodeType

@@ -1,7 +1,7 @@
 package scalasim.simengine
 
 import scala.collection.mutable.ListBuffer
-import simengine.utils.Logging
+import scalasim.simengine.utils.Logging
 
 
 object SimulationEngine extends Logging {

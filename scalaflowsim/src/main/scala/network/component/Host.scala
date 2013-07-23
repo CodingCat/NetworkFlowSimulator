@@ -1,4 +1,4 @@
-package network.component
+package scalasim.network.component
 
 
 class Host (hosttype : NodeType) extends Node (hosttype) {

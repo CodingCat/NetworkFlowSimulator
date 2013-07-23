@@ -1,7 +1,7 @@
 package scalasim.application
 
+import scalasim.network.component.HostContainer
 import scalasim.XmlParser
-import network.component.HostContainer
 import scala.collection.mutable
 import application.PermuMatrixApp
 

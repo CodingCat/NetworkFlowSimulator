@@ -1,8 +1,8 @@
-package network.controlplane.topology
+package scalasim.network.controlplane.topology
 
 import scala.collection.mutable.HashMap
-import network.component.{Router, Host, HostType, Link}
-import network.controlplane.ControlPlane
+import scalasim.network.component.{Router, Host, HostType, Link}
+import scalasim.network.controlplane.ControlPlane
 
 class TopologyManager (private val cp : ControlPlane) {
 

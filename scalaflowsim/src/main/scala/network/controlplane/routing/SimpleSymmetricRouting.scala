@@ -1,10 +1,10 @@
-package network.controlplane.routing
+package scalasim.network.controlplane.routing
 
-import network.component._
-import network.traffic.Flow
-import network.component.ToRRouterType
+import scalasim.network.component._
+import scalasim.network.traffic.Flow
+import scalasim.network.component.ToRRouterType
 import scala.collection.mutable.ListBuffer
-import network.controlplane.ControlPlane
+import scalasim.network.controlplane.ControlPlane
 
 
 private [controlplane] class SimpleSymmetricRouting (controlPlane : ControlPlane)

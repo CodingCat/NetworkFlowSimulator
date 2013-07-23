@@ -1,9 +1,9 @@
-package network.controlplane.resource
+package scalasim.network.controlplane.resource
 
-import network.traffic.Flow
-import network.component.Link
+import scalasim.network.traffic.Flow
 import scala.collection.mutable.{ListBuffer, HashMap}
-import network.controlplane.ControlPlane
+import scalasim.network.controlplane.ControlPlane
+import scalasim.network.component.Link
 
 abstract private [controlplane] class ResourceAllocator (controlPlane : ControlPlane) {
 

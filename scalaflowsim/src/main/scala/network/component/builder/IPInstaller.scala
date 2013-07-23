@@ -1,6 +1,6 @@
-package network.component.builder
+package scalasim.network.component.builder
 
-import network.component.{NodeContainer, Node}
+import scalasim.network.component.{NodeContainer, Node}
 
 object IPInstaller {
 

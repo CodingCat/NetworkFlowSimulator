@@ -1,14 +1,15 @@
-package simengine.openflow
+package scalasim.simengine.openflow
 
 import org.jboss.netty.handler.codec.frame.FrameDecoder
 import org.jboss.netty.channel._
 import org.jboss.netty.buffer.{ChannelBuffers, ChannelBuffer}
 import org.openflow.protocol.factory.BasicFactory
-import org.openflow.protocol.{OFHello, OFType, OFMessage}
+import org.openflow.protocol._
 import scala.collection.JavaConversions._
-import simengine.utils.Logging
+import scalasim.simengine.utils.Logging
 import org.jboss.netty.handler.codec.oneone.OneToOneEncoder
-import scala.collection.mutable.ListBuffer
+import org.openflow.protocol.statistics.{OFStatistics, OFDescriptionStatistics, OFStatisticsType}
+import java.util
 
 class OpenFlowMsgEncoder extends OneToOneEncoder {
 
@@ -38,23 +39,91 @@ class OpenFlowMsgDecoder extends FrameDecoder {
   }
 }
 
-class OpenFlowChannelHandler extends SimpleChannelHandler  with Logging  {
+class OpenFlowChannelHandler () extends SimpleChannelHandler  with Logging  {
   private val factory = new BasicFactory()
 
-  private def processMessage(ofm : OFMessage) = ofm.getType match {
+  private def processFlowMod(offlowmod : OFFlowMod) {
+    offlowmod.getCommand match {
+      case OFFlowMod.OFPFC_DELETE => {
+
+      }
+      case _ => throw new Exception("unrecognized OFFlowMod command type:" + offlowmod.getCommand)
+    }
+  }
+
+  private def processStatRequest(ofstatreq : OFStatisticsRequest, outlist : java.util.ArrayList[OFMessage]) {
+    ofstatreq.getStatisticType match {
+      case OFStatisticsType.DESC => {
+        val statdescreply = factory.getStatistics(OFType.STATS_REPLY,OFStatisticsType.DESC)
+          .asInstanceOf[OFDescriptionStatistics]
+        //TODO: descriptions are not complete
+        statdescreply.setDatapathDescription(OpenFlowMsgDispatcher.getSwitchDescription)
+        statdescreply.setHardwareDescription("simulated router hardware")
+        statdescreply.setManufacturerDescription("simulated router")
+        statdescreply.setSoftwareDescription("simulated router software")
+        statdescreply.setSerialNumber("1")
+        val statList = new util.ArrayList[OFStatistics]
+        statList += statdescreply
+        val statreply = factory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
+        statreply.setStatisticType(OFStatisticsType.DESC)
+        statreply.setStatistics(statList)
+        statreply.setStatisticsFactory(factory)
+        statreply.setLength((statdescreply.getLength+ statreply.getLength).toShort)
+        statreply.setXid(ofstatreq.getXid)
+        outlist += statreply
+        //TODO: fragile?
+        OpenFlowMsgDispatcher.removeHandshakingHead
+      }
+      case _ => throw new Exception("unrecognized OFStatisticRequest: " + ofstatreq.getStatisticType)
+    }
+  }
+
+  private def processMessage(ofm : OFMessage, outlist : java.util.ArrayList[OFMessage]) = ofm.getType match {
     case OFType.HELLO => {
       logTrace("receive a hello message from controller")
-      factory.getMessage(OFType.HELLO).asInstanceOf[OFHello]
+      outlist += factory.getMessage(OFType.HELLO).asInstanceOf[OFHello]
+    }
+    case OFType.FEATURES_REQUEST => {
+      logTrace("receive a hello message from controller")
+      val featurereply = factory.getMessage(OFType.FEATURES_REPLY).asInstanceOf[OFFeaturesReply]
+      val featurelist = OpenFlowMsgDispatcher.getFeatureOfCurrentNode
+      featurereply.setXid(ofm.getXid)
+      featurereply.setDatapathId(featurelist._1)
+      featurereply.setBuffers(featurelist._2)
+      featurereply.setTables(featurelist._3.toByte)
+      featurereply.setCapabilities(featurelist._4)
+      featurereply.setPorts(featurelist._5)
+      outlist += featurereply
+    }
+    case OFType.SET_CONFIG => {
+      val m = ofm.asInstanceOf[OFSetConfig]
+      logTrace("receive a set config message from controller, miss_send_length:" + m.getMissSendLength +
+        " , flags:" + m.getFlags)
+      OpenFlowMsgDispatcher.setSwitchParameters(ofm.asInstanceOf[OFSetConfig])
+    }
+    case OFType.GET_CONFIG_REQUEST => {
+      logTrace("receive a get config request from controller")
+      val getconfigreply = factory.getMessage(OFType.GET_CONFIG_REPLY).asInstanceOf[OFGetConfigReply]
+      val config = OpenFlowMsgDispatcher.getSwitchParameters
+      getconfigreply.setFlags(config._1)
+      getconfigreply.setMissSendLength(config._2)
+      getconfigreply.setXid(ofm.getXid)
+      outlist += getconfigreply
+    }
+    case OFType.STATS_REQUEST => {
+      logTrace("receive a stat request message from controller")
+      processStatRequest(ofm.asInstanceOf[OFStatisticsRequest], outlist)
     }
     case _ => throw new Exception("unrecognized message type:" + ofm)
   }
 
   override def messageReceived(ctx: ChannelHandlerContext, e: MessageEvent) {
+    if (!e.getMessage.isInstanceOf[java.util.ArrayList[_]]) return
     val msglist = e.getMessage.asInstanceOf[java.util.ArrayList[OFMessage]]
     val outmsglist = new java.util.ArrayList[OFMessage]
     for (ofm: OFMessage <- msglist) {
       try {
-        outmsglist += processMessage(ofm)
+        processMessage(ofm, outmsglist)
       }
       catch {
         case ex: Exception => Channels.fireExceptionCaught(ctx.getChannel, ex)
@@ -62,6 +131,7 @@ class OpenFlowChannelHandler extends SimpleChannelHandler  with Logging  {
     }
     //send out all messages
     e.getChannel.write(outmsglist)
+    outmsglist.clear
   }
 
   override def exceptionCaught (ctx : ChannelHandlerContext, e : ExceptionEvent) {

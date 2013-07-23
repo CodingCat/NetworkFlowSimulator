@@ -1,10 +1,10 @@
-package network.controlplane.resource
+package scalasim.network.controlplane.resource
 
-import network.traffic._
-import network.component.Link
-import simengine.utils.Logging
-import network.controlplane.ControlPlane
-import network.controlplane.routing.RoutingProtocol
+import scalasim.network.traffic._
+import scalasim.network.controlplane.ControlPlane
+import scalasim.network.controlplane.routing.RoutingProtocol
+import scalasim.network.component.Link
+import scalasim.simengine.utils.Logging
 
 private [controlplane] class MaxMinAllocator (controlPlane : ControlPlane)
   extends ResourceAllocator (controlPlane) with Logging {

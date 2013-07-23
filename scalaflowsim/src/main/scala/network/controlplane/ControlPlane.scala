@@ -1,15 +1,15 @@
-package network.controlplane
+package scalasim.network.controlplane
 
 import scalasim.simengine.SimulationEngine
 import scalasim.XmlParser
-import network.component.{Link, Node}
-import network.controlplane.routing.RoutingProtocol
-import network.traffic.{CompletedFlow, RunningFlow, NewStartFlow, Flow}
-import network.events.CompleteFlowEvent
-import simengine.utils.Logging
+import scalasim.network.component.{Link, Node}
+import scalasim.network.controlplane.routing.RoutingProtocol
+import scalasim.network.traffic.{CompletedFlow, RunningFlow, NewStartFlow, Flow}
+import scalasim.network.events.CompleteFlowEvent
+import scalasim.simengine.utils.Logging
 import scala.collection.mutable.HashMap
-import network.controlplane.topology.TopologyManager
-import network.controlplane.resource.ResourceAllocator
+import scalasim.network.controlplane.topology.TopologyManager
+import scalasim.network.controlplane.resource.ResourceAllocator
 
 
 class ControlPlane(private [controlplane] val node : Node) extends Logging {

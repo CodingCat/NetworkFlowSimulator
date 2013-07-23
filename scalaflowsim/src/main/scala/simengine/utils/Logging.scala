@@ -1,4 +1,4 @@
-package simengine.utils
+package scalasim.simengine.utils
 
 import org.slf4j.{LoggerFactory, Logger}
 

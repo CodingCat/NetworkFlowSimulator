@@ -1,7 +1,7 @@
-package network.component.builder
+package scalasim.network.component.builder
 
+import scalasim.network.component.{RouterContainer, Link, HostContainer, Router}
 import scalasim.XmlParser
-import network.component.{RouterContainer, Router, Link, HostContainer}
 
 
 object LanBuilder {

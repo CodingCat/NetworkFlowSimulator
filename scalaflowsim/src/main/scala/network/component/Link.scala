@@ -1,4 +1,4 @@
-package network.component
+package scalasim.network.component
 
 
 class Link (val end_from : Node,

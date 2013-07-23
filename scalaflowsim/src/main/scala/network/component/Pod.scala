@@ -1,7 +1,7 @@
-package network.component
+package scalasim.network.component
 
 import scalasim.XmlParser
-import network.component.builder.{LanBuilder, IPInstaller}
+import scalasim.network.component.builder.{LanBuilder, IPInstaller}
 ;
 
 class Pod (private val cellID : Int,

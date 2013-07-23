@@ -1,12 +1,12 @@
 package application
 
 import scalasim.application.ServerApp
-import network.component.{Host, HostContainer}
 import scala.collection.mutable.{HashSet, MultiMap, HashMap, Set}
 import scala.util.Random
+import scalasim.network.component.{Host, HostContainer}
 import scalasim.simengine.SimulationEngine
-import network.events.StartNewFlowEvent
-import network.traffic.Flow
+import scalasim.network.events.StartNewFlowEvent
+import scalasim.network.traffic.Flow
 
 
 //build a permulate matrix between all machines,

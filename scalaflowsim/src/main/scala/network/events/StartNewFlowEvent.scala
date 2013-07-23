@@ -1,8 +1,8 @@
-package network.events
+package scalasim.network.events
 
+import scalasim.network.component.Host
 import scalasim.simengine.{SimulationEngine, EventOfTwoEntities}
-import network.traffic.Flow
-import network.component.Host
+import scalasim.network.traffic.Flow
 
 /**
  *

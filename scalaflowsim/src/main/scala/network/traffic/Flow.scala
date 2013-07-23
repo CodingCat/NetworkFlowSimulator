@@ -1,8 +1,8 @@
-package network.traffic
+package scalasim.network.traffic
 
 import scalasim.simengine.SimulationEngine
-import simengine.utils.Logging
-import network.events.CompleteFlowEvent
+import scalasim.network.events.CompleteFlowEvent
+import scalasim.simengine.utils.Logging
 
 
 /**
