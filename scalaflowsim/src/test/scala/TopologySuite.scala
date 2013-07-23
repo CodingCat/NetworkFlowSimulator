@@ -1,10 +1,8 @@
 package scalasim.test
 
-import network.component._
-import network.component.builder.{LanBuilder, IPInstaller}
+import scalasim.network.component.builder.{LanBuilder, IPInstaller}
 import org.scalatest.FunSuite
-import scalasim.XmlParser
-import org.openflow.util.HexString
+import scalasim.network.component._
 
 class TopologySuite extends FunSuite {
 
@@ -106,22 +104,6 @@ class TopologySuite extends FunSuite {
     //check hosts outlinks
     for (i <- 0 until cellnet.numRacks; j <- 0 until cellnet.numMachinesPerRack) {
       assert(cellnet.getHost(i, j).controlPlane.outlinks.contains("10.1." + i + ".1") === true)
-    }
-  }
-
-
-  test ("routers can be assigned with DPID address correctly") {
-    XmlParser.addProperties("scalasim.topology.cell.aggregaterouternum", "1")
-    XmlParser.addProperties("scalasim.topology.cell.racknum", "2")
-    XmlParser.addProperties("scalasim.topology.cell.racksize", "20")
-    XmlParser.loadConf("config.xml")
-    val cellnet = new Pod(1)
-    for (i <- 0 until cellnet.numAggRouters) {
-      println(cellnet.getAggregatRouter(i).getDPID)
-      assert(cellnet.getAggregatRouter(i).getDPID === HexString.toLong("01:01:00:00:00:00:00:00"))
-    }
-    for (i <- 0 until cellnet.numRacks) {
-      assert(cellnet.getToRRouter(i).getDPID === HexString.toLong("00:01:" + HexString.toHexString(i, 6)))
     }
   }
 }

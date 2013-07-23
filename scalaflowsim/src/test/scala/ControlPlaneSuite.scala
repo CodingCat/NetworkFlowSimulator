@@ -1,15 +1,15 @@
 package scalasim.test
 
 import org.scalatest.FunSuite
-import network.component.{Pod, HostContainer, Router}
-import network.component.builder.{LanBuilder, IPInstaller}
+import scalasim.network.component.{Pod, HostContainer, Router}
+import scalasim.network.component.builder.{LanBuilder, IPInstaller}
 import scalasim.simengine.SimulationEngine
-import network.traffic._
+import scalasim.network.traffic._
 import scala.collection.mutable.ListBuffer
-import network.component.ToRRouterType
+import scalasim.network.component.ToRRouterType
 import scalasim.{XmlParser, SimulationRunner}
-import simengine.utils.Logging
-import network.events.StartNewFlowEvent
+import scalasim.simengine.utils.Logging
+import scalasim.network.events.StartNewFlowEvent
 
 class ControlPlaneSuite extends FunSuite with Logging {
 

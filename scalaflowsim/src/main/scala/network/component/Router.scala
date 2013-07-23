@@ -1,37 +1,29 @@
 package scalasim.network.component
 
-import org.openflow.util.HexString
-
+import scalasim.simengine.openflow.OpenFlowConnector
+import scalasim.XmlParser
 
 class Router (nodetype : NodeType) extends Node(nodetype) {
-  private var rid : Int = 0
-  //openflow setup
-  private var flags : Short = 0
-  private var miss_send_len : Short = 0
 
-  def setParameter(f : Short, m : Short) {
-    flags = f
-    miss_send_len = miss_send_len
+  private var rid : Int = 0
+
+  private val openflowconnector = {
+    if (XmlParser.getString("scalasim.simengine.model", "tcp") == "openflow") {
+      new OpenFlowConnector(this)
+    }
+    else {
+      null
+    }
   }
 
-  def getFlag = flags
-
-  def get_miss_send_len = miss_send_len
+  def connectTOController() {
+    if (openflowconnector != null) openflowconnector.initChannel()
+  }
 
   def setrid (r : Int) { rid = r }
+  def getrid = rid
 
-  def getDPID() : Long = {
-    val impl_dependent = nodetype match {
-      case ToRRouterType => "00"
-      case AggregateRouterType => "01"
-      case CoreRouterType => "02"
-    }
-    val t = ip_addr(0).substring(ip_addr(0).indexOf('.') + 1, ip_addr(0).size)
-    //TODO: implicitly limit the maximum number of pods, improve?
-    val podid = HexString.toHexString(Integer.parseInt(t.substring(0, t.indexOf('.'))), 1)
-    val order = HexString.toHexString(rid, 6)
-    HexString.toLong(impl_dependent + ":" + podid + ":" + order)
-  }
+  def getDPID = openflowconnector.getDPID
 }
 
 class RouterContainer () extends NodeContainer {

@@ -1,7 +1,7 @@
 package scalasim.test
 
 import org.scalatest.FunSuite
-import simengine.utils.Logging
+import scalasim.simengine.utils.Logging
 
 
 class ControllerCommunicationSuite extends FunSuite with Logging {

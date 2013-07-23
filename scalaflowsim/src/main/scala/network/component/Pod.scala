@@ -14,6 +14,15 @@ class Pod (private val cellID : Int,
   private val hostsContainer = new HostContainer()
 
   private def buildNetwork() {
+    def initOFNetwork {
+      if (XmlParser.getString("scalasim.simengine.model", "tcp") == "openflow") {
+        //aggeregate routers
+        for (i <- 0 until aggregateRouterNumber) aggContainer(i).connectTOController()
+        //ToR routers
+        for (i <- 0 until numRacks) torContainer(i).connectTOController()
+      }
+    }
+
     def assignIPtoRacks() {
       for (i <- 0 until rackNumber) {
         //assign ip to the TOR router
@@ -44,10 +53,11 @@ class Pod (private val cellID : Int,
       }
     }
     //main part of buildNetwork
-    assignIPtoRacks()
-    assignIPtoAggLayer()
-    buildLanOnAggregate()
-    buildLanOnRack()
+    assignIPtoRacks
+    assignIPtoAggLayer
+    buildLanOnAggregate
+    buildLanOnRack
+    initOFNetwork
   }
 
 

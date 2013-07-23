@@ -1,6 +1,6 @@
 package scalasim.test
 
-import network.component.Pod
+import scalasim.network.component.Pod
 import scalasim.application.ApplicationRunner
 import scalasim.simengine.SimulationEngine
 import scalasim.XmlParser
