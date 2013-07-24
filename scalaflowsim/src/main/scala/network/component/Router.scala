@@ -1,6 +1,6 @@
 package scalasim.network.component
 
-import scalasim.simengine.openflow.OpenFlowConnector
+import scalasim.simengine.openflow.OpenFlowModule
 import scalasim.XmlParser
 
 class Router (nodetype : NodeType) extends Node(nodetype) {
@@ -9,7 +9,7 @@ class Router (nodetype : NodeType) extends Node(nodetype) {
 
   private val openflowconnector = {
     if (XmlParser.getString("scalasim.simengine.model", "tcp") == "openflow") {
-      new OpenFlowConnector(this)
+      new OpenFlowModule(this)
     }
     else {
       null
@@ -17,7 +17,7 @@ class Router (nodetype : NodeType) extends Node(nodetype) {
   }
 
   def connectTOController() {
-    if (openflowconnector != null) openflowconnector.initChannel()
+    if (openflowconnector != null) openflowconnector.connectToController()
   }
 
   def setrid (r : Int) { rid = r }

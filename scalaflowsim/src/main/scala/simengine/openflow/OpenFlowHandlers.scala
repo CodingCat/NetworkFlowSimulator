@@ -37,13 +37,16 @@ class OpenFlowMsgDecoder extends FrameDecoder {
   }
 }
 
-class OpenFlowChannelHandler (private val connector : OpenFlowConnector)
+class OpenFlowChannelHandler (private val connector : OpenFlowModule)
   extends SimpleChannelHandler  with Logging  {
 
   private def processFlowMod(offlowmod : OFFlowMod) {
     offlowmod.getCommand match {
       case OFFlowMod.OFPFC_DELETE => {
-
+        if (offlowmod.getMatch.getWildcards == OFMatch.OFPFW_ALL) {
+          //clear to initialize flow tables;
+          for (table <- connector.flowtables) table.clear
+        }
       }
       case _ => throw new Exception("unrecognized OFFlowMod command type:" + offlowmod.getCommand)
     }
@@ -111,6 +114,10 @@ class OpenFlowChannelHandler (private val connector : OpenFlowConnector)
       processStatRequest(ofm.asInstanceOf[OFStatisticsRequest], outlist)
       if (connector.status == OpenFlowSwitchHandShaking)
         connector.status = OpenFlowSwitchRunning
+    }
+    case OFType.FLOW_MOD => {
+      logTrace("receive a flow_mod message from controller")
+      processFlowMod(ofm.asInstanceOf[OFFlowMod])
     }
     case _ => throw new Exception("unrecognized message type:" + ofm)
   }

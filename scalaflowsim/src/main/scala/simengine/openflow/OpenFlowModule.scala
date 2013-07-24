@@ -8,6 +8,7 @@ import java.net.InetSocketAddress
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory
 import org.openflow.protocol._
 import org.openflow.util.HexString
+import simengine.openflow.flowtable.OFFlowTable
 
 abstract class OpenFlowSwitchStatus
 
@@ -15,7 +16,8 @@ case object OpenFlowSwitchHandShaking extends OpenFlowSwitchStatus
 case object OpenFlowSwitchRunning extends OpenFlowSwitchStatus
 case object OpenFlowSwitchClosing extends OpenFlowSwitchStatus
 
-class OpenFlowConnector (private val router : Router) {
+class OpenFlowModule (private val router : Router) {
+
   private val host = XmlParser.getString("scalasim.simengine.openflow.controller.host", "127.0.0.1")
   private val port = XmlParser.getInt("scalasim.simengine.openflow.controller.port", 6633)
 
@@ -23,6 +25,29 @@ class OpenFlowConnector (private val router : Router) {
   private var miss_send_len : Short = 0
 
   private[openflow] var status : OpenFlowSwitchStatus = OpenFlowSwitchHandShaking
+
+  private[openflow] val flowtables : Array[OFFlowTable] = new Array[OFFlowTable](
+    XmlParser.getInt("scalasim.simengine.openflow.tablenum", 1)
+  )
+
+  def init() {
+    for (i <- 0 until flowtables.length) flowtables(i) = new OFFlowTable
+  }
+
+  //build channel to the controller
+  def connectToController() {
+    try {
+      val clientfactory = new NioClientSocketChannelFactory(
+        Executors.newCachedThreadPool(),
+        Executors.newCachedThreadPool())
+      val clientbootstrap = new ClientBootstrap(clientfactory)
+      clientbootstrap.setPipelineFactory(new OpenFlowMsgPipelineFactory(this))
+      clientbootstrap.connect(new InetSocketAddress(host, port))
+    }
+    catch {
+      case e : Exception => e.printStackTrace
+    }
+  }
 
   def setParameter(f : Short, m : Short) {
     config_flags = f
@@ -45,20 +70,6 @@ class OpenFlowConnector (private val router : Router) {
     HexString.toLong(impl_dependent + ":" + podid + ":" + order)
   }
 
-  //build channel to the controller
-  def initChannel() {
-    try {
-      val clientfactory = new NioClientSocketChannelFactory(
-        Executors.newCachedThreadPool(),
-        Executors.newCachedThreadPool())
-      val clientbootstrap = new ClientBootstrap(clientfactory)
-      clientbootstrap.setPipelineFactory(new OpenFlowMsgPipelineFactory(this))
-      clientbootstrap.connect(new InetSocketAddress(host, port))
-    }
-    catch {
-      case e : Exception => e.printStackTrace
-    }
-  }
 
   def getSwitchFeature() = {
     (getDPID, 1000, 2, 7, new java.util.ArrayList[OFPhysicalPort])
@@ -74,4 +85,7 @@ class OpenFlowConnector (private val router : Router) {
   }
 
   def getSwitchDescription = router.ip_addr(0)
+
+  //init
+  init
 }

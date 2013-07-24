@@ -14,6 +14,8 @@ object SimulationRunner {
   }
 
   def main(args:Array[String]) = {
+    XmlParser.addProperties("scalasim.simengine.model", "openflow")
+    XmlParser.loadConf("config.xml")
     val pod = new Pod(1)
   }
 }
