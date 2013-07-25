@@ -1,4 +1,4 @@
-package scalasim.simengine.openflow.counters
+package scalasim.network.controlplane.openflow.flowtable.counters
 
 class OFCounter (private [openflow] val name : String) {
   protected [openflow] var value : Long = 0

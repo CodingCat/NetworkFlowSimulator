@@ -1,4 +1,4 @@
-package scalasim.simengine.openflow
+package scalasim.network.controlplane.openflow
 
 import org.jboss.netty.handler.codec.frame.FrameDecoder
 import org.jboss.netty.channel._
@@ -9,7 +9,6 @@ import scalasim.simengine.utils.Logging
 import org.jboss.netty.handler.codec.oneone.OneToOneEncoder
 import org.openflow.protocol.statistics._
 import java.util
-import simengine.openflow.OpenFlowFactory
 
 class OpenFlowMsgEncoder extends OneToOneEncoder {
 

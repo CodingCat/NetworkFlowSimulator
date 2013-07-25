@@ -1,4 +1,4 @@
-package scalasim.simengine.openflow
+package scalasim.network.controlplane.openflow
 
 import org.jboss.netty.channel.{Channels, ChannelPipeline, ChannelPipelineFactory}
 

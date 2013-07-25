@@ -1,4 +1,4 @@
-package scalasim.simengine.openflow.flowtable.instructions
+package scalasim.network.controlplane.openflow.flowtable.instructions
 
 object OFInstructionType extends Enumeration {
   type OFInstructionType = Value

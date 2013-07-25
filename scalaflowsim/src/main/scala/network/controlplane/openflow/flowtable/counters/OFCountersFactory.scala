@@ -1,4 +1,5 @@
-package scalasim.simengine.openflow.counters
+package scalasim.network.controlplane.openflow.flowtable.counters
+
 
 object OFCountersFactory {
   def getCounter(countertype : OFCounterType.Value) : OFCounter = {

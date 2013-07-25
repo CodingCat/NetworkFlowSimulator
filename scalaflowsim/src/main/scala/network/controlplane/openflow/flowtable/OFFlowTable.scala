@@ -1,9 +1,9 @@
-package scalasim.simengine.openflow.flowtable
+package scalasim.network.controlplane.openflow.flowtable
 
-import scalasim.simengine.openflow.flowtable.matchfield.OFMatchField
-import scalasim.simengine.openflow.counters.{OFPacketMatchesCount, OFPacketLookupCount, OFReferenceCount, OFCounter}
+import scalasim.network.controlplane.openflow.flowtable.matchfield.OFMatchField
+import scalasim.network.controlplane.openflow.flowtable.counters._
 import scala.collection.mutable.{ListBuffer, HashMap}
-import scalasim.simengine.openflow.flowtable.instructions.OFInstruction
+import scalasim.network.controlplane.openflow.flowtable.instructions.OFInstruction
 
 
 class OFFlowTable {

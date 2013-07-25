@@ -1,4 +1,4 @@
-package scalasim.simengine.openflow.flowtable.instructions
+package scalasim.network.controlplane.openflow.flowtable.instructions
 
 class OFInstruction (private val name : String) {
 

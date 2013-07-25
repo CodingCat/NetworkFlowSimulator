@@ -1,4 +1,5 @@
-package scalasim.simengine.openflow
+package scalasim.network.controlplane.openflow
+
 
 import scalasim.network.component._
 import scalasim.XmlParser
@@ -8,7 +9,8 @@ import java.net.InetSocketAddress
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory
 import org.openflow.protocol._
 import org.openflow.util.HexString
-import scalasim.simengine.openflow.flowtable.OFFlowTable
+import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
+import java.util
 
 abstract class OpenFlowSwitchStatus
 
@@ -18,8 +20,8 @@ case object OpenFlowSwitchClosing extends OpenFlowSwitchStatus
 
 class OpenFlowModule (private val router : Router) {
 
-  private val host = XmlParser.getString("scalasim.simengine.openflow.controller.host", "127.0.0.1")
-  private val port = XmlParser.getInt("scalasim.simengine.openflow.controller.port", 6633)
+  private val host = XmlParser.getString("scalasim.network.controlplane.openflow.controller.host", "127.0.0.1")
+  private val port = XmlParser.getInt("scalasim.network.controlplane.openflow.controller.port", 6633)
 
   private var config_flags : Short = 0
   private var miss_send_len : Short = 0
@@ -27,7 +29,7 @@ class OpenFlowModule (private val router : Router) {
   private[openflow] var status : OpenFlowSwitchStatus = OpenFlowSwitchHandShaking
 
   private[openflow] val flowtables : Array[OFFlowTable] = new Array[OFFlowTable](
-    XmlParser.getInt("scalasim.simengine.openflow.tablenum", 1)
+    XmlParser.getInt("scalasim.network.controlplane.openflow.tablenum", 1)
   )
 
   def init() {
@@ -73,7 +75,8 @@ class OpenFlowModule (private val router : Router) {
 
   def getSwitchFeature() = {
     //TODO: specify the switch features
-
+    val ports = new util.ArrayList[OFPhysicalPort]
+    //step 1. map outlink to physical ports
     //(dpid, buffer, n_tables, capabilities, physical port
     (getDPID, 1000, flowtables.length, 7, new java.util.ArrayList[OFPhysicalPort])
   }
