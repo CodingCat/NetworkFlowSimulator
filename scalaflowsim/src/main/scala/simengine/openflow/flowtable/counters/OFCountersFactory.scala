@@ -1,11 +1,11 @@
-package simengine.openflow.counters
+package scalasim.simengine.openflow.counters
 
 object OFCountersFactory {
   def getCounter(countertype : OFCounterType.Value) : OFCounter = {
     countertype match {
-      case OFCounterType.OFPacketLookups => new OFPacketLookupCount("packet_lookup_counter")
-      case OFCounterType.OFPacketMatches => new OFPacketMatchesCount("packet_match_counter")
-      case OFCounterType.OFReferenceCount => new OFReferenceCount("packet_reference_counter")
+      case OFCounterType.OFPacketLookups => new OFPacketLookupCount
+      case OFCounterType.OFPacketMatches => new OFPacketMatchesCount
+      case OFCounterType.OFReferenceCount => new OFReferenceCount
     }
   }
 }

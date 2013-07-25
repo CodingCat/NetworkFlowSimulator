@@ -1,4 +1,4 @@
-package simengine.openflow.counters
+package scalasim.simengine.openflow.counters
 
 object OFCounterType extends Enumeration {
   type OFCounterType = Value

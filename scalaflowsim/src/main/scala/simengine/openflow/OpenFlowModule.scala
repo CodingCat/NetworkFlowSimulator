@@ -8,7 +8,7 @@ import java.net.InetSocketAddress
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory
 import org.openflow.protocol._
 import org.openflow.util.HexString
-import simengine.openflow.flowtable.OFFlowTable
+import scalasim.simengine.openflow.flowtable.OFFlowTable
 
 abstract class OpenFlowSwitchStatus
 
@@ -66,13 +66,16 @@ class OpenFlowModule (private val router : Router) {
     val t = router.ip_addr(0).substring(router.ip_addr(0).indexOf('.') + 1, router.ip_addr(0).size)
     //TODO: implicitly limit the maximum number of pods, improve?
     val podid = HexString.toHexString(Integer.parseInt(t.substring(0, t.indexOf('.'))), 1)
-    val order = HexString.toHexString(router.getrid, 6)
-    HexString.toLong(impl_dependent + ":" + podid + ":" + order)
+    val order = HexString.toHexString(router.getrid, 4)
+    HexString.toLong(impl_dependent + ":" + podid + ":" + order + ":00")
   }
 
 
   def getSwitchFeature() = {
-    (getDPID, 1000, 2, 7, new java.util.ArrayList[OFPhysicalPort])
+    //TODO: specify the switch features
+
+    //(dpid, buffer, n_tables, capabilities, physical port
+    (getDPID, 1000, flowtables.length, 7, new java.util.ArrayList[OFPhysicalPort])
   }
 
   def setSwitchParameters(configpacket : OFSetConfig) {

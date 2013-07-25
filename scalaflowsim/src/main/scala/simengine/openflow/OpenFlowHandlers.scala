@@ -7,7 +7,7 @@ import org.openflow.protocol._
 import scala.collection.JavaConversions._
 import scalasim.simengine.utils.Logging
 import org.jboss.netty.handler.codec.oneone.OneToOneEncoder
-import org.openflow.protocol.statistics.{OFStatistics, OFDescriptionStatistics, OFStatisticsType}
+import org.openflow.protocol.statistics._
 import java.util
 import simengine.openflow.OpenFlowFactory
 
@@ -73,6 +73,38 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
         statreply.setXid(ofstatreq.getXid)
         outlist += statreply
       }
+      case OFStatisticsType.AGGREGATE => {
+        val stataggreqmsg = ofstatreq.asInstanceOf[OFStatisticsRequest]
+        val stataggreq = stataggreqmsg.getStatistics.get(0).asInstanceOf[OFAggregateStatisticsRequest]
+        val stataggreply = OpenFlowFactory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.AGGREGATE)
+          .asInstanceOf[OFAggregateStatisticsReply]
+        val statreply = OpenFlowFactory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
+        val table_id = stataggreq.getTableId
+        if (table_id >= 0 && table_id < connector.flowtables.length) {
+          val referred_table = connector.flowtables(table_id)
+          stataggreply.setFlowCount(referred_table.tablecounters("referencecount").value.toInt)
+          stataggreply.setPacketCount(referred_table.tablecounters("packetmatchescount").value
+            + referred_table.tablecounters("packetlookupcount").value)
+          stataggreply.setByteCount(referred_table.tablecounters("flowbytescount").value)
+        }
+        else {
+          for (i <- 0 until connector.flowtables.length) {
+            val referred_table = connector.flowtables(i)
+            stataggreply.setFlowCount(referred_table.tablecounters("referencecount").value.toInt)
+            stataggreply.setPacketCount(referred_table.tablecounters("packetmatchescount").value
+              + referred_table.tablecounters("packetlookupcount").value)
+            stataggreply.setByteCount(referred_table.tablecounters("flowbytescount").value)
+          }
+        }
+        val statList = new util.ArrayList[OFStatistics]
+        statList += stataggreply
+        statreply.setStatisticType(OFStatisticsType.AGGREGATE)
+        statreply.setStatistics(statList)
+        statreply.setStatisticsFactory(OpenFlowFactory)
+        statreply.setLength((stataggreply.getLength + statreply.getLength).toShort)
+        statreply.setXid(ofstatreq.getXid)
+        outlist += statreply
+      }
       case _ => throw new Exception("unrecognized OFStatisticRequest: " + ofstatreq.getStatisticType)
     }
   }
@@ -83,7 +115,7 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
       outlist += OpenFlowFactory.getMessage(OFType.HELLO).asInstanceOf[OFHello]
     }
     case OFType.FEATURES_REQUEST => {
-      logTrace("receive a hello message from controller")
+      logTrace("receive a feature request message from controller")
       val featurereply = OpenFlowFactory.getMessage(OFType.FEATURES_REPLY).asInstanceOf[OFFeaturesReply]
       val featurelist = connector.getSwitchFeature
       featurereply.setXid(ofm.getXid)

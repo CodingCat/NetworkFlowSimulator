@@ -1,4 +1,4 @@
-package simengine.openflow.flowtable.matchfield
+package scalasim.simengine.openflow.flowtable.matchfield
 
 import org.openflow.protocol.OFMatch
 

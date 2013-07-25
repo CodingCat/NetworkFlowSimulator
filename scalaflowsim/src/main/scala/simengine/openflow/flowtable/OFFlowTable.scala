@@ -1,9 +1,9 @@
-package simengine.openflow.flowtable
+package scalasim.simengine.openflow.flowtable
 
-import simengine.openflow.flowtable.matchfield.OFMatchField
-import simengine.openflow.counters.OFCounter
-import scala.collection.mutable.{ListBuffer, HashMap, LinkedList}
-import simengine.openflow.flowtable.instructions.OFInstruction
+import scalasim.simengine.openflow.flowtable.matchfield.OFMatchField
+import scalasim.simengine.openflow.counters.{OFPacketMatchesCount, OFPacketLookupCount, OFReferenceCount, OFCounter}
+import scala.collection.mutable.{ListBuffer, HashMap}
+import scalasim.simengine.openflow.flowtable.instructions.OFInstruction
 
 
 class OFFlowTable {
@@ -12,7 +12,15 @@ class OFFlowTable {
     private val instructions : Array[OFInstruction] = new Array[OFInstruction](5)
   }
 
-  private val entries : HashMap[OFMatchField, OFFlowTableEntry] = new HashMap[OFMatchField, OFFlowTableEntry]
+  private[openflow] val entries : HashMap[OFMatchField, OFFlowTableEntry] = new HashMap[OFMatchField, OFFlowTableEntry]
+  private[openflow] val tablecounters : HashMap[String, OFCounter] = new HashMap[String, OFCounter]
+
+  def init() {
+    tablecounters += ("referencecount" -> new OFReferenceCount)
+    tablecounters += ("packetlookupcount" -> new OFPacketLookupCount)
+    tablecounters += ("packetmatchescount" -> new OFPacketMatchesCount)
+    tablecounters += ("flowbytescount" -> new OFPacketMatchesCount)
+  }
 
   def addEntry(matchfield : OFMatchField, instructionSet : ListBuffer[OFInstruction]) {
     //TODO:to be implemented
@@ -21,4 +29,6 @@ class OFFlowTable {
   def clear() {
     entries.clear()
   }
+
+  init()
 }

@@ -1,18 +1,16 @@
-package simengine.openflow.counters
+package scalasim.simengine.openflow.counters
 
-class OFCounter (private val name : String)
+class OFCounter (private [openflow] val name : String) {
+  protected [openflow] var value : Long = 0
+}
 
 //Per table counters
-class OFReferenceCount(name : String) extends OFCounter(name) {
-  private [openflow] var value : Int = 0
-}
+class OFReferenceCount extends OFCounter("referencecount")
 
-class OFPacketLookupCount(name : String) extends OFCounter(name) {
-  private [openflow] var value : Long = 0
-}
+class OFPacketLookupCount extends OFCounter("packetlookupcount")
 
-class OFPacketMatchesCount(name : String) extends OFCounter(name) {
-  private [openflow] var value : Long = 0
-}
+class OFPacketMatchesCount extends OFCounter("packetmatchedcount")
 
+//in openflow specification there is not such a counter
+class OFFlowBytesCount extends OFCounter("flowbytescount")
 
