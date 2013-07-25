@@ -123,6 +123,7 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
       featurereply.setTables(featurelist._3.toByte)
       featurereply.setCapabilities(featurelist._4)
       featurereply.setPorts(featurelist._5)
+      //featurereply.setLengthU(32 + featurereply.getPorts.length * 64)
       outlist += featurereply
     }
     case OFType.SET_CONFIG => {

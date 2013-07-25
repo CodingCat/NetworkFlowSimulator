@@ -76,9 +76,8 @@ class OpenFlowModule (private val router : Router) {
   def getSwitchFeature() = {
     //TODO: specify the switch features
     val ports = new util.ArrayList[OFPhysicalPort]
-    //step 1. map outlink to physical ports
     //(dpid, buffer, n_tables, capabilities, physical port
-    (getDPID, 1000, flowtables.length, 7, new java.util.ArrayList[OFPhysicalPort])
+    (getDPID, 1000, flowtables.length, 7, router.controlPlane.topoModule.physicalports)
   }
 
   def setSwitchParameters(configpacket : OFSetConfig) {
