@@ -77,7 +77,8 @@ class OpenFlowModule (private val router : Router) {
     //TODO: specify the switch features
     val ports = new util.ArrayList[OFPhysicalPort]
     //(dpid, buffer, n_tables, capabilities, physical port
-    (getDPID, 1000, flowtables.length, 7, router.controlPlane.topoModule.physicalports)
+    (getDPID, 1000, flowtables.length, 7,
+      router.controlPlane.topoModule.physicalports.values.toList)
   }
 
   def setSwitchParameters(configpacket : OFSetConfig) {

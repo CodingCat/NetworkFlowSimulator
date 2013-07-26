@@ -3,7 +3,6 @@ package scalasim.network.controlplane.topology
 import scala.collection.mutable.HashMap
 import scalasim.network.component.{Router, Host, HostType, Link}
 import scalasim.network.controlplane.ControlPlane
-import scalasim.network.util.AddressNameConvertor
 import scalasim.XmlParser
 import java.util
 import org.openflow.protocol.OFPhysicalPort
@@ -23,7 +22,7 @@ class TopologyManager (private val cp : ControlPlane) {
 
   private [controlplane] val physicalports = {
     if (runningmodel == "openflow") {
-      new util.ArrayList[OFPhysicalPort]
+      new HashMap[Link, OFPhysicalPort]
     }
     else null
   }
@@ -58,18 +57,20 @@ class TopologyManager (private val cp : ControlPlane) {
     port.setCurrentFeatures(feature)
     port.setPeerFeatures(feature)
     port.setSupportedFeatures(feature)
-    physicalports.add(port)
+    physicalports += l -> port
   }
 
   def registerOutgoingLink(l : Link) {
     outlink += (l.end_from.ip_addr(0) -> l)
-    if (cp.node.isInstanceOf[Router] && runningmodel == "openflow") addOFPhysicalPort(l, outlink.size.toShort)
+    if (cp.node.isInstanceOf[Router] && runningmodel == "openflow") addOFPhysicalPort(l,
+      (outlink.size + inlinks.size).toShort)
   }
 
   def registerIncomeLink(l : Link) {
     val otherEnd = l.end_from
     if (otherEnd.isInstanceOf[Host]) inlinks += otherEnd.ip_addr(0) -> l
     if (otherEnd.isInstanceOf[Router]) inlinks += otherEnd.ip_addr(0) -> l
-    if (cp.node.isInstanceOf[Router] && runningmodel == "openflow") addOFPhysicalPort(l, inlinks.size.toShort)
+    if (cp.node.isInstanceOf[Router] && runningmodel == "openflow") addOFPhysicalPort(l,
+      (outlink.size + inlinks.size).toShort)
   }
 }

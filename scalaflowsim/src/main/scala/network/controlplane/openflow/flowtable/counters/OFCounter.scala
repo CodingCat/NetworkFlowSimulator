@@ -1,16 +1,30 @@
 package scalasim.network.controlplane.openflow.flowtable.counters
 
 class OFCounter (private [openflow] val name : String) {
-  protected [openflow] var value : Long = 0
 }
 
 //Per table counters
-class OFReferenceCount extends OFCounter("referencecount")
 
-class OFPacketLookupCount extends OFCounter("packetlookupcount")
+class OFTableCount extends OFCounter("table_counter") {
+  private [controlplane] var referencecount  : Int = 0
+  private [controlplane] var packetlookup : Long = 0
+  private [controlplane] var packetmatches : Long = 0
+  private [controlplane] var flowbytes : Int = 0
+}
 
-class OFPacketMatchesCount extends OFCounter("packetmatchedcount")
-
-//in openflow specification there is not such a counter
-class OFFlowBytesCount extends OFCounter("flowbytescount")
+//Per port counters
+class OFPortCount extends OFCounter("port_counter") {
+  private [controlplane] var receivedpacket : Long = 0
+  private [controlplane] var transmittedpacket : Long = 0
+  private [controlplane] var receivedbytes : Long = 0
+  private [controlplane] var transmittedbytes : Long = 0
+  private [controlplane] var receivedrops : Long = 0
+  private [controlplane] var transmitdrops : Long = 0
+  private [controlplane] var receiveerror : Long = 0
+  private [controlplane] var transmiterror : Long = 0
+  private [controlplane] var receiveframe_align_error : Long = 0
+  private [controlplane] var receive_overrun_error : Long = 0
+  private [controlplane] var receive_crc_error : Long = 0
+  private [controlplane] var collisions : Long = 0
+}
 

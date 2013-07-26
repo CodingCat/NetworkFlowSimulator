@@ -12,15 +12,8 @@ class OFFlowTable {
     private val instructions : Array[OFInstruction] = new Array[OFInstruction](5)
   }
 
-  private[openflow] val entries : HashMap[OFMatchField, OFFlowTableEntry] = new HashMap[OFMatchField, OFFlowTableEntry]
-  private[openflow] val tablecounters : HashMap[String, OFCounter] = new HashMap[String, OFCounter]
-
-  def init() {
-    tablecounters += ("referencecount" -> new OFReferenceCount)
-    tablecounters += ("packetlookupcount" -> new OFPacketLookupCount)
-    tablecounters += ("packetmatchescount" -> new OFPacketMatchesCount)
-    tablecounters += ("flowbytescount" -> new OFPacketMatchesCount)
-  }
+  private [openflow] val entries : HashMap[OFMatchField, OFFlowTableEntry] = new HashMap[OFMatchField, OFFlowTableEntry]
+  private [openflow] val counters : OFTableCount = new OFTableCount
 
   def addEntry(matchfield : OFMatchField, instructionSet : ListBuffer[OFInstruction]) {
     //TODO:to be implemented
@@ -29,6 +22,4 @@ class OFFlowTable {
   def clear() {
     entries.clear()
   }
-
-  init()
 }

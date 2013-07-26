@@ -73,6 +73,12 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
         statreply.setXid(ofstatreq.getXid)
         outlist += statreply
       }
+      case OFStatisticsType.PORT => {
+
+      }
+      case OFStatisticsType.FLOW => {
+
+      }
       case OFStatisticsType.AGGREGATE => {
         val stataggreqmsg = ofstatreq.asInstanceOf[OFStatisticsRequest]
         val stataggreq = stataggreqmsg.getStatistics.get(0).asInstanceOf[OFAggregateStatisticsRequest]
@@ -82,18 +88,18 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
         val table_id = stataggreq.getTableId
         if (table_id >= 0 && table_id < connector.flowtables.length) {
           val referred_table = connector.flowtables(table_id)
-          stataggreply.setFlowCount(referred_table.tablecounters("referencecount").value.toInt)
-          stataggreply.setPacketCount(referred_table.tablecounters("packetmatchescount").value
-            + referred_table.tablecounters("packetlookupcount").value)
-          stataggreply.setByteCount(referred_table.tablecounters("flowbytescount").value)
+          stataggreply.setFlowCount(referred_table.counters.referencecount)
+          stataggreply.setPacketCount(referred_table.counters.packetlookup +
+            referred_table.counters.packetmatches)
+          stataggreply.setByteCount(referred_table.counters.flowbytes)
         }
         else {
           for (i <- 0 until connector.flowtables.length) {
             val referred_table = connector.flowtables(i)
-            stataggreply.setFlowCount(referred_table.tablecounters("referencecount").value.toInt)
-            stataggreply.setPacketCount(referred_table.tablecounters("packetmatchescount").value
-              + referred_table.tablecounters("packetlookupcount").value)
-            stataggreply.setByteCount(referred_table.tablecounters("flowbytescount").value)
+            stataggreply.setFlowCount(referred_table.counters.referencecount)
+            stataggreply.setPacketCount(referred_table.counters.packetlookup +
+              referred_table.counters.packetmatches)
+            stataggreply.setByteCount(referred_table.counters.flowbytes)
           }
         }
         val statList = new util.ArrayList[OFStatistics]
