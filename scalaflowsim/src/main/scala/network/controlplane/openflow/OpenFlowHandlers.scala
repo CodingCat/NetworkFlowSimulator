@@ -9,6 +9,7 @@ import scalasim.simengine.utils.Logging
 import org.jboss.netty.handler.codec.oneone.OneToOneEncoder
 import org.openflow.protocol.statistics._
 import java.util
+import scalasim.XmlParser
 
 class OpenFlowMsgEncoder extends OneToOneEncoder {
 
@@ -158,6 +159,23 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
       echoreply.setXid(echoreq.getXid)
       echoreply.setPayload(echoreq.getPayload)
       outlist += echoreply
+    }
+    case OFType.PACKET_OUT => {
+      logTrace("receive a packet_out message from controller")
+      val packetoutmsg = ofm.asInstanceOf[OFPacketOut]
+      if (packetoutmsg.getInPort == -1 && packetoutmsg.getBufferId == -1) {
+        //TODO: forward the packet in flood
+        //the packet must a BDDP
+      }
+      else {
+        //send out the packet or forward the flow
+        if (XmlParser.getString("scalasim.simengine.simlevel", "flow") == "flow") {
+
+        }
+        else {
+
+        }
+      }
     }
     case _ => throw new Exception("unrecognized message type:" + ofm)
   }
