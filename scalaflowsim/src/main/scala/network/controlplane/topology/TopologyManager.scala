@@ -3,6 +3,7 @@ package scalasim.network.controlplane.topology
 import scala.collection.mutable.HashMap
 import scalasim.network.component.{Router, Host, HostType, Link}
 import scalasim.network.controlplane.ControlPlane
+import scalasim.network.controlplane.openflow.flowtable.counters.OFPortCount
 import scalasim.XmlParser
 import java.util
 import org.openflow.protocol.OFPhysicalPort
@@ -23,6 +24,13 @@ class TopologyManager (private val cp : ControlPlane) {
   private [controlplane] val physicalports = {
     if (runningmodel == "openflow") {
       new HashMap[Link, OFPhysicalPort]
+    }
+    else null
+  }
+
+  private [controlplane] val portcounters = {
+    if (runningmodel == "openflow") {
+      new HashMap[Short, OFPortCount]
     }
     else null
   }
@@ -58,6 +66,7 @@ class TopologyManager (private val cp : ControlPlane) {
     port.setPeerFeatures(feature)
     port.setSupportedFeatures(feature)
     physicalports += l -> port
+    portcounters += (port.getPortNumber -> new OFPortCount(port.getPortNumber))
   }
 
   def registerOutgoingLink(l : Link) {

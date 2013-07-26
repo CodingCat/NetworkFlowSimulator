@@ -18,7 +18,7 @@ case object OpenFlowSwitchHandShaking extends OpenFlowSwitchStatus
 case object OpenFlowSwitchRunning extends OpenFlowSwitchStatus
 case object OpenFlowSwitchClosing extends OpenFlowSwitchStatus
 
-class OpenFlowModule (private val router : Router) {
+class OpenFlowModule (private [openflow] val router : Router) {
 
   private val host = XmlParser.getString("scalasim.network.controlplane.openflow.controller.host", "127.0.0.1")
   private val port = XmlParser.getInt("scalasim.network.controlplane.openflow.controller.port", 6633)

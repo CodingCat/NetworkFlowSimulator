@@ -74,7 +74,57 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
         outlist += statreply
       }
       case OFStatisticsType.PORT => {
-
+        val statportreqmsg = ofstatreq.asInstanceOf[OFStatisticsRequest]
+        val statportreq = statportreqmsg.getStatistics.get(0).asInstanceOf[OFPortStatisticsRequest]
+        val statportreply = OpenFlowFactory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.PORT)
+          .asInstanceOf[OFPortStatisticsReply]
+        val statreply = OpenFlowFactory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
+        val port_num = statportreq.getPortNumber
+        if (port_num == -1) {
+          val counters = connector.router.controlPlane.topoModule.portcounters
+          for (counter_pair <- counters) {
+            val counter = counter_pair._2
+            statportreply.setPortNumber(port_num)
+            statportreply.setreceivePackets(statportreply.getreceivePackets + counter.receivedpacket)
+            statportreply.setTransmitPackets(statportreply.getTransmitPackets + counter.transmittedpacket)
+            statportreply.setReceiveBytes(statportreply.getReceiveBytes + counter.receivedbytes)
+            statportreply.setTransmitBytes(statportreply.getTransmitBytes + counter.transmittedbytes)
+            statportreply.setReceiveDropped(statportreply.getReceiveDropped + counter.receivedrops)
+            statportreply.setTransmitDropped(statportreply.getTransmitDropped + counter.transmitdrops)
+            statportreply.setreceiveErrors(statportreply.getreceiveErrors + counter.receiveerror)
+            statportreply.setTransmitErrors(statportreply.getTransmitErrors + counter.transmiterror)
+            statportreply.setReceiveFrameErrors(statportreply.getReceiveFrameErrors +
+              counter.receiveframe_align_error)
+            statportreply.setReceiveOverrunErrors(statportreply.getReceiveOverrunErrors +
+              counter.receive_overrun_error)
+            statportreply.setReceiveCRCErrors(statportreply.getReceiveCRCErrors + counter.receive_crc_error)
+            statportreply.setCollisions(statportreply.getCollisions + counter.collisions)
+          }
+        }
+        else {
+          val counter = connector.router.controlPlane.topoModule.portcounters(port_num)
+          statportreply.setPortNumber(port_num)
+          statportreply.setreceivePackets(counter.receivedpacket)
+          statportreply.setTransmitPackets(counter.transmittedpacket)
+          statportreply.setReceiveBytes(counter.receivedbytes)
+          statportreply.setTransmitBytes(counter.transmittedbytes)
+          statportreply.setReceiveDropped(counter.receivedrops)
+          statportreply.setTransmitDropped(counter.transmitdrops)
+          statportreply.setreceiveErrors(counter.receiveerror)
+          statportreply.setTransmitErrors(counter.transmiterror)
+          statportreply.setReceiveFrameErrors(counter.receiveframe_align_error)
+          statportreply.setReceiveOverrunErrors(counter.receive_overrun_error)
+          statportreply.setReceiveCRCErrors(counter.receive_crc_error)
+          statportreply.setCollisions(counter.collisions)
+        }
+        val statList = new util.ArrayList[OFStatistics]
+        statList += statportreply
+        statreply.setStatisticType(OFStatisticsType.PORT)
+        statreply.setStatistics(statList)
+        statreply.setStatisticsFactory(OpenFlowFactory)
+        statreply.setLength((statportreply.getLength + statreply.getLength).toShort)
+        statreply.setXid(ofstatreq.getXid)
+        outlist += statreply
       }
       case OFStatisticsType.FLOW => {
 
