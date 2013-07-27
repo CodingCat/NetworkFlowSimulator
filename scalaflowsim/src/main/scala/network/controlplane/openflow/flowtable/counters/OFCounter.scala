@@ -28,3 +28,10 @@ class OFPortCount (private [openflow] port_num : Int) extends OFCounter("port_co
   private [controlplane] var collisions : Long = 0
 }
 
+class OFFlowCount () extends OFCounter("flow_counter") {
+  private [controlplane] var receivedpacket : Long = 0
+  private [controlplane] var receivedbytes : Long = 0
+  private [controlplane] var durationSeconds : Int = 0
+  private [controlplane] var durationNanoSeconds : Int = 0
+}
+

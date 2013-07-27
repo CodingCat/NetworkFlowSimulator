@@ -5,6 +5,7 @@ import org.jboss.netty.channel._
 import org.jboss.netty.buffer.{ChannelBuffers, ChannelBuffer}
 import org.openflow.protocol._
 import scala.collection.JavaConversions._
+import scalasim.simengine.SimulationEngine
 import scalasim.simengine.utils.Logging
 import org.jboss.netty.handler.codec.oneone.OneToOneEncoder
 import org.openflow.protocol.statistics._
@@ -14,7 +15,7 @@ import scalasim.XmlParser
 class OpenFlowMsgEncoder extends OneToOneEncoder {
 
   override def encode(ctx: ChannelHandlerContext, channel: Channel, msg: AnyRef): AnyRef = {
-    if (!(msg.isInstanceOf[java.util.ArrayList[_]])) return msg
+    if (!msg.isInstanceOf[java.util.ArrayList[_]]) return msg
     val msglist = msg.asInstanceOf[java.util.ArrayList[OFMessage]]
     var size: Int = 0
     for (ofm <- msglist) {
@@ -45,7 +46,7 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
       case OFFlowMod.OFPFC_DELETE => {
         if (offlowmod.getMatch.getWildcards == OFMatch.OFPFW_ALL) {
           //clear to initialize flow tables;
-          for (table <- connector.flowtables) table.clear
+          for (table <- connector.flowtables) table.clear()
         }
       }
       case _ => throw new Exception("unrecognized OFFlowMod command type:" + offlowmod.getCommand)
@@ -72,6 +73,70 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
         statreply.setLength((statdescreply.getLength+ statreply.getLength).toShort)
         statreply.setXid(ofstatreq.getXid)
         outlist += statreply
+      }
+      case OFStatisticsType.FLOW =>{
+        val statflowreqmsg = ofstatreq.asInstanceOf[OFStatisticsRequest]
+        val statflowreq = statflowreqmsg.getStatistics.get(0).asInstanceOf[OFFlowStatisticsRequest]
+        val statflowreplymsg = OpenFlowFactory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
+        val statlist = new util.ArrayList[OFStatistics]
+        if (statflowreq.getTableId == -1) {
+          //read from all tables
+          logTrace("collect flow information from all tables")
+          for (i <- 0 until connector.flowtables.length) {
+            logTrace("collect flow information on table " + i + " with match wildcard " +
+              statflowreq.getMatch.getWildcards + " and outputport " +  + statflowreq.getOutPort)
+            val qualifiedflows = connector.flowtables(i).getFlowsByMatchAndPort(statflowreq.getMatch,
+              statflowreq.getOutPort)
+            logTrace("qualified flow number: " + qualifiedflows.length)
+            for (flowentry <- qualifiedflows) {
+              val statflowreply = OpenFlowFactory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.FLOW)
+                .asInstanceOf[OFFlowStatisticsReply]
+              statflowreply.setLength(88)
+              statflowreply.setMatch(statflowreq.getMatch)
+              statflowreply.setTableId(i.toByte)
+              statflowreply.setDurationNanoseconds(flowentry.counter.durationNanoSeconds)
+              statflowreply.setDurationSeconds(flowentry.counter.durationSeconds)
+              statflowreply.setPriority(0)
+              statflowreply.setIdleTimeout((connector.flowtables(i).flowIdleDuration -
+                SimulationEngine.currentTime + flowentry.lastAccessPoint).toShort)
+              statflowreply.setHardTimeout((flowentry.expireMoments - SimulationEngine.currentTime).toShort)
+              statflowreply.setCookie(0)
+              statflowreply.setPacketCount(flowentry.counter.receivedpacket)
+              statflowreply.setByteCount(flowentry.counter.receivedbytes)
+              logTrace("add flow reply: " + statflowreply)
+              statlist += statflowreply
+            }
+          }
+        }
+        else {
+          val referredtable = connector.flowtables(statflowreq.getTableId)
+          val qualifiedflows = referredtable.getFlowsByMatchAndPort(statflowreq.getMatch,
+            statflowreq.getOutPort)
+          for (flowentry <- qualifiedflows) {
+            val statflowreply = OpenFlowFactory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.FLOW)
+              .asInstanceOf[OFFlowStatisticsReply]
+            statflowreply.setLength(88)
+            statflowreply.setMatch(statflowreq.getMatch)
+            statflowreply.setTableId(statflowreq.getTableId)
+            statflowreply.setDurationNanoseconds(flowentry.counter.durationNanoSeconds)
+            statflowreply.setDurationSeconds(flowentry.counter.durationSeconds)
+            statflowreply.setPriority(0)
+            statflowreply.setIdleTimeout((referredtable.flowIdleDuration - SimulationEngine.currentTime +
+              flowentry.lastAccessPoint).toShort)
+            statflowreply.setHardTimeout((flowentry.expireMoments - SimulationEngine.currentTime).toShort)
+            statflowreply.setCookie(0)
+            statflowreply.setPacketCount(flowentry.counter.receivedpacket)
+            statflowreply.setByteCount(flowentry.counter.receivedbytes)
+            statflowreply.setActions(flowentry.actions)
+            statlist += statflowreply
+          }
+        }
+        statflowreplymsg.setLength((statflowreplymsg.getLength + statlist.length * 88).toShort)
+        statflowreplymsg.setStatisticType(OFStatisticsType.FLOW)
+        statflowreplymsg.setStatistics(statlist)
+        statflowreplymsg.setStatisticsFactory(OpenFlowFactory)
+        statflowreplymsg.setXid(ofstatreq.getXid)
+        outlist += statflowreplymsg
       }
       case OFStatisticsType.PORT => {
         val statportreqmsg = ofstatreq.asInstanceOf[OFStatisticsRequest]
@@ -126,9 +191,7 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
         statreply.setXid(ofstatreq.getXid)
         outlist += statreply
       }
-      case OFStatisticsType.FLOW => {
 
-      }
       case OFStatisticsType.AGGREGATE => {
         val stataggreqmsg = ofstatreq.asInstanceOf[OFStatisticsRequest]
         val stataggreq = stataggreqmsg.getStatistics.get(0).asInstanceOf[OFAggregateStatisticsRequest]

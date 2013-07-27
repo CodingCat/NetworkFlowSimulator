@@ -33,7 +33,10 @@ class OpenFlowModule (private [openflow] val router : Router) {
   )
 
   def init() {
-    for (i <- 0 until flowtables.length) flowtables(i) = new OFFlowTable
+    //leave interface to implement pipeline
+    for (i <- 0 until flowtables.length) flowtables(i) = new OFFlowTable(
+      XmlParser.getInt("scalasim.network.controlplane.openflow.flowExpireDuration", 600),
+      XmlParser.getInt("scalasim.network.controlplane.openflow.flowIdleDuration", 300))
   }
 
   //build channel to the controller
