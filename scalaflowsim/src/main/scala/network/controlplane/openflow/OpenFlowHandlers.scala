@@ -11,6 +11,7 @@ import org.jboss.netty.handler.codec.oneone.OneToOneEncoder
 import org.openflow.protocol.statistics._
 import java.util
 import scalasim.XmlParser
+import org.openflow.protocol.factory.BasicFactory
 
 class OpenFlowMsgEncoder extends OneToOneEncoder {
 
@@ -30,16 +31,18 @@ class OpenFlowMsgEncoder extends OneToOneEncoder {
 }
 
 class OpenFlowMsgDecoder extends FrameDecoder {
-
+  val factory = BasicFactory.getInstance()
   override def decode(ctx: ChannelHandlerContext, channel: Channel, buffer: ChannelBuffer)  : AnyRef = {
     //parse the channelbuffer into the list of ofmessage
     if (!channel.isConnected) return None
-    OpenFlowFactory.parseMessage(buffer)
+    factory.parseMessage(buffer)
   }
 }
 
 class OpenFlowChannelHandler (private val connector : OpenFlowModule)
   extends SimpleChannelHandler  with Logging  {
+
+  val factory = BasicFactory.getInstance()
 
   private def processFlowMod(offlowmod : OFFlowMod) {
     offlowmod.getCommand match {
@@ -56,7 +59,7 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
   private def processStatRequest(ofstatreq : OFStatisticsRequest, outlist : java.util.ArrayList[OFMessage]) {
     ofstatreq.getStatisticType match {
       case OFStatisticsType.DESC => {
-        val statdescreply = OpenFlowFactory.getStatistics(OFType.STATS_REPLY,OFStatisticsType.DESC)
+        val statdescreply = factory.getStatistics(OFType.STATS_REPLY,OFStatisticsType.DESC)
           .asInstanceOf[OFDescriptionStatistics]
         //TODO: descriptions are not complete
         statdescreply.setDatapathDescription(connector.getSwitchDescription)
@@ -66,10 +69,10 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
         statdescreply.setSerialNumber("1")
         val statList = new util.ArrayList[OFStatistics]
         statList += statdescreply
-        val statreply = OpenFlowFactory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
+        val statreply = factory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
         statreply.setStatisticType(OFStatisticsType.DESC)
         statreply.setStatistics(statList)
-        statreply.setStatisticsFactory(OpenFlowFactory)
+        statreply.setStatisticsFactory(factory)
         statreply.setLength((statdescreply.getLength+ statreply.getLength).toShort)
         statreply.setXid(ofstatreq.getXid)
         outlist += statreply
@@ -77,7 +80,7 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
       case OFStatisticsType.FLOW =>{
         val statflowreqmsg = ofstatreq.asInstanceOf[OFStatisticsRequest]
         val statflowreq = statflowreqmsg.getStatistics.get(0).asInstanceOf[OFFlowStatisticsRequest]
-        val statflowreplymsg = OpenFlowFactory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
+        val statflowreplymsg = factory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
         val statlist = new util.ArrayList[OFStatistics]
         if (statflowreq.getTableId == -1) {
           //read from all tables
@@ -89,7 +92,7 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
               statflowreq.getOutPort)
             logTrace("qualified flow number: " + qualifiedflows.length)
             for (flowentry <- qualifiedflows) {
-              val statflowreply = OpenFlowFactory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.FLOW)
+              val statflowreply = factory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.FLOW)
                 .asInstanceOf[OFFlowStatisticsReply]
               statflowreply.setLength(88)
               statflowreply.setMatch(statflowreq.getMatch)
@@ -113,7 +116,7 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
           val qualifiedflows = referredtable.getFlowsByMatchAndPort(statflowreq.getMatch,
             statflowreq.getOutPort)
           for (flowentry <- qualifiedflows) {
-            val statflowreply = OpenFlowFactory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.FLOW)
+            val statflowreply = factory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.FLOW)
               .asInstanceOf[OFFlowStatisticsReply]
             statflowreply.setLength(88)
             statflowreply.setMatch(statflowreq.getMatch)
@@ -134,16 +137,16 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
         statflowreplymsg.setLength((statflowreplymsg.getLength + statlist.length * 88).toShort)
         statflowreplymsg.setStatisticType(OFStatisticsType.FLOW)
         statflowreplymsg.setStatistics(statlist)
-        statflowreplymsg.setStatisticsFactory(OpenFlowFactory)
+        statflowreplymsg.setStatisticsFactory(factory)
         statflowreplymsg.setXid(ofstatreq.getXid)
         outlist += statflowreplymsg
       }
       case OFStatisticsType.PORT => {
         val statportreqmsg = ofstatreq.asInstanceOf[OFStatisticsRequest]
         val statportreq = statportreqmsg.getStatistics.get(0).asInstanceOf[OFPortStatisticsRequest]
-        val statportreply = OpenFlowFactory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.PORT)
+        val statportreply = factory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.PORT)
           .asInstanceOf[OFPortStatisticsReply]
-        val statreply = OpenFlowFactory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
+        val statreply = factory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
         val statList = new util.ArrayList[OFStatistics]
         val port_num = statportreq.getPortNumber
         if (port_num == -1) {
@@ -185,7 +188,7 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
         }
         statreply.setStatisticType(OFStatisticsType.PORT)
         statreply.setStatistics(statList)
-        statreply.setStatisticsFactory(OpenFlowFactory)
+        statreply.setStatisticsFactory(factory)
         statreply.setLength((statreply.getLength + statportreply.getLength * statList.size).toShort)
         statreply.setXid(ofstatreq.getXid)
         outlist += statreply
@@ -194,9 +197,9 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
       case OFStatisticsType.AGGREGATE => {
         val stataggreqmsg = ofstatreq.asInstanceOf[OFStatisticsRequest]
         val stataggreq = stataggreqmsg.getStatistics.get(0).asInstanceOf[OFAggregateStatisticsRequest]
-        val stataggreply = OpenFlowFactory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.AGGREGATE)
+        val stataggreply = factory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.AGGREGATE)
           .asInstanceOf[OFAggregateStatisticsReply]
-        val statreply = OpenFlowFactory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
+        val statreply = factory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
         val table_id = stataggreq.getTableId
         if (table_id >= 0 && table_id < connector.flowtables.length) {
           val referred_table = connector.flowtables(table_id)
@@ -218,7 +221,7 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
         statList += stataggreply
         statreply.setStatisticType(OFStatisticsType.AGGREGATE)
         statreply.setStatistics(statList)
-        statreply.setStatisticsFactory(OpenFlowFactory)
+        statreply.setStatisticsFactory(factory)
         statreply.setLength((stataggreply.getLength + statreply.getLength).toShort)
         statreply.setXid(ofstatreq.getXid)
         outlist += statreply
@@ -230,11 +233,11 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
   private def processMessage(ofm : OFMessage, outlist : java.util.ArrayList[OFMessage]) = ofm.getType match {
     case OFType.HELLO => {
       logTrace("receive a hello message from controller")
-      outlist += OpenFlowFactory.getMessage(OFType.HELLO).asInstanceOf[OFHello]
+      outlist += factory.getMessage(OFType.HELLO).asInstanceOf[OFHello]
     }
     case OFType.FEATURES_REQUEST => {
       logTrace("receive a feature request message from controller")
-      val featurereply = OpenFlowFactory.getMessage(OFType.FEATURES_REPLY).asInstanceOf[OFFeaturesReply]
+      val featurereply = factory.getMessage(OFType.FEATURES_REPLY).asInstanceOf[OFFeaturesReply]
       val featurelist = connector.getSwitchFeature
       featurereply.setXid(ofm.getXid)
       featurereply.setDatapathId(featurelist._1)
@@ -254,7 +257,7 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
     }
     case OFType.GET_CONFIG_REQUEST => {
       logTrace("receive a get config request from controller")
-      val getconfigreply = OpenFlowFactory.getMessage(OFType.GET_CONFIG_REPLY).asInstanceOf[OFGetConfigReply]
+      val getconfigreply = factory.getMessage(OFType.GET_CONFIG_REPLY).asInstanceOf[OFGetConfigReply]
       val config = connector.getSwitchParameters
       getconfigreply.setFlags(config._1)
       getconfigreply.setMissSendLength(config._2)
@@ -274,12 +277,12 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
     case OFType.ECHO_REQUEST => {
       logTrace("receive a echo_request message from controller")
       val echoreq = ofm.asInstanceOf[OFEchoRequest]
-      val echoreply = OpenFlowFactory.getMessage(OFType.ECHO_REPLY).asInstanceOf[OFEchoReply]
+      val echoreply = factory.getMessage(OFType.ECHO_REPLY).asInstanceOf[OFEchoReply]
       echoreply.setXid(echoreq.getXid)
       echoreply.setPayload(echoreq.getPayload)
       outlist += echoreply
     }
-    case OFType.PACKET_OUT => {
+    /*case OFType.PACKET_OUT => {
       logTrace("receive a packet_out message from controller")
       val packetoutmsg = ofm.asInstanceOf[OFPacketOut]
       if (packetoutmsg.getInPort == -1 && packetoutmsg.getBufferId == -1) {
@@ -295,7 +298,7 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
 
         }
       }
-    }
+    } */
     case _ => throw new Exception("unrecognized message type:" + ofm)
   }
 
