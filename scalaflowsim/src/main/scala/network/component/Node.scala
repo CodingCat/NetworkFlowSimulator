@@ -1,7 +1,12 @@
 package scalasim.network.component
 
 import scala.collection.mutable.ListBuffer
-import scalasim.network.controlplane.ControlPlane
+import scalasim.network.controlplane.openflow.OpenFlowModule
+import scalasim.network.controlplane.resource.ResourceAllocator
+import scalasim.network.controlplane.routing.RoutingProtocol
+import scalasim.network.controlplane.{ControlPlane, TCPControlPlane}
+import scalasim.network.controlplane.topology.TopologyManager
+import scalasim.XmlParser
 
 
 abstract class NodeType
@@ -13,9 +18,32 @@ case object HostType extends NodeType
 
 class Node (val nodetype : NodeType) {
   val ip_addr : ListBuffer[String] = new ListBuffer[String]
-  val controlPlane = new ControlPlane(this)
+  val controlPlane : ControlPlane = {
+    if (XmlParser.getString("scalasim.simengine.model", "tcp") == "tcp" || nodetype == HostType)
+      new TCPControlPlane(this,
+        RoutingProtocol("SimpleSymmetric", this),
+        ResourceAllocator("MaxMin", controlPlane),
+        new TopologyManager(this))
+    else {
+      if (XmlParser.getString("scalasim.simengine.model", "tcp") == "openflow") {
+        new OpenFlowModule(this.asInstanceOf[Router],
+          RoutingProtocol("OpenFlow", this),
+          ResourceAllocator("OpenFlow", controlPlane),
+          new TopologyManager(this))
+      }
+      else {
+        null
+      }
+    }
+  }
+
   def assignIP(ip : String) = ip_addr += ip
-  override def toString = ip_addr(0)
+
+  override def toString = {
+    if (ip_addr.length > 0) ip_addr(0)
+    else "new initialized node"
+  }
+
   def getLink(destinationIP : String) {}
 }
 

@@ -1,12 +1,12 @@
 package scalasim.network.controlplane.resource
 
 import scalasim.network.traffic._
-import scalasim.network.controlplane.ControlPlane
+import scalasim.network.controlplane.TCPControlPlane
 import scalasim.network.controlplane.routing.RoutingProtocol
 import scalasim.network.component.Link
 import scalasim.simengine.utils.Logging
 
-private [controlplane] class MaxMinAllocator (controlPlane : ControlPlane)
+private [controlplane] class MaxMinAllocator (controlPlane : TCPControlPlane)
   extends ResourceAllocator (controlPlane) with Logging {
 
   override def allocate (link: Link) {

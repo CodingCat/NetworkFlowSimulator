@@ -1,74 +1,37 @@
 package scalasim.network.controlplane
 
-import scalasim.simengine.SimulationEngine
-import scalasim.XmlParser
 import scalasim.network.component.{Link, Node}
-import scalasim.network.controlplane.routing.RoutingProtocol
-import scalasim.network.traffic.{CompletedFlow, RunningFlow, NewStartFlow, Flow}
-import scalasim.network.events.CompleteFlowEvent
-import scalasim.simengine.utils.Logging
-import scala.collection.mutable.HashMap
-import scalasim.network.controlplane.topology.TopologyManager
 import scalasim.network.controlplane.resource.ResourceAllocator
+import scalasim.network.controlplane.routing.RoutingProtocol
+import scalasim.network.controlplane.topology.TopologyManager
+import scalasim.network.traffic.Flow
 
+abstract class ControlPlane (private [controlplane] val node : Node,
+                             private [controlplane] val routingModule : RoutingProtocol,
+                             private [controlplane] val resourceModule : ResourceAllocator,
+                             private [controlplane] val topoModule : TopologyManager) {
 
-class ControlPlane(private [controlplane] val node : Node) extends Logging {
-  private [controlplane] val routingModule = RoutingProtocol(
-    XmlParser.getString("scalasim.router.routing", "SimpleSymmetricRouting"), this)
-  private [controlplane] val resourceModule = ResourceAllocator(
-    XmlParser.getString("scalasim.router.resource", "MaxMin"), this)
-  private [controlplane] val topoModule = new TopologyManager(this)
+  lazy val IP : String = node.toString
 
-  private def nextNode(link : Link) : Node = {
-    if (link.end_to == node) link.end_from
-    else link.end_to
-  }
+  override def toString = "controlplane-" + node.toString
 
-  def allocate (flow : Flow) {
-    if (node.ip_addr(0) == flow.DstIP) {
-      if (flow.status != RunningFlow && flow.status != CompletedFlow){
-        if (flow.status == NewStartFlow) {
-          val completeEvent = new CompleteFlowEvent(flow, RoutingProtocol.getFlowStarter(flow.SrcIP),
-            SimulationEngine.currentTime + flow.Demand / flow.getTempRate)
-          logTrace("schedule complete event " + completeEvent + " for " + flow + " at " +
-            (SimulationEngine.currentTime + flow.Demand / flow.getTempRate))
-          flow.bindEvent(completeEvent)
-          SimulationEngine.addEvent(completeEvent)
-        }
-        flow.run
-      }
-    }
-    else {
-      val nextlink = routingModule.fetchRoutingEntry(flow)
-      val nextnode = nextNode(nextlink)
-      val rpccontrolplane = {
-        if (nextlink.end_from == node) node.controlPlane
-        else nextnode.controlPlane
-      }
-      if (flow.status == NewStartFlow)
-        rpccontrolplane.resourceModule.insertNewLinkFlowPair(nextlink, flow)
-      rpccontrolplane.resourceModule.allocate(nextlink)
-      nextnode.controlPlane.allocate(flow)
-    }
-  }
+  /**
+   * allowcate resource to the flow
+   * @param flow
+   */
+  def allocate(flow : Flow) : Flow
 
-  def finishFlow(flow : Flow) {
-    if (node.ip_addr(0) != flow.DstIP) {
-      logTrace("flow ended at " + node.ip_addr(0))
-      val nextlink = routingModule.fetchRoutingEntry(flow)
-      val nextnode = nextNode(nextlink)
-      val rpccontrolplane = {
-        if (nextlink.end_from == node) node.controlPlane
-        else nextnode.controlPlane
-      }
-      rpccontrolplane.resourceModule.deleteFlow(flow)
-      nextnode.controlPlane.finishFlow(flow)
-      //reallocate resource to other flows
-      rpccontrolplane.resourceModule.reallocate(nextlink)
-      logTrace("delete route table entry:" + flow + " at " + node.ip_addr(0))
-      routingModule.deleteEntry(flow)
-    }
-  }
+  /**
+   * cleanup job when a flow is deleted
+   * @param flow
+   */
+  def finishFlow(flow : Flow)
+
+  /**
+   * routing the flow
+   * @param flow
+   */
+  def routing (flow : Flow)
 
   def getLinkAvailableBandwidth(l : Link) : Double = resourceModule.getLinkAvailableBandwidth(l)
 
@@ -80,27 +43,7 @@ class ControlPlane(private [controlplane] val node : Node) extends Logging {
     topoModule.registerOutgoingLink(link)
   }
 
-
-  def routing (flow : Flow) : Unit = {
-    logInfo("arrive at " + node.ip_addr(0))
-    if (node.ip_addr(0) != flow.DstIP) {
-      val nextlink = routingModule.selectNextLink(flow)
-      val nextnode = nextNode(nextlink)
-      logDebug("send through " + nextlink)
-      routingModule.insertFlowPath(flow, nextlink)
-      nextnode.controlPlane.routing(flow)
-    }
-    else {
-      //arrive the destination
-      //start resource allocation process
-      RoutingProtocol.getFlowStarter(flow.SrcIP).controlPlane.allocate(flow)
-    }
-  }
-
-  override def toString = "ControlPlane-" + node
-
-  def IP : String = node.toString
-
-  def outlinks : HashMap[String, Link] = topoModule.outlink
-  def inlinks : HashMap[String, Link] = topoModule.inlinks
+  //TODO: expose topo for test, need to be improved
+  def outlinks = topoModule.outlink
+  def inlinks = topoModule.inlinks
 }

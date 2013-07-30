@@ -21,7 +21,7 @@ class OpenFlowMsgEncoder extends OneToOneEncoder {
     val msglist = msg.asInstanceOf[java.util.ArrayList[OFMessage]]
     var size: Int = 0
     for (ofm <- msglist) {
-      size += ofm.getLengthU
+      size += ofm.getLength
     }
     val buf: ChannelBuffer = ChannelBuffers.buffer(size)
     for (ofm <- msglist) {
@@ -40,7 +40,7 @@ class OpenFlowMsgDecoder extends FrameDecoder {
   }
 }
 
-class OpenFlowChannelHandler (private val connector : OpenFlowModule)
+class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
   extends SimpleChannelHandler  with Logging  {
 
   private val factory =  new BasicFactory
@@ -50,7 +50,7 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
       case OFFlowMod.OFPFC_DELETE => {
         if (offlowmod.getMatch.getWildcards == OFMatch.OFPFW_ALL) {
           //clear to initialize flow tables;
-          for (table <- connector.flowtables) table.clear()
+          for (table <- openflowPlane.flowtables) table.clear()
         }
       }
       case _ => throw new Exception("unrecognized OFFlowMod command type:" + offlowmod.getCommand)
@@ -63,7 +63,7 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
         val statdescreply = factory.getStatistics(OFType.STATS_REPLY,OFStatisticsType.DESC)
           .asInstanceOf[OFDescriptionStatistics]
         //TODO: descriptions are not complete
-        statdescreply.setDatapathDescription(connector.getSwitchDescription)
+        statdescreply.setDatapathDescription(openflowPlane.getSwitchDescription)
         statdescreply.setHardwareDescription("simulated router hardware")
         statdescreply.setManufacturerDescription("simulated router")
         statdescreply.setSoftwareDescription("simulated router software")
@@ -86,10 +86,10 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
         if (statflowreq.getTableId == -1) {
           //read from all tables
           logTrace("collect flow information from all tables")
-          for (i <- 0 until connector.flowtables.length) {
+          for (i <- 0 until openflowPlane.flowtables.length) {
             logTrace("collect flow information on table " + i + " with match wildcard " +
               statflowreq.getMatch.getWildcards + " and outputport " +  + statflowreq.getOutPort)
-            val qualifiedflows = connector.flowtables(i).getFlowsByMatchAndPort(statflowreq.getMatch,
+            val qualifiedflows = openflowPlane.flowtables(i).getFlowsByMatchAndPort(statflowreq.getMatch,
               statflowreq.getOutPort)
             logTrace("qualified flow number: " + qualifiedflows.length)
             for (flowentry <- qualifiedflows) {
@@ -101,7 +101,7 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
               statflowreply.setDurationNanoseconds(flowentry.counter.durationNanoSeconds)
               statflowreply.setDurationSeconds(flowentry.counter.durationSeconds)
               statflowreply.setPriority(0)
-              statflowreply.setIdleTimeout((connector.flowtables(i).flowIdleDuration -
+              statflowreply.setIdleTimeout((openflowPlane.flowtables(i).flowIdleDuration -
                 SimulationEngine.currentTime + flowentry.lastAccessPoint).toShort)
               statflowreply.setHardTimeout((flowentry.expireMoments - SimulationEngine.currentTime).toShort)
               statflowreply.setCookie(0)
@@ -113,7 +113,7 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
           }
         }
         else {
-          val referredtable = connector.flowtables(statflowreq.getTableId)
+          val referredtable = openflowPlane.flowtables(statflowreq.getTableId)
           val qualifiedflows = referredtable.getFlowsByMatchAndPort(statflowreq.getMatch,
             statflowreq.getOutPort)
           for (flowentry <- qualifiedflows) {
@@ -151,7 +151,7 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
         val statList = new util.ArrayList[OFStatistics]
         val port_num = statportreq.getPortNumber
         if (port_num == -1) {
-          val counters = connector.router.controlPlane.topoModule.portcounters
+          val counters = openflowPlane.topoModule.portcounters
           for (counter_pair <- counters) {
             val counter = counter_pair._2
             statportreply.setPortNumber(counter_pair._1)
@@ -171,7 +171,7 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
           }
         }
         else {
-          val counter = connector.router.controlPlane.topoModule.portcounters(port_num)
+          val counter = openflowPlane.topoModule.portcounters(port_num)
           statportreply.setPortNumber(port_num)
           statportreply.setreceivePackets(counter.receivedpacket)
           statportreply.setTransmitPackets(counter.transmittedpacket)
@@ -202,16 +202,16 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
           .asInstanceOf[OFAggregateStatisticsReply]
         val statreply = factory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
         val table_id = stataggreq.getTableId
-        if (table_id >= 0 && table_id < connector.flowtables.length) {
-          val referred_table = connector.flowtables(table_id)
+        if (table_id >= 0 && table_id < openflowPlane.flowtables.length) {
+          val referred_table = openflowPlane.flowtables(table_id)
           stataggreply.setFlowCount(referred_table.counters.referencecount)
           stataggreply.setPacketCount(referred_table.counters.packetlookup +
             referred_table.counters.packetmatches)
           stataggreply.setByteCount(referred_table.counters.flowbytes)
         }
         else {
-          for (i <- 0 until connector.flowtables.length) {
-            val referred_table = connector.flowtables(i)
+          for (i <- 0 until openflowPlane.flowtables.length) {
+            val referred_table = openflowPlane.flowtables(i)
             stataggreply.setFlowCount(referred_table.counters.referencecount)
             stataggreply.setPacketCount(referred_table.counters.packetlookup +
               referred_table.counters.packetmatches)
@@ -234,32 +234,36 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
   private def processMessage(ofm : OFMessage, outlist : java.util.ArrayList[OFMessage]) = ofm.getType match {
     case OFType.HELLO => {
       logTrace("receive a hello message from controller")
-      outlist += factory.getMessage(OFType.HELLO).asInstanceOf[OFHello]
+      val helloreply = factory.getMessage(OFType.HELLO).asInstanceOf[OFHello]
+      helloreply.setLength(8)
+      helloreply.setType(OFType.HELLO)
+      helloreply.setXid(ofm.getXid)
+      helloreply.setVersion(ofm.getVersion)
+      outlist += helloreply
     }
     case OFType.FEATURES_REQUEST => {
       logTrace("receive a feature request message from controller")
       val featurereply = factory.getMessage(OFType.FEATURES_REPLY).asInstanceOf[OFFeaturesReply]
-      val featurelist = connector.getSwitchFeature
-      featurereply.setXid(ofm.getXid)
+      val featurelist = openflowPlane.getSwitchFeature
       featurereply.setDatapathId(featurelist._1)
       featurereply.setBuffers(featurelist._2)
       featurereply.setTables(featurelist._3.toByte)
       featurereply.setCapabilities(featurelist._4)
-      logDebug("port number:" + featurelist._5.length + " at " + connector.router.ip_addr(0))
       featurereply.setPorts(featurelist._5)
       featurereply.setLength((32 + featurereply.getPorts.length * 48).toShort)
+      featurereply.setXid(ofm.getXid)
       outlist += featurereply
     }
     case OFType.SET_CONFIG => {
       val m = ofm.asInstanceOf[OFSetConfig]
       logTrace("receive a set config message from controller, miss_send_length:" + m.getMissSendLength +
         " , flags:" + m.getFlags)
-      connector.setSwitchParameters(ofm.asInstanceOf[OFSetConfig])
+      openflowPlane.setSwitchParameters(ofm.asInstanceOf[OFSetConfig])
     }
     case OFType.GET_CONFIG_REQUEST => {
       logTrace("receive a get config request from controller")
       val getconfigreply = factory.getMessage(OFType.GET_CONFIG_REPLY).asInstanceOf[OFGetConfigReply]
-      val config = connector.getSwitchParameters
+      val config = openflowPlane.getSwitchParameters
       getconfigreply.setFlags(config._1)
       getconfigreply.setMissSendLength(config._2)
       getconfigreply.setXid(ofm.getXid)
@@ -268,8 +272,8 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
     case OFType.STATS_REQUEST => {
       logTrace("receive a stat request message from controller")
       processStatRequest(ofm.asInstanceOf[OFStatisticsRequest], outlist)
-      if (connector.status == OpenFlowSwitchHandShaking)
-        connector.status = OpenFlowSwitchRunning
+      if (openflowPlane.status == OpenFlowSwitchHandShaking)
+        openflowPlane.status = OpenFlowSwitchRunning
     }
     case OFType.FLOW_MOD => {
       logTrace("receive a flow_mod message from controller")
@@ -289,24 +293,25 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
       if (packetoutmsg.getBufferId == -1) {
         //the packet data is included in the packoutmsg
         val outData = packetoutmsg.getPacketData
-        val topoManager = connector.router.controlPlane.topoModule
+        logTrace("receive LLDP packet from the controller with the size " + outData.length)
+        val topoManager = openflowPlane.topoModule
         //send out through all ports
-        val allports = connector.router.controlPlane.topoModule.outlink.values.toList :::
-          connector.router.controlPlane.topoModule.inlinks.values.toList
+        val allports = topoManager.outlink.values.toList ::: topoManager.inlinks.values.toList
         for (port <- allports) {
           //send back PACKET_IN to controller
           val packet_in_msg = factory.getMessage(OFType.PACKET_IN).asInstanceOf[OFPacketIn]
           packet_in_msg.setBufferId(-1)
-          packet_in_msg.setInPort(topoManager.physicalports(port).getPortNumber)
-          packet_in_msg.setPacketData(outData)
-          packet_in_msg.setReason(OFPacketIn.OFPacketInReason.ACTION)
-          packet_in_msg.setTotalLength((outData.length + packet_in_msg.getLength).toShort)
+            .setInPort(topoManager.physicalports(port).getPortNumber)
+            .setPacketData(outData)
+            .setReason(OFPacketIn.OFPacketInReason.ACTION)
+            .setTotalLength(outData.length.toShort)
           outlist += packet_in_msg
           //make Neightbour send PACKET_IN with the same data
           val neighbour = topoManager.getNeighbour(port)
           if (neighbour.isInstanceOf[Router]) {
             val neighbour_router = neighbour.asInstanceOf[Router]
-            neighbour_router.openflowconnector.sendLLDPtoController(port, outData)
+            //TODO: this line may not work when the neighbour code is not a openflow switch
+            neighbour_router.controlPlane.asInstanceOf[OpenFlowModule].sendLLDPtoController(port, outData)
           }
         }
       }
@@ -325,7 +330,7 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
 
   override def channelConnected(ctx : ChannelHandlerContext, e : ChannelStateEvent) {
     //save the channel for sending packet
-    connector.toControllerChannel = e.getChannel
+    openflowPlane.toControllerChannel = e.getChannel
   }
 
   override def messageReceived(ctx: ChannelHandlerContext, e: MessageEvent) {

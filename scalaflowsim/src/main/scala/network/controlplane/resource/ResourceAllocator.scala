@@ -1,8 +1,9 @@
 package scalasim.network.controlplane.resource
 
+import scalasim.network.controlplane.openflow.OpenFlowModule
 import scalasim.network.traffic.Flow
 import scala.collection.mutable.{ListBuffer, HashMap}
-import scalasim.network.controlplane.ControlPlane
+import scalasim.network.controlplane.{ControlPlane, TCPControlPlane}
 import scalasim.network.component.Link
 
 abstract private [controlplane] class ResourceAllocator (controlPlane : ControlPlane) {
@@ -38,7 +39,8 @@ abstract private [controlplane] class ResourceAllocator (controlPlane : ControlP
 
 object ResourceAllocator {
   def apply (name : String, controlPlane : ControlPlane) : ResourceAllocator = name match {
-    case "MaxMin" => new MaxMinAllocator(controlPlane)
+    case "MaxMin" => new MaxMinAllocator(controlPlane.asInstanceOf[TCPControlPlane])
+    case "OpenFlow" => new OpenFlowAllocator(controlPlane.asInstanceOf[OpenFlowModule])
     case _ => throw new Exception("unrecognizable ResourceAllocator type")
   }
 }

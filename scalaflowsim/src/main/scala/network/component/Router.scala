@@ -7,23 +7,19 @@ class Router (nodetype : NodeType) extends Node(nodetype) {
 
   private var rid : Int = 0
 
-  private [network] val openflowconnector = {
-    if (XmlParser.getString("scalasim.simengine.model", "tcp") == "openflow") {
-      new OpenFlowModule(this)
-    }
-    else {
-      null
-    }
-  }
-
   def connectTOController() {
-    if (openflowconnector != null) openflowconnector.connectToController()
+    if (controlPlane.isInstanceOf[OpenFlowModule]) {
+      controlPlane.asInstanceOf[OpenFlowModule].connectToController
+    }
   }
 
   def setrid (r : Int) { rid = r }
   def getrid = rid
 
-  def getDPID = openflowconnector.getDPID
+  def getDPID : Long = {
+    if (! controlPlane.isInstanceOf[OpenFlowModule]) -1
+    else controlPlane.asInstanceOf[OpenFlowModule].getDPID
+  }
 }
 
 class RouterContainer () extends NodeContainer {

@@ -3,11 +3,14 @@ package scalasim.test
 import scalasim.network.component.builder.{LanBuilder, IPInstaller}
 import org.scalatest.FunSuite
 import scalasim.network.component._
+import scalasim.simengine.SimulationEngine
+import scalasim.SimulationRunner
 
 class TopologySuite extends FunSuite {
 
   test("IPInstaller can assign IPs to a host/router") {
      val host : Host = new Host(HostType)
+     SimulationRunner.reset
      IPInstaller.assignIPAddress(host, "10.0.0.1")
      assert(host.ip_addr.length == 1 && host.ip_addr(0) == "10.0.0.1")
      IPInstaller.assignIPAddress(host, "10.0.0.2")
@@ -15,6 +18,7 @@ class TopologySuite extends FunSuite {
   }
 
   test("IPInstaller can assign IPs to host/router container") {
+    SimulationRunner.reset
     val hostContainer : HostContainer = new HostContainer()
     val router : Router = new Router(ToRRouterType)
     IPInstaller.assignIPAddress(router, "10.0.0.1")
@@ -26,6 +30,7 @@ class TopologySuite extends FunSuite {
   }
 
   test("LanBuilder cannot build the lan for router-hosts before all involved elements are assigned with IP addresses") {
+    SimulationRunner.reset
     val router : Router = new Router(ToRRouterType)
     val hostContainer = new  HostContainer()
     hostContainer.create(10)
@@ -38,7 +43,9 @@ class TopologySuite extends FunSuite {
     }
   }
 
-  test("LanBuilder cannot build the lan for router-routers before all involved elements are assigned with IP addresses") {
+  test("LanBuilder cannot build the lan for router-routers before " +
+    "all involved elements are assigned with IP addresses") {
+    SimulationRunner.reset
     val router : Router = new Router(AggregateRouterType)
     val routerContainer = new RouterContainer()
     routerContainer.create(10, ToRRouterType)
@@ -52,6 +59,7 @@ class TopologySuite extends FunSuite {
   }
 
   test("LanBuilder should be able to create the local area network for router-hosts") {
+    SimulationRunner.reset
     val router : Router = new Router(ToRRouterType)
     val hosts : HostContainer = new HostContainer()
     IPInstaller.assignIPAddress(router, "10.0.0.1")
@@ -68,6 +76,7 @@ class TopologySuite extends FunSuite {
   }
 
   test("LanBuilder should be able to create the local area network for router-routers") {
+    SimulationRunner.reset
     val aggRouter : Router = new Router(AggregateRouterType)
     val routers : RouterContainer = new RouterContainer()
     IPInstaller.assignIPAddress(aggRouter, "10.0.0.1")
@@ -84,6 +93,7 @@ class TopologySuite extends FunSuite {
   }
 
   test("Pod network can be created correctly") {
+    SimulationRunner.reset
     val cellnet = new Pod(1)
     //check aggregate routers's inlinks
     for (i <- 0 until cellnet.numAggRouters; j <- 0 until cellnet.numRacks) {

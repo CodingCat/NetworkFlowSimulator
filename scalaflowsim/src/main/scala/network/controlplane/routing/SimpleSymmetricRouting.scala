@@ -4,11 +4,11 @@ import scalasim.network.component._
 import scalasim.network.traffic.Flow
 import scalasim.network.component.ToRRouterType
 import scala.collection.mutable.ListBuffer
-import scalasim.network.controlplane.ControlPlane
+import scalasim.network.controlplane.TCPControlPlane
 
 
-private [controlplane] class SimpleSymmetricRouting (controlPlane : ControlPlane)
-  extends RoutingProtocol (controlPlane) {
+private [controlplane] class SimpleSymmetricRouting (node : Node)
+  extends RoutingProtocol (node) {
 
   private var dstRange : String = null
   private var localRange : String = null
@@ -59,7 +59,9 @@ private [controlplane] class SimpleSymmetricRouting (controlPlane : ControlPlane
                 "dstIP:" + flow.DstIP + "\tsrcIP:" + flow.SrcIP + "\tlocalIP:" + localRange)
             }
           }
-          else selectRandomOutlink(flow)
+          else {
+            selectRandomOutlink(flow)
+          }
         }
         case AggregateRouterType => {
           if (getCellID(router.ip_addr(0)) == dstCellID) {

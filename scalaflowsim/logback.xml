@@ -13,7 +13,7 @@
 	</appender>
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<filter class="ch.qos.logback.classic.filter.LevelFilter">
-			<level>Debug</level>
+			<level>Info</level>
 			<onMatch>ACCEPT</onMatch>
 			<onMismatch>DENY</onMismatch>
 		</filter>
@@ -22,7 +22,7 @@
 		</encoder>
 	</appender>
 	<root level="trace">
-		<appender-ref ref="TraceFileAppender" />
+		<!--		<appender-ref ref="TraceFileAppender" /> -->
 		<appender-ref ref="STDOUT" />
 	</root>
 </configuration>

@@ -2,20 +2,20 @@ package scalasim.network.controlplane.topology
 
 import scala.collection.mutable.HashMap
 import scalasim.network.component._
-import scalasim.network.controlplane.ControlPlane
+import scalasim.network.controlplane.{ControlPlane, TCPControlPlane}
 import scalasim.network.controlplane.openflow.flowtable.counters.OFPortCount
 import scalasim.XmlParser
 import java.util
 import org.openflow.protocol.OFPhysicalPort
 import org.openflow.util.HexString
 
-class TopologyManager (private val cp : ControlPlane) {
+class TopologyManager (private [controlplane] val  node : Node) {
 
   private [controlplane] val outlink = new HashMap[String, Link] // key -> destination ip
   private [controlplane] val inlinks = {
     //if the other end is a host, then the key is the ip of the host,
     //if the other end is a router, then the key is the IP range of that host
-    if (cp.node.nodetype != HostType) new HashMap[String, Link]
+    if (! node.isInstanceOf[Host]) new HashMap[String, Link]
     else null
   }
 
@@ -40,15 +40,15 @@ class TopologyManager (private val cp : ControlPlane) {
     //port number
     port.setPortNumber(portID)
     //port hardware address
-    val t = cp.node.ip_addr(0).substring(cp.node.ip_addr(0).indexOf('.') + 1, cp.node.ip_addr(0).size)
+    val t = node.ip_addr(0).substring(node.ip_addr(0).indexOf('.') + 1, node.ip_addr(0).size)
     val podid = HexString.toHexString(Integer.parseInt(t.substring(0, t.indexOf('.'))), 1)
-    val order = HexString.toHexString(cp.node.asInstanceOf[Router].getrid, 4)
+    val order = HexString.toHexString(node.asInstanceOf[Router].getrid, 4)
     val portnumhex = HexString.toHexString(port.getPortNumber, 1)
     port.setHardwareAddress(HexString.fromHexString(podid + ":" + order + ":" + portnumhex))
     //port name
     //TODO:convert name into 16 bytes array
     val portname = {
-      if (l.end_from == cp.node) l.end_to.toString
+      if (l.end_from == node) l.end_to.toString
       else l.end_from.toString
     }
     port.setName(portname)
@@ -70,25 +70,25 @@ class TopologyManager (private val cp : ControlPlane) {
   }
 
   def registerOutgoingLink(l : Link) {
-    outlink += (l.end_from.ip_addr(0) -> l)
-    if (cp.node.isInstanceOf[Router] && runningmodel == "openflow") addOFPhysicalPort(l,
-      (outlink.size + inlinks.size).toShort)
+    outlink += (l.end_to.ip_addr(0) -> l)
+    if (! node.isInstanceOf[Host] && runningmodel == "openflow")
+      addOFPhysicalPort(l, (outlink.size + inlinks.size).toShort)
   }
 
   def registerIncomeLink(l : Link) {
     val otherEnd = l.end_from
     if (otherEnd.isInstanceOf[Host]) inlinks += otherEnd.ip_addr(0) -> l
     if (otherEnd.isInstanceOf[Router]) inlinks += otherEnd.ip_addr(0) -> l
-    if (cp.node.isInstanceOf[Router] && runningmodel == "openflow") addOFPhysicalPort(l,
+    if (! node.isInstanceOf[Host] && runningmodel == "openflow") addOFPhysicalPort(l,
       (outlink.size + inlinks.size).toShort)
   }
 
   def getNeighbour(l : Link) : Node = {
-    if (l.end_from != cp.node && l.end_to != cp.node) {
+    if (l.end_from != node && l.end_to != node) {
       throw new Exception("getting neighbour error, this link :" + l.toString + " doesn't belong to this node (" +
-      cp.node.toString)
+      node.toString)
     }
-    if (l.end_to == cp.node) l.end_from
+    if (l.end_to == node) l.end_from
     else l.end_to
   }
 }

@@ -2,6 +2,12 @@ package scalasim.network.controlplane.openflow
 
 
 import scalasim.network.component._
+import scalasim.network.controlplane.resource.ResourceAllocator
+import scalasim.network.controlplane.routing.RoutingProtocol
+import scalasim.network.controlplane.topology.TopologyManager
+import scalasim.network.controlplane.{ControlPlane, TCPControlPlane}
+import scalasim.network.traffic.Flow
+import scalasim.simengine.utils.Logging
 import scalasim.XmlParser
 import java.util.concurrent.Executors
 import org.jboss.netty.bootstrap.ClientBootstrap
@@ -21,7 +27,11 @@ case object OpenFlowSwitchHandShaking extends OpenFlowSwitchStatus
 case object OpenFlowSwitchRunning extends OpenFlowSwitchStatus
 case object OpenFlowSwitchClosing extends OpenFlowSwitchStatus
 
-class OpenFlowModule (private [openflow] val router : Router) {
+class OpenFlowModule (router : Router,
+                      routingModule : RoutingProtocol,
+                      resourceModule : ResourceAllocator,
+                      topoModule : TopologyManager)
+  extends ControlPlane (router, routingModule, resourceModule, topoModule) with Logging {
 
   private val host = XmlParser.getString("scalasim.network.controlplane.openflow.controller.host", "127.0.0.1")
   private val port = XmlParser.getInt("scalasim.network.controlplane.openflow.controller.port", 6633)
@@ -69,7 +79,7 @@ class OpenFlowModule (private [openflow] val router : Router) {
   def getFlag = config_flags
   def get_miss_send_len = miss_send_len
 
-  def getDPID : Long = {
+  private lazy val dpid : Long = {
     val impl_dependent = router.nodetype match {
       case ToRRouterType => "00"
       case AggregateRouterType => "01"
@@ -79,6 +89,19 @@ class OpenFlowModule (private [openflow] val router : Router) {
     //TODO: implicitly limit the maximum number of pods, improve?
     val podid = HexString.toHexString(Integer.parseInt(t.substring(0, t.indexOf('.'))), 1)
     val order = HexString.toHexString(router.getrid, 4)
+    HexString.toLong(impl_dependent + ":" + podid + ":" + order + ":00")
+  }
+
+  def getDPID = {
+    val impl_dependent = router.nodetype match {
+      case ToRRouterType => "00"
+      case AggregateRouterType => "01"
+      case CoreRouterType => "02"
+    }
+    val t = router.ip_addr(0).substring(router.ip_addr(0).indexOf('.') + 1, router.ip_addr(0).size)
+    //TODO: implicitly limit the maximum number of pods, improve?
+    val podid = HexString.toHexString(Integer.parseInt(t.substring(0, t.indexOf('.'))), 1)
+    val order = HexString.toHexString(router.getrid, 5)
     HexString.toLong(impl_dependent + ":" + podid + ":" + order + ":00")
   }
 
@@ -93,6 +116,8 @@ class OpenFlowModule (private [openflow] val router : Router) {
   def setSwitchParameters(configpacket : OFSetConfig) {
     config_flags = configpacket.getFlags
     miss_send_len = configpacket.getMissSendLength
+    logDebug("configpacket set to " + config_flags + " and miss_send_len set to " +
+    miss_send_len)
   }
 
   def getSwitchParameters() : (Short, Short) = {
@@ -101,20 +126,57 @@ class OpenFlowModule (private [openflow] val router : Router) {
 
   def getSwitchDescription = router.ip_addr(0)
 
+  private def sendMessageToController(message : OFMessage) {
+    val buffer = ChannelBuffers.buffer(message.getLength)
+    message.writeTo(buffer)
+    if (toControllerChannel.isConnected)
+      toControllerChannel.write(buffer)
+    /*else
+      throw new Exception("the openflow switch " + router.ip_addr(0) +
+      " has been disconnected with the controller")*/
+  }
+
   def sendLLDPtoController (l : Link, lldpData : Array[Byte]) {
-    val port = router.controlPlane.topoModule.physicalports(l)
+    val port = topoModule.physicalports(l)
     //send out packet_in
     val packet_in_msg = factory.getMessage(OFType.PACKET_IN).asInstanceOf[OFPacketIn]
     packet_in_msg.setBufferId(-1)
-    packet_in_msg.setInPort(port.getPortNumber)
-    packet_in_msg.setPacketData(lldpData)
-    packet_in_msg.setReason(OFPacketIn.OFPacketInReason.ACTION)
-    packet_in_msg.setTotalLength((lldpData.length + packet_in_msg.getLength).toShort)
-    //encapsulate packet_in_msg with ChannelBuffer
-    val buffer = ChannelBuffers.buffer(packet_in_msg.getTotalLength)
-    packet_in_msg.writeTo(buffer)
-    toControllerChannel.write(buffer)
+      .setInPort(port.getPortNumber)
+      .setPacketData(lldpData)
+      .setReason(OFPacketIn.OFPacketInReason.ACTION)
+      .setTotalLength(lldpData.length.toShort)
+    sendMessageToController(packet_in_msg)
   }
+
+  def sendPacketIntoController(flow : Flow, ethernetFramedata : Array[Byte]) {
+    val link = routingModule.selectNextLink(flow)
+    val port = topoModule.physicalports(link)
+    val packet_in_msg = factory.getMessage(OFType.PACKET_IN).asInstanceOf[OFPacketIn]
+    packet_in_msg.setBufferId(-1)
+      .setInPort(port.getPortNumber)
+      .setPacketData(ethernetFramedata)
+      .setReason(OFPacketIn.OFPacketInReason.NO_MATCH)
+      .setTotalLength(ethernetFramedata.length.toShort)
+    sendMessageToController(packet_in_msg)
+  }
+
+  /**
+   * allowcate resource to the flow
+   * @param flow
+   */
+  def allocate(flow: Flow): Flow = ???
+
+  /**
+   * cleanup job when a flow is deleted
+   * @param flow
+   */
+  def finishFlow(flow: Flow) {}
+
+  /**
+   * routing the flow
+   * @param flow
+   */
+  def routing(flow: Flow) {}
 
   //init
   init

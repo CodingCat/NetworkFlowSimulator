@@ -17,7 +17,7 @@ class OpenFlowSuite extends FunSuite {
       assert(cellnet.getAggregatRouter(i).getDPID === HexString.toLong("01:01:00:00:00:00:00:00"))
     }
     for (i <- 0 until cellnet.numRacks) {
-      assert(cellnet.getToRRouter(i).getDPID === HexString.toLong("00:01:" + HexString.toHexString(i, 6)))
+      assert(cellnet.getToRRouter(i).getDPID === HexString.toLong("00:01:" + HexString.toHexString(i, 5) + ":00"))
     }
   }
 }
