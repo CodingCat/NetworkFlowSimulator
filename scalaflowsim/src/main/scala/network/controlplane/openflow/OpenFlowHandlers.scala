@@ -5,6 +5,7 @@ import org.jboss.netty.channel._
 import org.jboss.netty.buffer.{ChannelBuffers, ChannelBuffer}
 import org.openflow.protocol._
 import scala.collection.JavaConversions._
+import scalasim.network.component.Router
 import scalasim.simengine.SimulationEngine
 import scalasim.simengine.utils.Logging
 import org.jboss.netty.handler.codec.oneone.OneToOneEncoder
@@ -31,7 +32,7 @@ class OpenFlowMsgEncoder extends OneToOneEncoder {
 }
 
 class OpenFlowMsgDecoder extends FrameDecoder {
-  val factory = BasicFactory.getInstance()
+  val factory = new BasicFactory
   override def decode(ctx: ChannelHandlerContext, channel: Channel, buffer: ChannelBuffer)  : AnyRef = {
     //parse the channelbuffer into the list of ofmessage
     if (!channel.isConnected) return None
@@ -42,7 +43,7 @@ class OpenFlowMsgDecoder extends FrameDecoder {
 class OpenFlowChannelHandler (private val connector : OpenFlowModule)
   extends SimpleChannelHandler  with Logging  {
 
-  val factory = BasicFactory.getInstance()
+  private val factory =  new BasicFactory
 
   private def processFlowMod(offlowmod : OFFlowMod) {
     offlowmod.getCommand match {
@@ -282,15 +283,35 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
       echoreply.setPayload(echoreq.getPayload)
       outlist += echoreply
     }
-    /*case OFType.PACKET_OUT => {
+    case OFType.PACKET_OUT => {
       logTrace("receive a packet_out message from controller")
       val packetoutmsg = ofm.asInstanceOf[OFPacketOut]
-      if (packetoutmsg.getInPort == -1 && packetoutmsg.getBufferId == -1) {
-        //TODO: forward the packet in flood
-        //the packet must a BDDP
+      if (packetoutmsg.getBufferId == -1) {
+        //the packet data is included in the packoutmsg
+        val outData = packetoutmsg.getPacketData
+        val topoManager = connector.router.controlPlane.topoModule
+        //send out through all ports
+        val allports = connector.router.controlPlane.topoModule.outlink.values.toList :::
+          connector.router.controlPlane.topoModule.inlinks.values.toList
+        for (port <- allports) {
+          //send back PACKET_IN to controller
+          val packet_in_msg = factory.getMessage(OFType.PACKET_IN).asInstanceOf[OFPacketIn]
+          packet_in_msg.setBufferId(-1)
+          packet_in_msg.setInPort(topoManager.physicalports(port).getPortNumber)
+          packet_in_msg.setPacketData(outData)
+          packet_in_msg.setReason(OFPacketIn.OFPacketInReason.ACTION)
+          packet_in_msg.setTotalLength((outData.length + packet_in_msg.getLength).toShort)
+          outlist += packet_in_msg
+          //make Neightbour send PACKET_IN with the same data
+          val neighbour = topoManager.getNeighbour(port)
+          if (neighbour.isInstanceOf[Router]) {
+            val neighbour_router = neighbour.asInstanceOf[Router]
+            neighbour_router.openflowconnector.sendLLDPtoController(port, outData)
+          }
+        }
       }
       else {
-        //send out the packet or forward the flow
+        //TODO:packet_out specifies a certain buffer or entry
         if (XmlParser.getString("scalasim.simengine.simlevel", "flow") == "flow") {
 
         }
@@ -298,8 +319,13 @@ class OpenFlowChannelHandler (private val connector : OpenFlowModule)
 
         }
       }
-    } */
+    }
     case _ => throw new Exception("unrecognized message type:" + ofm)
+  }
+
+  override def channelConnected(ctx : ChannelHandlerContext, e : ChannelStateEvent) {
+    //save the channel for sending packet
+    connector.toControllerChannel = e.getChannel
   }
 
   override def messageReceived(ctx: ChannelHandlerContext, e: MessageEvent) {

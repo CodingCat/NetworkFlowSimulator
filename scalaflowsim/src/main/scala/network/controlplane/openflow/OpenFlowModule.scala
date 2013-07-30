@@ -11,6 +11,9 @@ import org.openflow.protocol._
 import org.openflow.util.HexString
 import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
 import java.util
+import org.openflow.protocol.factory.BasicFactory
+import org.jboss.netty.buffer.{ChannelBuffers, ChannelBuffer}
+import org.jboss.netty.channel.Channel
 
 abstract class OpenFlowSwitchStatus
 
@@ -26,11 +29,15 @@ class OpenFlowModule (private [openflow] val router : Router) {
   private var config_flags : Short = 0
   private var miss_send_len : Short = 0
 
-  private[openflow] var status : OpenFlowSwitchStatus = OpenFlowSwitchHandShaking
+  private [openflow] var status : OpenFlowSwitchStatus = OpenFlowSwitchHandShaking
 
-  private[openflow] val flowtables : Array[OFFlowTable] = new Array[OFFlowTable](
+  private [openflow] val flowtables : Array[OFFlowTable] = new Array[OFFlowTable](
     XmlParser.getInt("scalasim.network.controlplane.openflow.tablenum", 1)
   )
+
+  private val factory = new BasicFactory
+
+  private [openflow] var toControllerChannel : Channel = null
 
   def init() {
     //leave interface to implement pipeline
@@ -93,6 +100,21 @@ class OpenFlowModule (private [openflow] val router : Router) {
   }
 
   def getSwitchDescription = router.ip_addr(0)
+
+  def sendLLDPtoController (l : Link, lldpData : Array[Byte]) {
+    val port = router.controlPlane.topoModule.physicalports(l)
+    //send out packet_in
+    val packet_in_msg = factory.getMessage(OFType.PACKET_IN).asInstanceOf[OFPacketIn]
+    packet_in_msg.setBufferId(-1)
+    packet_in_msg.setInPort(port.getPortNumber)
+    packet_in_msg.setPacketData(lldpData)
+    packet_in_msg.setReason(OFPacketIn.OFPacketInReason.ACTION)
+    packet_in_msg.setTotalLength((lldpData.length + packet_in_msg.getLength).toShort)
+    //encapsulate packet_in_msg with ChannelBuffer
+    val buffer = ChannelBuffers.buffer(packet_in_msg.getTotalLength)
+    packet_in_msg.writeTo(buffer)
+    toControllerChannel.write(buffer)
+  }
 
   //init
   init

@@ -1,7 +1,7 @@
 package scalasim.network.controlplane.topology
 
 import scala.collection.mutable.HashMap
-import scalasim.network.component.{Router, Host, HostType, Link}
+import scalasim.network.component._
 import scalasim.network.controlplane.ControlPlane
 import scalasim.network.controlplane.openflow.flowtable.counters.OFPortCount
 import scalasim.XmlParser
@@ -81,5 +81,14 @@ class TopologyManager (private val cp : ControlPlane) {
     if (otherEnd.isInstanceOf[Router]) inlinks += otherEnd.ip_addr(0) -> l
     if (cp.node.isInstanceOf[Router] && runningmodel == "openflow") addOFPhysicalPort(l,
       (outlink.size + inlinks.size).toShort)
+  }
+
+  def getNeighbour(l : Link) : Node = {
+    if (l.end_from != cp.node && l.end_to != cp.node) {
+      throw new Exception("getting neighbour error, this link :" + l.toString + " doesn't belong to this node (" +
+      cp.node.toString)
+    }
+    if (l.end_to == cp.node) l.end_from
+    else l.end_to
   }
 }

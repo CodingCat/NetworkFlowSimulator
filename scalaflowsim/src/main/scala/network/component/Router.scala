@@ -7,7 +7,7 @@ class Router (nodetype : NodeType) extends Node(nodetype) {
 
   private var rid : Int = 0
 
-  private val openflowconnector = {
+  private [network] val openflowconnector = {
     if (XmlParser.getString("scalasim.simengine.model", "tcp") == "openflow") {
       new OpenFlowModule(this)
     }
