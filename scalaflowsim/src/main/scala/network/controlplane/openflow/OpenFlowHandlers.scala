@@ -315,7 +315,6 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
         }
       }
       else {
-        logger.trace("receive a PACKET_OUT for certain buffer " + packetoutmsg.toString)
         //TODO:packet_out specifies a certain buffer or entry
         if (XmlParser.getString("scalasim.simengine.simlevel", "flow") == "flow") {
 

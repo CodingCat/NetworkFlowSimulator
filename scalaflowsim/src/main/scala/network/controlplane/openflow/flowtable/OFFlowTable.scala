@@ -1,20 +1,21 @@
 package scalasim.network.controlplane.openflow.flowtable
 
 import scalasim.network.controlplane.openflow.flowtable.counters._
-import scala.collection.mutable.HashMap
+import scala.collection.mutable.{ListBuffer, HashMap}
 import org.openflow.protocol.{OFFlowMod, OFMessage, OFMatch}
 import scala.collection.mutable
 import org.openflow.protocol.action.{OFActionOutput, OFAction}
 import scalasim.simengine.SimulationEngine
 import scalasim.simengine.utils.Logging
 import network.events.OFFlowTableEntryExpireEvent
-
+import scala.collection.JavaConversions._
+import java.util
 
 class OFFlowTable extends Logging {
   class OFFlowTableEntryAttaches (table : OFFlowTable) {
     private [openflow] var matchfield : OFMatch = null
     private [openflow] val counter : OFFlowCount = new OFFlowCount
-    private [openflow] val actions : mutable.LinkedList[OFAction] = new mutable.LinkedList[OFAction]
+    private [openflow] val actions : ListBuffer[OFAction] = new ListBuffer[OFAction]
     private var lastAccessPoint : Int = SimulationEngine.currentTime.toInt
     private [openflow] var flowHardExpireMoment : Int = 0
     private [openflow] var flowIdleDuration : Int = 0
@@ -72,8 +73,11 @@ class OFFlowTable extends Logging {
   }
 
   def getFlowsByMatchAndPort(match_field : OFMatch, port_num : Short) : List[OFFlowTableEntryAttaches] = {
+
     def containsOutputAction (p : OFFlowTableEntryAttaches) : OFActionOutput = {
-      for (action <- p.actions) if (action.isInstanceOf[OFActionOutput]) return action.asInstanceOf[OFActionOutput]
+      for (action <- p.actions) {
+        if (action.isInstanceOf[OFActionOutput]) return action.asInstanceOf[OFActionOutput]
+      }
       return null
     }
 
@@ -111,6 +115,7 @@ class OFFlowTable extends Logging {
     val entryAttach = new OFFlowTableEntryAttaches(this)
     entryAttach.matchfield = flow_mod.getMatch
     entryAttach.priority = flow_mod.getPriority
+    flow_mod.getActions.toList.foreach(f => entryAttach.actions += f)
     //schedule flow entry clean event
     entryAttach.flowHardExpireMoment = (SimulationEngine.currentTime + flow_mod.getHardTimeout).toInt
     entryAttach.flowIdleDuration = flow_mod.getIdleTimeout
