@@ -5,6 +5,7 @@ import scalasim.network.controlplane.resource.ResourceAllocator
 import scalasim.network.controlplane.routing.RoutingProtocol
 import scalasim.network.controlplane.topology.TopologyManager
 import scalasim.network.traffic.Flow
+import scalasim.simengine.utils.Logging
 
 abstract class ControlPlane (private [controlplane] val node : Node,
                              private [controlplane] val routingModule : RoutingProtocol,
@@ -31,7 +32,7 @@ abstract class ControlPlane (private [controlplane] val node : Node,
    * routing the flow
    * @param flow
    */
-  def routing (flow : Flow)
+  def routing (flow : Flow, inlink : Link)
 
   def getLinkAvailableBandwidth(l : Link) : Double = resourceModule.getLinkAvailableBandwidth(l)
 

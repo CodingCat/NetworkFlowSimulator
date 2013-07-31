@@ -13,18 +13,18 @@ import scalasim.network.traffic.Flow
 //each machine should be selected for only once
 //and do not allow to send to itself
 class PermuMatrixApp (servers : HostContainer) extends ServerApp (servers) {
-  private val selectedPair = new HashMap[String, Set[String]] with MultiMap[String, String]//src ip -> dst ip
+  private val selectedPair = new HashMap[Host, Set[Host]] with MultiMap[Host, Host]//src ip -> dst ip
   private val ipHostMap = new HashMap[String, Host]//ip -> host
 
   def init() {
     for (i <- 0 until servers.size) {
-      ipHostMap += servers(i).ip_addr(0) -> servers(i).asInstanceOf[Host]
+      ipHostMap += servers(i).ip_addr(0) -> servers(i)
     }
   }
 
-  def insertTrafficPair(src : String, dst : String) {
-    if (selectedPair.contains(src) == false) {
-      selectedPair += (src -> new HashSet[String])
+  def insertTrafficPair(src : Host, dst : Host) {
+    if (!selectedPair.contains(src)) {
+      selectedPair += (src -> new HashSet[Host])
     }
     selectedPair(src) += dst
   }
@@ -36,7 +36,7 @@ class PermuMatrixApp (servers : HostContainer) extends ServerApp (servers) {
       while (proposedIdx == i) {
         proposedIdx = Random.nextInt(servers.size)
       }
-      insertTrafficPair(servers(i).ip_addr(0), servers(proposedIdx).ip_addr(0))
+      insertTrafficPair(servers(i), servers(proposedIdx))
     }
   }
 
@@ -45,7 +45,9 @@ class PermuMatrixApp (servers : HostContainer) extends ServerApp (servers) {
   def run() {
     if (selectedPair.size == 0) selectMachinePairs()
     for (srcdstPair <- selectedPair; dst <- srcdstPair._2) {
-      val newflowevent = new StartNewFlowEvent(Flow(srcdstPair._1, dst, 1), ipHostMap(srcdstPair._1),
+      val newflowevent = new StartNewFlowEvent(
+        Flow(srcdstPair._1.ip_addr(0), dst.ip_addr(0), srcdstPair._1.mac_addr(0), dst.mac_addr(0), size = 1),
+        ipHostMap(srcdstPair._1.ip_addr(0)),
         SimulationEngine.currentTime)
       SimulationEngine.addEvent(newflowevent)
     }

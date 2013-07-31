@@ -15,7 +15,7 @@ abstract private [controlplane] class RoutingProtocol (private val node : Node)
 
   protected val flowPathMap = new HashMap[Flow, Link]
 
-  def selectNextLink(flow : Flow) : Link
+  def selectNextLink(flow : Flow, inPort : Link) : Link
 
   def fetchRoutingEntry(flow : Flow) : Link = flowPathMap(flow)
 

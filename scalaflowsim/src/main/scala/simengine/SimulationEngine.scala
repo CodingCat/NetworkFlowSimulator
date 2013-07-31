@@ -14,7 +14,7 @@ object SimulationEngine extends Logging {
   private var numPassedEvents = 0
 
   def run() {
-    while (eventqueue.isEmpty == false) {
+    while (!eventqueue.isEmpty) {
       val event = eventqueue.head
       if (event.getTimeStamp < currentTime) {
         throw new Exception("cannot execute an event happened before, event timestamp: " +
@@ -24,6 +24,7 @@ object SimulationEngine extends Logging {
       event.process
       numPassedEvents += 1
       eventqueue -= event
+      logTrace("dequeue " + event.toString)
     }
   }
 

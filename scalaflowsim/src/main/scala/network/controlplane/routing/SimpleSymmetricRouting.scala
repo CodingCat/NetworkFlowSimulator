@@ -41,7 +41,7 @@ private [controlplane] class SimpleSymmetricRouting (node : Node)
     dstCellID = getCellID(flow.DstIP)
   }
 
-  def selectNextLink(flow: Flow): Link = {
+  def selectNextLink(flow: Flow, inlink : Link): Link = {
     if (flowPathMap.contains(flow)) {
       return flowPathMap(flow)
     }

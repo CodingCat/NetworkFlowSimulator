@@ -70,19 +70,19 @@ class TCPControlPlane(node : Node,
     }
   }
 
-  def routing (flow : Flow) {
+  def routing (flow : Flow, inlink : Link) {
     logTrace("arrive at " + node.ip_addr(0))
-    if (node.ip_addr(0) != flow.DstIP) {
-      val nextlink = routingModule.selectNextLink(flow)
-      val nextnode = nextNode(nextlink)
-      logDebug("send through " + nextlink)
-      routingModule.insertFlowPath(flow, nextlink)
-      nextnode.controlPlane.routing(flow)
-    }
-    else {
+    if (node.ip_addr(0) == flow.DstIP) {
       //arrive the destination
       //start resource allocation process
       RoutingProtocol.getFlowStarter(flow.SrcIP).controlPlane.allocate(flow)
+    }
+    else {
+      val nextlink = routingModule.selectNextLink(flow, inlink)
+      val nextnode = nextNode(nextlink)
+      logDebug("send through " + nextlink)
+      routingModule.insertFlowPath(flow, nextlink)
+      nextnode.controlPlane.routing(flow, nextlink)
     }
   }
 

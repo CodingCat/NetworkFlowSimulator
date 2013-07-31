@@ -2,7 +2,7 @@ package scalasim.test
 
 import org.scalatest.FunSuite
 import scalasim.network.component.{Pod, HostContainer, Router}
-import scalasim.network.component.builder.{LanBuilder, IPInstaller}
+import scalasim.network.component.builder.{LanBuilder, AddressInstaller}
 import scalasim.simengine.SimulationEngine
 import scalasim.network.traffic._
 import scala.collection.mutable.ListBuffer
@@ -18,11 +18,13 @@ class ControlPlaneSuite extends FunSuite with Logging {
     val torrouter = new Router(ToRRouterType)
     val rackservers = new HostContainer
     rackservers.create(2)
-    IPInstaller.assignIPAddress(torrouter, "10.0.0.1")
-    IPInstaller.assignIPAddress(torrouter.ip_addr(0), 2, rackservers, 0, rackservers.size - 1)
+    AddressInstaller.assignIPAddress(torrouter, "10.0.0.1")
+    AddressInstaller.assignIPAddress(torrouter.ip_addr(0), 2, rackservers, 0, rackservers.size - 1)
     LanBuilder.buildLan(torrouter, rackservers, 0, rackservers.size - 1)
-    val flow1 = Flow(rackservers(0).toString, rackservers(1).toString, 1)
-    val flow2 = Flow(rackservers(1).toString, rackservers(0).toString, 1)
+    val flow1 = Flow(rackservers(0).toString, rackservers(1).toString,
+      rackservers(0).mac_addr(0), rackservers(1).mac_addr(0), size = 1)
+    val flow2 = Flow(rackservers(1).toString, rackservers(0).toString,
+      rackservers(1).mac_addr(0), rackservers(0).mac_addr(0), size = 1)
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, rackservers(0), 0))
     SimulationEngine.addEvent(new StartNewFlowEvent(flow2, rackservers(1), 0))
     SimulationEngine.run()
@@ -36,8 +38,10 @@ class ControlPlaneSuite extends FunSuite with Logging {
   test("flow can be routed across racks") {
     SimulationRunner.reset
     val pod = new Pod(1, 2, 4, 20)
-    val flow1 = Flow(pod.getHost(0, 1).toString, pod.getHost(1, 1).toString, 1)
-    val flow2 = Flow(pod.getHost(3, 1).toString, pod.getHost(2, 1).toString, 1)
+    val flow1 = Flow(pod.getHost(0, 1).toString, pod.getHost(1, 1).toString,
+      pod.getHost(0, 1).mac_addr(0), pod.getHost(1, 1).mac_addr(0), size = 1)
+    val flow2 = Flow(pod.getHost(3, 1).toString, pod.getHost(2, 1).toString,
+      pod.getHost(3, 1).mac_addr(0), pod.getHost(2, 1).mac_addr(0), size = 1)
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 1), 0))
     SimulationEngine.addEvent(new StartNewFlowEvent(flow2, pod.getHost(3, 1), 0))
     SimulationEngine.run()
@@ -51,13 +55,13 @@ class ControlPlaneSuite extends FunSuite with Logging {
   test ("flows in a collection can be ordered according to their rate or temprate") {
     SimulationEngine.reset
     var flowset = new ListBuffer[Flow]
-    flowset += Flow("10.0.0.1", "10.0.0.2", 1000)
+    flowset += Flow("10.0.0.1", "10.0.0.2", "", "", size = 1000)
     flowset(0).status = RunningFlow
     flowset(0).setRate(10)
-    flowset += Flow("10.0.0.2", "10.0.0.3", 1000)
+    flowset += Flow("10.0.0.2", "10.0.0.3", "", "", size = 1000)
     flowset(1).status = NewStartFlow
     flowset(1).setTempRate(5)
-    flowset += Flow("10.0.0.3", "10.0.0.4", 1000)
+    flowset += Flow("10.0.0.3", "10.0.0.4", "", "", size = 1000)
     flowset(2).status = RunningFlow
     flowset(2).setRate(20)
     flowset = flowset.sorted(FlowRateOrdering)
@@ -71,8 +75,10 @@ class ControlPlaneSuite extends FunSuite with Logging {
     logInfo("flow can be allocated with correct bandwidth (within the same rack)")
     val pod = new Pod(1, 0, 1, 2)
     SimulationRunner.reset
-    val flow1 = Flow(pod.getHost(0, 0).toString, pod.getHost(0, 1).toString, 1)
-    val flow2 = Flow(pod.getHost(0, 1).toString, pod.getHost(0, 0).toString, 1)
+    val flow1 = Flow(pod.getHost(0, 0).toString, pod.getHost(0, 1).toString,
+      pod.getHost(0, 0).mac_addr(0), pod.getHost(0, 1).mac_addr(0), size = 1)
+    val flow2 = Flow(pod.getHost(0, 1).toString, pod.getHost(0, 0).toString,
+      pod.getHost(0, 1).mac_addr(0), pod.getHost(0, 0).mac_addr(0), size = 1)
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 0), 0))
     SimulationEngine.addEvent(new StartNewFlowEvent(flow2, pod.getHost(0, 1), 0))
     SimulationEngine.run()
@@ -87,7 +93,8 @@ class ControlPlaneSuite extends FunSuite with Logging {
     val flowlist = new ListBuffer[Flow]
     SimulationRunner.reset
     for (i <- 0 until 2; j <- 0 until 4) {
-      val flow = Flow(pod.getHost(i, j).toString, pod.getHost({if (i == 0) 1 else 0}, j).toString, 1)
+      val flow = Flow(pod.getHost(i, j).toString, pod.getHost({if (i == 0) 1 else 0}, j).toString,
+        pod.getHost(i, j).mac_addr(0), pod.getHost({if (i == 0) 1 else 0}, j).mac_addr(0), size = 1)
       flowlist += flow
       SimulationEngine.addEvent(new StartNewFlowEvent(flow, pod.getHost(i, j), 0))
     }
@@ -106,11 +113,13 @@ class ControlPlaneSuite extends FunSuite with Logging {
     val flowlist = new ListBuffer[Flow]
     SimulationRunner.reset
     for (i <- 0 until 3) {
-      val flow = Flow(pod.getHost(0, 0).toString, pod.getHost(1, i).toString, 1)
+      val flow = Flow(pod.getHost(0, 0).toString, pod.getHost(1, i).toString,
+        pod.getHost(0, 0).mac_addr(0), pod.getHost(1, i).mac_addr(0), size = 1)
       flowlist += flow
       SimulationEngine.addEvent(new StartNewFlowEvent(flow, pod.getHost(0, 0), 0))
     }
-    val flow1 = Flow(pod.getHost(0, 1).toString, pod.getHost(1, 1).toString, 7.5)
+    val flow1 = Flow(pod.getHost(0, 1).toString, pod.getHost(1, 1).toString,
+      pod.getHost(0, 1).mac_addr(0), pod.getHost(1, 1).mac_addr(0), size = 7.5)
     flowlist += flow1
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 1), 0))
     SimulationEngine.run()
@@ -134,7 +143,8 @@ class ControlPlaneSuite extends FunSuite with Logging {
     val flowlist = new ListBuffer[Flow]
     SimulationRunner.reset
     for (i <- 0 until 2; j <- 0 until 4) {
-      val flow = Flow(pod.getHost(i, j).toString, pod.getHost({if (i == 1) 0 else 1}, j).toString, 1)
+      val flow = Flow(pod.getHost(i, j).toString, pod.getHost({if (i == 1) 0 else 1}, j).toString,
+        pod.getHost(i, j).mac_addr(0), pod.getHost({if (i == 1) 0 else 1}, j).mac_addr(0), size = 1)
       flowlist += flow
       SimulationEngine.addEvent(new StartNewFlowEvent(flow, pod.getHost(i, j), 0))
     }

@@ -1,8 +1,9 @@
 package scalasim.network.component.builder
 
-import scalasim.network.component.{NodeContainer, Node}
+import scalasim.network.component._
+import org.openflow.util.HexString
 
-object IPInstaller {
+object AddressInstaller {
 
   /**
    * assign IP to a single node
@@ -11,6 +12,7 @@ object IPInstaller {
    */
   def assignIPAddress(node : Node, ip : String) {
     node.assignIP(ip)
+    node.assignMac(HexString.toHexString(node.ip_addr(0).replace(".", "").toLong, 6))
   }
 
   /**
@@ -27,7 +29,9 @@ object IPInstaller {
                        startIdx : Int,
                        endIdx : Int) {
     val ip_prefix : String =  ipbase.substring(0, ipbase.lastIndexOf('.') + 1)
-    for (i <- startIdx to endIdx)
+    for (i <- startIdx to endIdx) {
       nodes(i).assignIP(ip_prefix + (startAddress + i - startIdx).toString)
+      nodes(i).assignMac(HexString.toHexString(nodes(i).ip_addr(0).replace(".", "").toLong, 6))
+    }
   }
 }

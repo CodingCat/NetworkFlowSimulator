@@ -16,6 +16,6 @@ class StartNewFlowEvent (flow : Flow, host : Host, timestamp : Double)
 
   def process() {
     logTrace("start the flow " + flow + " at " + SimulationEngine.currentTime)
-    host.controlPlane.routing(flow)
+    host.controlPlane.routing(flow, null)
   }
 }

@@ -14,10 +14,12 @@ class OpenFlowSuite extends FunSuite {
     XmlParser.loadConf("config.xml")
     val cellnet = new Pod(1)
     for (i <- 0 until cellnet.numAggRouters) {
-      assert(cellnet.getAggregatRouter(i).getDPID === HexString.toLong("01:01:00:00:00:00:00:00"))
+      assert(cellnet.getAggregatRouter(i).getDPID === HexString.toLong("01:01:" +
+        cellnet.getAggregatRouter(i).mac_addr(0)))
     }
     for (i <- 0 until cellnet.numRacks) {
-      assert(cellnet.getToRRouter(i).getDPID === HexString.toLong("00:01:" + HexString.toHexString(i, 5) + ":00"))
+      assert(cellnet.getToRRouter(i).getDPID === HexString.toLong("00:01:" +
+        cellnet.getToRRouter(i).mac_addr(0)))
     }
   }
 }

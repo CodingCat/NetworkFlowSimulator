@@ -20,6 +20,7 @@ import java.util
 import org.openflow.protocol.factory.BasicFactory
 import org.jboss.netty.buffer.{ChannelBuffers, ChannelBuffer}
 import org.jboss.netty.channel.Channel
+import org.slf4j.LoggerFactory
 
 abstract class OpenFlowSwitchStatus
 
@@ -31,7 +32,7 @@ class OpenFlowModule (router : Router,
                       routingModule : RoutingProtocol,
                       resourceModule : ResourceAllocator,
                       topoModule : TopologyManager)
-  extends ControlPlane (router, routingModule, resourceModule, topoModule) with Logging {
+  extends ControlPlane (router, routingModule, resourceModule, topoModule) {
 
   private val host = XmlParser.getString("scalasim.network.controlplane.openflow.controller.host", "127.0.0.1")
   private val port = XmlParser.getInt("scalasim.network.controlplane.openflow.controller.port", 6633)
@@ -79,19 +80,6 @@ class OpenFlowModule (router : Router,
   def getFlag = config_flags
   def get_miss_send_len = miss_send_len
 
-  private lazy val dpid : Long = {
-    val impl_dependent = router.nodetype match {
-      case ToRRouterType => "00"
-      case AggregateRouterType => "01"
-      case CoreRouterType => "02"
-    }
-    val t = router.ip_addr(0).substring(router.ip_addr(0).indexOf('.') + 1, router.ip_addr(0).size)
-    //TODO: implicitly limit the maximum number of pods, improve?
-    val podid = HexString.toHexString(Integer.parseInt(t.substring(0, t.indexOf('.'))), 1)
-    val order = HexString.toHexString(router.getrid, 4)
-    HexString.toLong(impl_dependent + ":" + podid + ":" + order + ":00")
-  }
-
   def getDPID = {
     val impl_dependent = router.nodetype match {
       case ToRRouterType => "00"
@@ -101,8 +89,7 @@ class OpenFlowModule (router : Router,
     val t = router.ip_addr(0).substring(router.ip_addr(0).indexOf('.') + 1, router.ip_addr(0).size)
     //TODO: implicitly limit the maximum number of pods, improve?
     val podid = HexString.toHexString(Integer.parseInt(t.substring(0, t.indexOf('.'))), 1)
-    val order = HexString.toHexString(router.getrid, 5)
-    HexString.toLong(impl_dependent + ":" + podid + ":" + order + ":00")
+    HexString.toLong(impl_dependent + ":" + podid + ":" + node.mac_addr(0))
   }
 
 
@@ -116,8 +103,6 @@ class OpenFlowModule (router : Router,
   def setSwitchParameters(configpacket : OFSetConfig) {
     config_flags = configpacket.getFlags
     miss_send_len = configpacket.getMissSendLength
-    logDebug("configpacket set to " + config_flags + " and miss_send_len set to " +
-    miss_send_len)
   }
 
   def getSwitchParameters() : (Short, Short) = {
@@ -131,9 +116,9 @@ class OpenFlowModule (router : Router,
     message.writeTo(buffer)
     if (toControllerChannel.isConnected)
       toControllerChannel.write(buffer)
-    /*else
+    else
       throw new Exception("the openflow switch " + router.ip_addr(0) +
-      " has been disconnected with the controller")*/
+      " has been disconnected with the controller")
   }
 
   def sendLLDPtoController (l : Link, lldpData : Array[Byte]) {
@@ -148,11 +133,10 @@ class OpenFlowModule (router : Router,
     sendMessageToController(packet_in_msg)
   }
 
-  def sendPacketIntoController(flow : Flow, ethernetFramedata : Array[Byte]) {
-    val link = routingModule.selectNextLink(flow)
-    val port = topoModule.physicalports(link)
+  def sendPacketInToController(inlink : Link, ethernetFramedata : Array[Byte]) {
+    val port = topoModule.physicalports(inlink)
     val packet_in_msg = factory.getMessage(OFType.PACKET_IN).asInstanceOf[OFPacketIn]
-    packet_in_msg.setBufferId(-1)
+    packet_in_msg.setBufferId(0)
       .setInPort(port.getPortNumber)
       .setPacketData(ethernetFramedata)
       .setReason(OFPacketIn.OFPacketInReason.NO_MATCH)
@@ -164,7 +148,7 @@ class OpenFlowModule (router : Router,
    * allowcate resource to the flow
    * @param flow
    */
-  def allocate(flow: Flow): Flow = ???
+  def allocate(flow: Flow): Flow = flow
 
   /**
    * cleanup job when a flow is deleted
@@ -176,7 +160,9 @@ class OpenFlowModule (router : Router,
    * routing the flow
    * @param flow
    */
-  def routing(flow: Flow) {}
+  def routing(flow: Flow, inlink : Link) {
+    routingModule.selectNextLink(flow, inlink)
+  }
 
   //init
   init

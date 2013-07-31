@@ -4,17 +4,24 @@ import scalasim.simengine.SimulationEngine
 import scalasim.network.events.CompleteFlowEvent
 import scalasim.simengine.utils.Logging
 
-
 /**
  *
  * @param srcIP
  * @param dstIP
+ * @param srcMac
+ * @param dstMac
+ * @param vlanID
+ * @param prioritycode
  * @param demand
  */
 class Flow private (
-  private val srcIP : String,
-  private val dstIP : String,
-  private var demand : Double//in MB
+  private [network] val srcIP : String,
+  private [network] val dstIP : String,
+  private [network] val srcMac : String,
+  private [network] val dstMac : String,
+  private [network] val vlanID : Short = 0,
+  private [network] val prioritycode: Byte = 0,
+  private [network] var demand : Double//in MB
   ) extends Logging {
 
   var status : FlowStatus = NewStartFlow
@@ -86,7 +93,9 @@ class Flow private (
   override def toString() : String = ("Flow-" + srcIP + "-" + dstIP)
 }
 
-
 object Flow {
-  def apply(srcIP : String, dstIP : String, size : Double) : Flow = new Flow(srcIP, dstIP, size)
+  def apply(srcIP : String, dstIP : String, srcMac : String, dstMac : String,
+            vlanID : Short = 0, prioritycode : Byte = 0, size : Double) : Flow = {
+    new Flow(srcIP, dstIP, srcMac, dstMac, vlanID, prioritycode, size)
+  }
 }

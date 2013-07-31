@@ -1,6 +1,6 @@
 package scalasim.test
 
-import scalasim.network.component.builder.{LanBuilder, IPInstaller}
+import scalasim.network.component.builder.{LanBuilder, AddressInstaller}
 import org.scalatest.FunSuite
 import scalasim.network.component._
 import scalasim.simengine.SimulationEngine
@@ -8,22 +8,22 @@ import scalasim.SimulationRunner
 
 class TopologySuite extends FunSuite {
 
-  test("IPInstaller can assign IPs to a host/router") {
+  test("AddressInstaller can assign IPs to a host/router") {
      val host : Host = new Host(HostType)
      SimulationRunner.reset
-     IPInstaller.assignIPAddress(host, "10.0.0.1")
+     AddressInstaller.assignIPAddress(host, "10.0.0.1")
      assert(host.ip_addr.length == 1 && host.ip_addr(0) == "10.0.0.1")
-     IPInstaller.assignIPAddress(host, "10.0.0.2")
+     AddressInstaller.assignIPAddress(host, "10.0.0.2")
      assert(host.ip_addr.length == 2 && host.ip_addr(0) == "10.0.0.1" && host.ip_addr(1) == "10.0.0.2")
   }
 
-  test("IPInstaller can assign IPs to host/router container") {
+  test("AddressInstaller can assign IPs to host/router container") {
     SimulationRunner.reset
     val hostContainer : HostContainer = new HostContainer()
     val router : Router = new Router(ToRRouterType)
-    IPInstaller.assignIPAddress(router, "10.0.0.1")
+    AddressInstaller.assignIPAddress(router, "10.0.0.1")
     hostContainer.create(10)
-    IPInstaller.assignIPAddress(router.ip_addr(router.ip_addr.length - 1), 2, hostContainer, 0, 9)
+    AddressInstaller.assignIPAddress(router.ip_addr(router.ip_addr.length - 1), 2, hostContainer, 0, 9)
     for (i <- 0 until 10) {
       assert(hostContainer(i).ip_addr(0) === "10.0.0." + (i + 2))
     }
@@ -62,9 +62,9 @@ class TopologySuite extends FunSuite {
     SimulationRunner.reset
     val router : Router = new Router(ToRRouterType)
     val hosts : HostContainer = new HostContainer()
-    IPInstaller.assignIPAddress(router, "10.0.0.1")
+    AddressInstaller.assignIPAddress(router, "10.0.0.1")
     hosts.create(10)
-    IPInstaller.assignIPAddress(router.ip_addr(0), 2, hosts, 0, 9)
+    AddressInstaller.assignIPAddress(router.ip_addr(0), 2, hosts, 0, 9)
     LanBuilder.buildLan(router, hosts, 0, 9)
     for (i <- 0 to 9) {
       val hostOutLink = hosts(i).controlPlane.outlinks.get("10.0.0.1")
@@ -79,9 +79,9 @@ class TopologySuite extends FunSuite {
     SimulationRunner.reset
     val aggRouter : Router = new Router(AggregateRouterType)
     val routers : RouterContainer = new RouterContainer()
-    IPInstaller.assignIPAddress(aggRouter, "10.0.0.1")
+    AddressInstaller.assignIPAddress(aggRouter, "10.0.0.1")
     routers.create(10, ToRRouterType)
-    IPInstaller.assignIPAddress(aggRouter.ip_addr(0), 2, routers, 0, 9)
+    AddressInstaller.assignIPAddress(aggRouter.ip_addr(0), 2, routers, 0, 9)
     LanBuilder.buildLan(aggRouter, routers, 0, 9)
     for (i <- 0 to 9) {
       val routerOutlink = routers(i).controlPlane.outlinks.get("10.0.0.1")
