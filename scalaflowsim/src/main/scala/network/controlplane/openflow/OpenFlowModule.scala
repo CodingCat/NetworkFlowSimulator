@@ -3,7 +3,7 @@ package scalasim.network.controlplane.openflow
 
 import scalasim.network.component._
 import scalasim.network.controlplane.resource.ResourceAllocator
-import scalasim.network.controlplane.routing.RoutingProtocol
+import scalasim.network.controlplane.routing.{OpenFlowRouting, RoutingProtocol}
 import scalasim.network.controlplane.topology.TopologyManager
 import scalasim.network.controlplane.{ControlPlane, TCPControlPlane}
 import scalasim.network.traffic.Flow
@@ -22,17 +22,13 @@ import org.jboss.netty.buffer.{ChannelBuffers, ChannelBuffer}
 import org.jboss.netty.channel.Channel
 import org.slf4j.LoggerFactory
 
-abstract class OpenFlowSwitchStatus
-
-case object OpenFlowSwitchHandShaking extends OpenFlowSwitchStatus
-case object OpenFlowSwitchRunning extends OpenFlowSwitchStatus
-case object OpenFlowSwitchClosing extends OpenFlowSwitchStatus
-
 class OpenFlowModule (router : Router,
                       routingModule : RoutingProtocol,
                       resourceModule : ResourceAllocator,
                       topoModule : TopologyManager)
   extends ControlPlane (router, routingModule, resourceModule, topoModule) {
+
+  private [openflow] val ofroutingModule = routingModule.asInstanceOf[OpenFlowRouting]
 
   private val host = XmlParser.getString("scalasim.network.controlplane.openflow.controller.host", "127.0.0.1")
   private val port = XmlParser.getInt("scalasim.network.controlplane.openflow.controller.port", 6633)
@@ -40,22 +36,21 @@ class OpenFlowModule (router : Router,
   private var config_flags : Short = 0
   private var miss_send_len : Short = 0
 
-  private [openflow] var status : OpenFlowSwitchStatus = OpenFlowSwitchHandShaking
+  private val logger = LoggerFactory.getLogger("OpenFlowModule")
 
-  private [openflow] val flowtables : Array[OFFlowTable] = new Array[OFFlowTable](
-    XmlParser.getInt("scalasim.network.controlplane.openflow.tablenum", 1)
-  )
+  /**
+   * 0 - handshaking
+   * 1 - running
+   * 2 - closed
+   */
+  private [openflow] var status : Int = 0
 
   private val factory = new BasicFactory
 
   private [openflow] var toControllerChannel : Channel = null
 
-  def init() {
-    //leave interface to implement pipeline
-    for (i <- 0 until flowtables.length) flowtables(i) = new OFFlowTable(
-      XmlParser.getInt("scalasim.network.controlplane.openflow.flowExpireDuration", 600),
-      XmlParser.getInt("scalasim.network.controlplane.openflow.flowIdleDuration", 300))
-  }
+  private [openflow] val ioBatchBuffer = new util.ArrayList[OFMessage]
+  private [openflow] val msgPendingBuffer = new util.ArrayList[OFMessage]
 
   //build channel to the controller
   def connectToController() {
@@ -96,7 +91,7 @@ class OpenFlowModule (router : Router,
   def getSwitchFeature() = {
     //TODO: specify the switch features
     //(dpid, buffer, n_tables, capabilities, physical port
-    (getDPID, 1000, flowtables.length, 7,
+    (getDPID, 1000, ofroutingModule.flowtables.length, 7,
       router.controlPlane.topoModule.physicalports.values.toList)
   }
 
@@ -112,16 +107,21 @@ class OpenFlowModule (router : Router,
   def getSwitchDescription = router.ip_addr(0)
 
   private def sendMessageToController(message : OFMessage) {
-    val buffer = ChannelBuffers.buffer(message.getLength)
-    message.writeTo(buffer)
-    if (toControllerChannel.isConnected)
-      toControllerChannel.write(buffer)
-    else
-      throw new Exception("the openflow switch " + router.ip_addr(0) +
-      " has been disconnected with the controller")
+    msgPendingBuffer.add(message)
+    if (status == 1) {
+      logger.trace("send " + msgPendingBuffer.size() + " pending messages")
+      if (toControllerChannel.isConnected) {
+        toControllerChannel.write(msgPendingBuffer)
+        msgPendingBuffer.clear()
+      }
+      else
+        throw new Exception("the openflow switch " + router.ip_addr(0) +
+          " has been disconnected with the controller")
+    }
   }
 
   def sendLLDPtoController (l : Link, lldpData : Array[Byte]) {
+    logger.trace("reply lldp request")
     val port = topoModule.physicalports(l)
     //send out packet_in
     val packet_in_msg = factory.getMessage(OFType.PACKET_IN).asInstanceOf[OFPacketIn]
@@ -133,9 +133,10 @@ class OpenFlowModule (router : Router,
     sendMessageToController(packet_in_msg)
   }
 
-  def sendPacketInToController(inlink : Link, ethernetFramedata : Array[Byte]) {
+  def sendPacketInToController(inlink: Link, ethernetFramedata: Array[Byte]) {
     val port = topoModule.physicalports(inlink)
     val packet_in_msg = factory.getMessage(OFType.PACKET_IN).asInstanceOf[OFPacketIn]
+    logger.trace("send PACKET_IN to controller for table missing")
     packet_in_msg.setBufferId(0)
       .setInPort(port.getPortNumber)
       .setPacketData(ethernetFramedata)
@@ -163,7 +164,4 @@ class OpenFlowModule (router : Router,
   def routing(flow: Flow, inlink : Link) {
     routingModule.selectNextLink(flow, inlink)
   }
-
-  //init
-  init
 }

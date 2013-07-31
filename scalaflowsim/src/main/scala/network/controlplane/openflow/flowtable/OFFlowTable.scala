@@ -2,30 +2,55 @@ package scalasim.network.controlplane.openflow.flowtable
 
 import scalasim.network.controlplane.openflow.flowtable.counters._
 import scala.collection.mutable.HashMap
-import org.openflow.protocol.OFMatch
+import org.openflow.protocol.{OFFlowMod, OFMessage, OFMatch}
 import scala.collection.mutable
 import org.openflow.protocol.action.{OFActionOutput, OFAction}
+import scalasim.simengine.SimulationEngine
 import scalasim.simengine.utils.Logging
+import network.events.OFFlowTableEntryExpireEvent
 
 
-class OFFlowTable (private [openflow] val flowExpireDuration : Int ,
-                    private [openflow] val flowIdleDuration : Int) extends Logging {
-  class OFFlowTableEntryAttaches (private [openflow] val expireMoments : Int) {
+class OFFlowTable extends Logging {
+  class OFFlowTableEntryAttaches (table : OFFlowTable) {
+    private [openflow] var matchfield : OFMatch = null
     private [openflow] val counter : OFFlowCount = new OFFlowCount
     private [openflow] val actions : mutable.LinkedList[OFAction] = new mutable.LinkedList[OFAction]
-    private [openflow] var lastAccessPoint : Int = 0
-  }
+    private var lastAccessPoint : Int = SimulationEngine.currentTime.toInt
+    private [openflow] var flowHardExpireMoment : Int = 0
+    private [openflow] var flowIdleDuration : Int = 0
+    private [openflow] var priority : Short = 0
+    private [openflow] var expireEvent : OFFlowTableEntryExpireEvent = null
 
-  /*def testcode {
-    val match_field_1 = new OFMatch
-    val match_field_2 = new OFMatch
-    match_field_2.setDataLayerDestination("00:00:00:00:00:01")
-    val entry_1 = new OFFlowTableEntryAttaches(100)
-    val entry_2 = new OFFlowTableEntryAttaches(100)
-    entries += (match_field_1 -> entry_1)
-    entries += (match_field_2 -> entry_2)
-    logDebug("entries length: " + entries.size)
-  } */
+    def getLastAccessPoint = lastAccessPoint
+
+    def refreshlastAccessPoint() {
+      lastAccessPoint = SimulationEngine.currentTime.toInt
+      determineEntryExpireMoment()
+    }
+
+    private def determineEntryExpireMoment () {
+      var expireMoment = 0
+      val idleDuration = flowIdleDuration
+      val idleexpireMoment = lastAccessPoint + flowIdleDuration
+      val hardexpireMoment = flowHardExpireMoment
+      if (
+        (hardexpireMoment != 0 && idleDuration == 0 && expireEvent == null) &&
+          (hardexpireMoment != 0 && idleexpireMoment != 0 && hardexpireMoment < idleexpireMoment)) {
+        expireMoment = hardexpireMoment
+      }
+      else {
+        if (
+          (hardexpireMoment == 0 && idleDuration != 0) &&
+          (hardexpireMoment != 0 && idleexpireMoment != 0 && idleexpireMoment < hardexpireMoment)) {
+          expireMoment = idleexpireMoment
+        }
+      }
+      if (expireMoment != 0) {
+        expireEvent = new OFFlowTableEntryExpireEvent(table, matchfield, expireMoment)
+        SimulationEngine.addEvent(expireEvent)
+      }
+    }
+  }
 
   private [openflow] val entries : HashMap[OFMatch, OFFlowTableEntryAttaches] =
     new HashMap[OFMatch, OFFlowTableEntryAttaches]
@@ -68,5 +93,28 @@ class OFFlowTable (private [openflow] val flowExpireDuration : Int ,
     }
   }
 
- // testcode
+  def removeEntry (matchfield : OFMatch) {
+    entries -= matchfield
+  }
+
+  def matchFlow(matchfield : OFMatch) {
+    if (entries.contains(matchfield)) {
+      entries(matchfield).refreshlastAccessPoint()
+    }
+  }
+
+  def addFlowTableEntry (flow_mod : OFFlowMod) {
+    //openflow 1.0 hasn't support pipeline processing yet
+    //so add the entry to the first table by default
+    if (flow_mod.getCommand != OFFlowMod.OFPFC_ADD)
+      throw new Exception("the flow must be a OFPFC_ADD Flow_Mod when you add flowtable entry")
+    val entryAttach = new OFFlowTableEntryAttaches(this)
+    entryAttach.matchfield = flow_mod.getMatch
+    entryAttach.priority = flow_mod.getPriority
+    //schedule flow entry clean event
+    entryAttach.flowHardExpireMoment = (SimulationEngine.currentTime + flow_mod.getHardTimeout).toInt
+    entryAttach.flowIdleDuration = flow_mod.getIdleTimeout
+    entryAttach.refreshlastAccessPoint
+    entries += (entryAttach.matchfield -> entryAttach)
+  }
 }

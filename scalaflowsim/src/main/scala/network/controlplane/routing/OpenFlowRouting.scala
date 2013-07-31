@@ -1,11 +1,21 @@
 package scalasim.network.controlplane.routing
 
 import scalasim.network.component.{Node, Link}
+import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
 import scalasim.network.controlplane.openflow.OpenFlowModule
 import scalasim.network.traffic.Flow
 import packets.{Data, TCP, IPv4, Ethernet}
+import scalasim.XmlParser
 
 class OpenFlowRouting (node : Node) extends RoutingProtocol (node) {
+
+  private [controlplane] val flowtables = new Array[OFFlowTable](
+    XmlParser.getInt("scalasim.openflow.flowtablenum", 1))
+
+  def init() {
+    for (i <- 0 until flowtables.length)
+      flowtables(i) = new OFFlowTable
+  }
 
   def selectNextLink(flow: Flow, inLink : Link): Link = {
     //TODO: matching by flowtable
@@ -31,4 +41,6 @@ class OpenFlowRouting (node : Node) extends RoutingProtocol (node) {
     if (flowPathMap.contains(flow)) flowPathMap(flow)
     else null
   }
+
+  init
 }

@@ -7,7 +7,6 @@ import org.openflow.protocol._
 import scala.collection.JavaConversions._
 import scalasim.network.component.Router
 import scalasim.simengine.SimulationEngine
-import scalasim.simengine.utils.Logging
 import org.jboss.netty.handler.codec.oneone.OneToOneEncoder
 import org.openflow.protocol.statistics._
 import java.util
@@ -48,19 +47,20 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
 
   private val logger = LoggerFactory.getLogger("OpenFlowHandler")
 
-  private def processFlowMod(offlowmod : OFFlowMod) {
+  private def processFlowMod(offlowmod: OFFlowMod) {
     offlowmod.getCommand match {
       case OFFlowMod.OFPFC_DELETE => {
         if (offlowmod.getMatch.getWildcards == OFMatch.OFPFW_ALL) {
           //clear to initialize flow tables;
-          for (table <- openflowPlane.flowtables) table.clear()
+          for (table <- openflowPlane.ofroutingModule.flowtables) table.clear
         }
       }
+      case OFFlowMod.OFPFC_ADD => openflowPlane.ofroutingModule.flowtables(0).addFlowTableEntry(offlowmod)
       case _ => throw new Exception("unrecognized OFFlowMod command type:" + offlowmod.getCommand)
     }
   }
 
-  private def processStatRequest(ofstatreq : OFStatisticsRequest, outlist : java.util.ArrayList[OFMessage]) {
+  private def processStatRequest(ofstatreq : OFStatisticsRequest) {
     ofstatreq.getStatisticType match {
       case OFStatisticsType.DESC => {
         val statdescreply = factory.getStatistics(OFType.STATS_REPLY,OFStatisticsType.DESC)
@@ -79,7 +79,7 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
         statreply.setStatisticsFactory(factory)
         statreply.setLength((statdescreply.getLength+ statreply.getLength).toShort)
         statreply.setXid(ofstatreq.getXid)
-        outlist += statreply
+        openflowPlane.ioBatchBuffer += statreply
       }
       case OFStatisticsType.FLOW =>{
         val statflowreqmsg = ofstatreq.asInstanceOf[OFStatisticsRequest]
@@ -89,11 +89,11 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
         if (statflowreq.getTableId == -1) {
           //read from all tables
           logger.trace("collect flow information from all tables")
-          for (i <- 0 until openflowPlane.flowtables.length) {
+          for (i <- 0 until openflowPlane.ofroutingModule.flowtables.length) {
             logger.trace("collect flow information on table " + i + " with match wildcard " +
               statflowreq.getMatch.getWildcards + " and outputport " +  + statflowreq.getOutPort)
-            val qualifiedflows = openflowPlane.flowtables(i).getFlowsByMatchAndPort(statflowreq.getMatch,
-              statflowreq.getOutPort)
+            val qualifiedflows = openflowPlane.ofroutingModule.flowtables(i).
+              getFlowsByMatchAndPort(statflowreq.getMatch, statflowreq.getOutPort)
             logger.trace("qualified flow number: " + qualifiedflows.length)
             for (flowentry <- qualifiedflows) {
               val statflowreply = factory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.FLOW)
@@ -104,9 +104,9 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
               statflowreply.setDurationNanoseconds(flowentry.counter.durationNanoSeconds)
               statflowreply.setDurationSeconds(flowentry.counter.durationSeconds)
               statflowreply.setPriority(0)
-              statflowreply.setIdleTimeout((openflowPlane.flowtables(i).flowIdleDuration -
-                SimulationEngine.currentTime + flowentry.lastAccessPoint).toShort)
-              statflowreply.setHardTimeout((flowentry.expireMoments - SimulationEngine.currentTime).toShort)
+              statflowreply.setIdleTimeout((flowentry.flowIdleDuration -
+                (SimulationEngine.currentTime - flowentry.getLastAccessPoint)).toShort)
+              statflowreply.setHardTimeout((flowentry.flowHardExpireMoment - SimulationEngine.currentTime).toShort)
               statflowreply.setCookie(0)
               statflowreply.setPacketCount(flowentry.counter.receivedpacket)
               statflowreply.setByteCount(flowentry.counter.receivedbytes)
@@ -116,7 +116,7 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
           }
         }
         else {
-          val referredtable = openflowPlane.flowtables(statflowreq.getTableId)
+          val referredtable = openflowPlane.ofroutingModule.flowtables(statflowreq.getTableId)
           val qualifiedflows = referredtable.getFlowsByMatchAndPort(statflowreq.getMatch,
             statflowreq.getOutPort)
           for (flowentry <- qualifiedflows) {
@@ -128,9 +128,9 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
             statflowreply.setDurationNanoseconds(flowentry.counter.durationNanoSeconds)
             statflowreply.setDurationSeconds(flowentry.counter.durationSeconds)
             statflowreply.setPriority(0)
-            statflowreply.setIdleTimeout((referredtable.flowIdleDuration - SimulationEngine.currentTime +
-              flowentry.lastAccessPoint).toShort)
-            statflowreply.setHardTimeout((flowentry.expireMoments - SimulationEngine.currentTime).toShort)
+            statflowreply.setIdleTimeout((flowentry.flowIdleDuration -
+              (SimulationEngine.currentTime - flowentry.getLastAccessPoint)).toShort)
+            statflowreply.setHardTimeout((flowentry.flowHardExpireMoment - SimulationEngine.currentTime).toShort)
             statflowreply.setCookie(0)
             statflowreply.setPacketCount(flowentry.counter.receivedpacket)
             statflowreply.setByteCount(flowentry.counter.receivedbytes)
@@ -143,7 +143,7 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
         statflowreplymsg.setStatistics(statlist)
         statflowreplymsg.setStatisticsFactory(factory)
         statflowreplymsg.setXid(ofstatreq.getXid)
-        outlist += statflowreplymsg
+        openflowPlane.ioBatchBuffer += statflowreplymsg
       }
       case OFStatisticsType.PORT => {
         val statportreqmsg = ofstatreq.asInstanceOf[OFStatisticsRequest]
@@ -195,7 +195,7 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
         statreply.setStatisticsFactory(factory)
         statreply.setLength((statreply.getLength + statportreply.getLength * statList.size).toShort)
         statreply.setXid(ofstatreq.getXid)
-        outlist += statreply
+        openflowPlane.ioBatchBuffer += statreply
       }
 
       case OFStatisticsType.AGGREGATE => {
@@ -205,16 +205,16 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
           .asInstanceOf[OFAggregateStatisticsReply]
         val statreply = factory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
         val table_id = stataggreq.getTableId
-        if (table_id >= 0 && table_id < openflowPlane.flowtables.length) {
-          val referred_table = openflowPlane.flowtables(table_id)
+        if (table_id >= 0 && table_id < openflowPlane.ofroutingModule.flowtables.length) {
+          val referred_table = openflowPlane.ofroutingModule.flowtables(table_id)
           stataggreply.setFlowCount(referred_table.counters.referencecount)
           stataggreply.setPacketCount(referred_table.counters.packetlookup +
             referred_table.counters.packetmatches)
           stataggreply.setByteCount(referred_table.counters.flowbytes)
         }
         else {
-          for (i <- 0 until openflowPlane.flowtables.length) {
-            val referred_table = openflowPlane.flowtables(i)
+          for (i <- 0 until openflowPlane.ofroutingModule.flowtables.length) {
+            val referred_table = openflowPlane.ofroutingModule.flowtables(i)
             stataggreply.setFlowCount(referred_table.counters.referencecount)
             stataggreply.setPacketCount(referred_table.counters.packetlookup +
               referred_table.counters.packetmatches)
@@ -228,13 +228,13 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
         statreply.setStatisticsFactory(factory)
         statreply.setLength((stataggreply.getLength + statreply.getLength).toShort)
         statreply.setXid(ofstatreq.getXid)
-        outlist += statreply
+        openflowPlane.ioBatchBuffer += statreply
       }
       case _ => throw new Exception("unrecognized OFStatisticRequest: " + ofstatreq.getStatisticType)
     }
   }
 
-  private def processMessage(ofm : OFMessage, outlist : java.util.ArrayList[OFMessage]) = ofm.getType match {
+  private def processMessage(ofm : OFMessage) = ofm.getType match {
     case OFType.HELLO => {
       logger.trace("receive a hello message from controller")
       val helloreply = factory.getMessage(OFType.HELLO).asInstanceOf[OFHello]
@@ -242,7 +242,7 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
       helloreply.setType(OFType.HELLO)
       helloreply.setXid(ofm.getXid)
       helloreply.setVersion(ofm.getVersion)
-      outlist += helloreply
+      openflowPlane.ioBatchBuffer += helloreply
     }
     case OFType.FEATURES_REQUEST => {
       logger.trace("receive a feature request message from controller")
@@ -255,7 +255,7 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
       featurereply.setPorts(featurelist._5)
       featurereply.setLength((32 + featurereply.getPorts.length * 48).toShort)
       featurereply.setXid(ofm.getXid)
-      outlist += featurereply
+      openflowPlane.ioBatchBuffer += featurereply
     }
     case OFType.SET_CONFIG => {
       val m = ofm.asInstanceOf[OFSetConfig]
@@ -270,13 +270,15 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
       getconfigreply.setFlags(config._1)
       getconfigreply.setMissSendLength(config._2)
       getconfigreply.setXid(ofm.getXid)
-      outlist += getconfigreply
+      openflowPlane.ioBatchBuffer += getconfigreply
     }
     case OFType.STATS_REQUEST => {
       logger.trace("receive a stat request message from controller")
-      processStatRequest(ofm.asInstanceOf[OFStatisticsRequest], outlist)
-      if (openflowPlane.status == OpenFlowSwitchHandShaking)
-        openflowPlane.status = OpenFlowSwitchRunning
+      processStatRequest(ofm.asInstanceOf[OFStatisticsRequest])
+      if (openflowPlane.status == 0) {
+        logger.trace("change the switch " + openflowPlane.node.toString + " to running")
+        openflowPlane.status = 1
+      }
     }
     case OFType.FLOW_MOD => {
       logger.trace("receive a flow_mod message from controller")
@@ -288,7 +290,7 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
       val echoreply = factory.getMessage(OFType.ECHO_REPLY).asInstanceOf[OFEchoReply]
       echoreply.setXid(echoreq.getXid)
       echoreply.setPayload(echoreq.getPayload)
-      outlist += echoreply
+      openflowPlane.ioBatchBuffer += echoreply
     }
     case OFType.PACKET_OUT => {
       logger.trace("receive a packet_out message from controller")
@@ -302,13 +304,7 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
         val allports = topoManager.outlink.values.toList ::: topoManager.inlinks.values.toList
         for (port <- allports) {
           //send back PACKET_IN to controller
-          val packet_in_msg = factory.getMessage(OFType.PACKET_IN).asInstanceOf[OFPacketIn]
-          packet_in_msg.setBufferId(-1)
-            .setInPort(topoManager.physicalports(port).getPortNumber)
-            .setPacketData(outData)
-            .setReason(OFPacketIn.OFPacketInReason.ACTION)
-            .setTotalLength(outData.length.toShort)
-          outlist += packet_in_msg
+          openflowPlane.sendLLDPtoController(port, outData)
           //make Neightbour send PACKET_IN with the same data
           val neighbour = topoManager.getNeighbour(port)
           if (neighbour.isInstanceOf[Router]) {
@@ -319,7 +315,7 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
         }
       }
       else {
-        logger.trace("receive a PACKET_OUT " + packetoutmsg.toString)
+        logger.trace("receive a PACKET_OUT for certain buffer " + packetoutmsg.toString)
         //TODO:packet_out specifies a certain buffer or entry
         if (XmlParser.getString("scalasim.simengine.simlevel", "flow") == "flow") {
 
@@ -340,18 +336,17 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
   override def messageReceived(ctx: ChannelHandlerContext, e: MessageEvent) {
     if (!e.getMessage.isInstanceOf[java.util.ArrayList[_]]) return
     val msglist = e.getMessage.asInstanceOf[java.util.ArrayList[OFMessage]]
-    val outmsglist = new java.util.ArrayList[OFMessage]
     for (ofm: OFMessage <- msglist) {
       try {
-        processMessage(ofm, outmsglist)
+        processMessage(ofm)
       }
       catch {
         case ex: Exception => Channels.fireExceptionCaught(ctx.getChannel, ex)
       }
     }
     //send out all messages
-    e.getChannel.write(outmsglist)
-    outmsglist.clear
+    e.getChannel.write(openflowPlane.ioBatchBuffer)
+    openflowPlane.ioBatchBuffer.clear
   }
 
   override def exceptionCaught (ctx : ChannelHandlerContext, e : ExceptionEvent) {
