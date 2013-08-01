@@ -4,6 +4,8 @@ import scalasim.network.component._
 import scalasim.network.traffic.Flow
 import scalasim.network.component.ToRRouterType
 import scala.collection.mutable.ListBuffer
+import org.openflow.protocol.OFMatch
+import simengine.utils.IPAddressConvertor
 
 
 private [controlplane] class SimpleSymmetricRouting (node : Node)
@@ -18,8 +20,9 @@ private [controlplane] class SimpleSymmetricRouting (node : Node)
     t.substring(0, t.indexOf('.'))
   }
 
-  private def selectRandomOutlink(flow : Flow) : Link = {
-    val selectidx = Math.max(flow.DstIP.hashCode(), flow.DstIP.hashCode() * -1) %
+  private def selectRandomOutlink(matchfield : OFMatch) : Link = {
+    val dstip = IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination)
+    val selectidx = Math.max(dstip.hashCode(), dstip.hashCode() * -1) %
       controlPlane.topoModule.outlink.size
     var i = 0
     def selectLink() : Link = {
@@ -34,32 +37,33 @@ private [controlplane] class SimpleSymmetricRouting (node : Node)
     selectLink()
   }
 
-  private def getDstParameters(flow : Flow) {
-    dstRange = flow.DstIP.substring(0, flow.DstIP.lastIndexOf('.') + 1) + "1"
+  private def getDstParameters(matchfield : OFMatch) {
+    val dstIP = IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination)
+    dstRange = dstIP.substring(0, dstIP.lastIndexOf('.') + 1) + "1"
     localRange = controlPlane.IP.substring(0, controlPlane.IP.lastIndexOf('.') + 1) + "1"
-    dstCellID = getCellID(flow.DstIP)
+    dstCellID = getCellID(dstIP)
   }
 
-  def selectNextLink(flow: Flow, inlink : Link): Link = {
-    if (flowPathMap.contains(flow)) {
-      return flowPathMap(flow)
+  override def selectNextLink(flow : Flow, matchfield : OFMatch, inlink : Link): Link = {
+    if (flowPathMap.contains(matchfield)) {
+      return flowPathMap(matchfield)
     }
-    flow.increaseHop()
     if (controlPlane.node.nodetype != HostType) {
-      getDstParameters(flow)
+      getDstParameters(matchfield)
+      val dstIP = IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination)
       val router = controlPlane.node.asInstanceOf[Router]
       val routerCP = router.controlPlane
       controlPlane.node.nodetype match {
         case ToRRouterType => {
           if (dstRange == localRange) {
-            if (routerCP.topoModule.inlinks.contains(flow.DstIP)) routerCP.topoModule.inlinks(flow.DstIP)
+            if (routerCP.topoModule.inlinks.contains(dstIP)) routerCP.topoModule.inlinks(dstIP)
             else {
               throw new Exception("topology error, tor router cannot find a host, " +
-                "dstIP:" + flow.DstIP + "\tsrcIP:" + flow.SrcIP + "\tlocalIP:" + localRange)
+                "dstIP:" + dstIP + "\tsrcIP:" + dstIP + "\tlocalIP:" + localRange)
             }
           }
           else {
-            selectRandomOutlink(flow)
+            selectRandomOutlink(matchfield)
           }
         }
         case AggregateRouterType => {
@@ -68,10 +72,12 @@ private [controlplane] class SimpleSymmetricRouting (node : Node)
             if (routerCP.topoModule.inlinks.contains(dstRange)) routerCP.topoModule.inlinks(dstRange)
             else {
               throw new Exception("topology error, agg router cannot find a router, " +
-                "dstIP:" + flow.DstIP + "\tsrcIP:" + flow.SrcIP + "\tlocalIP:" + localRange)
+                "dstIP:" + IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination) +
+                "\tsrcIP:" + IPAddressConvertor.IntToDecimalString(matchfield.getNetworkSource) +
+                "\tlocalIP:" + localRange)
             }
           }
-          else selectRandomOutlink(flow)
+          else selectRandomOutlink(matchfield)
         }
         case CoreRouterType => {
           val routepaths = new ListBuffer[Link]
@@ -79,20 +85,23 @@ private [controlplane] class SimpleSymmetricRouting (node : Node)
             if (getCellID(cellIP) == dstCellID) routepaths += routerCP.topoModule.inlinks(cellIP)
           }
           if (routepaths.size > 0) {
-            val selectIdx = flow.DstIP.hashCode % routepaths.size
+            val selectIdx = IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination).hashCode %
+              routepaths.size
             routepaths(Math.max(selectIdx, selectIdx * -1))
           }
           else {
             throw new Exception("topology error, core router cannot find a router, " +
-              "dstIP:" + flow.DstIP + "\tsrcIP:" + flow.SrcIP + "\tlocalIP:" + localRange)
+              "dstIP:" + IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination) +
+              "\tsrcIP:" + IPAddressConvertor.IntToDecimalString(matchfield.getNetworkSource) +
+              "\tlocalIP:" + localRange)
           }
         }
       }
     }
     else {
-      if (flowPathMap.contains(flow)) return flowPathMap(flow)
+      if (flowPathMap.contains(matchfield)) return flowPathMap(matchfield)
       //it's a host
-      val l = selectRandomOutlink(flow)
+      val l = selectRandomOutlink(matchfield)
       if (l == null) throw new Exception("failed on the first hop")
       l
     }

@@ -5,6 +5,8 @@ import scalasim.network.traffic.Flow
 import scala.collection.mutable.HashMap
 import scalasim.simengine.utils.Logging
 import scalasim.network.controlplane.ControlPlane
+import org.openflow.protocol.OFMatch
+import simengine.utils.IPAddressConvertor
 
 
 abstract private [controlplane] class RoutingProtocol (private val node : Node)
@@ -12,21 +14,22 @@ abstract private [controlplane] class RoutingProtocol (private val node : Node)
 
   protected lazy val controlPlane : ControlPlane = node.controlPlane
 
-  protected val flowPathMap = new HashMap[Flow, Link]
+  protected val flowPathMap = new HashMap[OFMatch, Link]
 
-  def selectNextLink(flow : Flow, inPort : Link) : Link
+  def selectNextLink(flow : Flow, matchfield : OFMatch, inPort : Link) : Link
 
-  def fetchRoutingEntry(flow : Flow) : Link = flowPathMap(flow)
+  def fetchRoutingEntry(matchfield : OFMatch) : Link = flowPathMap(matchfield)
 
-  def insertFlowPath (flow : Flow, link : Link) {
-    logTrace(controlPlane + " insert entry " + controlPlane + "->" + flow.DstIP)
-    flowPathMap += (flow -> link)
-    if (controlPlane.IP == flow.SrcIP) {
-      RoutingProtocol.globalFlowStarterMap += flow.SrcIP -> controlPlane.node.asInstanceOf[Host]
+  def insertFlowPath (matchfield : OFMatch, link : Link) {
+    logTrace(controlPlane + " insert entry " +
+      matchfield.getNetworkSource + "->" + matchfield.getNetworkDestination)
+    flowPathMap += (matchfield -> link)
+    if (IPAddressConvertor.DecimalStringToInt(controlPlane.IP) == matchfield.getNetworkSource) {
+      RoutingProtocol.globalFlowStarterMap += controlPlane.IP -> controlPlane.node.asInstanceOf[Host]
     }
   }
 
-  def deleteEntry(flow : Flow) {flowPathMap -= flow}
+  def deleteEntry(matchfield : OFMatch) {flowPathMap -= matchfield}
 }
 
 private [network] object RoutingProtocol {

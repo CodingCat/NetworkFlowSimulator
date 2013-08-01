@@ -13,7 +13,7 @@ import scalasim.network.events.StartNewFlowEvent
 
 class ControlPlaneSuite extends FunSuite with Logging {
 
-  test("flow can be routed within a rack") {
+  test("matchfield can be routed within a rack") {
     SimulationRunner.reset
     val torrouter = new Router(ToRRouterType)
     val rackservers = new HostContainer
@@ -28,14 +28,12 @@ class ControlPlaneSuite extends FunSuite with Logging {
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, rackservers(0), 0))
     SimulationEngine.addEvent(new StartNewFlowEvent(flow2, rackservers(1), 0))
     SimulationEngine.run()
-    assert(flow1.Hop === 2)
-    assert(flow2.Hop === 2)
     assert(flow1.status === CompletedFlow)
     assert(flow2.status === CompletedFlow)
 
   }
 
-  test("flow can be routed across racks") {
+  test("matchfield can be routed across racks") {
     SimulationRunner.reset
     val pod = new Pod(1, 2, 4, 20)
     val flow1 = Flow(pod.getHost(0, 1).toString, pod.getHost(1, 1).toString,
@@ -45,8 +43,6 @@ class ControlPlaneSuite extends FunSuite with Logging {
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 1), 0))
     SimulationEngine.addEvent(new StartNewFlowEvent(flow2, pod.getHost(3, 1), 0))
     SimulationEngine.run()
-    assert(flow1.Hop === 4)
-    assert(flow2.Hop === 4)
     assert(flow1.status === CompletedFlow)
     assert(flow2.status === CompletedFlow)
 
@@ -71,8 +67,8 @@ class ControlPlaneSuite extends FunSuite with Logging {
   }
 
 
-  test("flow can be allocated with correct bandwidth (within the same rack)") {
-    logInfo("flow can be allocated with correct bandwidth (within the same rack)")
+  test("matchfield can be allocated with correct bandwidth (within the same rack)") {
+    logInfo("matchfield can be allocated with correct bandwidth (within the same rack)")
     val pod = new Pod(1, 0, 1, 2)
     SimulationRunner.reset
     val flow1 = Flow(pod.getHost(0, 0).toString, pod.getHost(0, 1).toString,
@@ -87,8 +83,8 @@ class ControlPlaneSuite extends FunSuite with Logging {
   }
 
 
-  test("flow can be allocated with correct bandwidth (within the agg router) (case 1)") {
-    logInfo("flow can be allocated with correct bandwidth (within the agg router) (case 1)")
+  test("matchfield can be allocated with correct bandwidth (within the agg router) (case 1)") {
+    logInfo("matchfield can be allocated with correct bandwidth (within the agg router) (case 1)")
     val pod = new Pod(1, 1, 2, 4)
     val flowlist = new ListBuffer[Flow]
     SimulationRunner.reset
@@ -104,8 +100,8 @@ class ControlPlaneSuite extends FunSuite with Logging {
     }
   }
 
-  test("flow can be allocated with correct bandwidth (within the agg router) (case 2)") {
-    logInfo("start flow can be allocated with correct bandwidth (within the agg router) (when a flow decrease" +
+  test("matchfield can be allocated with correct bandwidth (within the agg router) (case 2)") {
+    logInfo("start matchfield can be allocated with correct bandwidth (within the agg router) (when a matchfield decrease" +
       " its rate, the other should take the margin) ")
     XmlParser.loadConf("config.xml")
     XmlParser.addProperties("scalasim.topology.locallinkrate", "75.0")
@@ -134,8 +130,8 @@ class ControlPlaneSuite extends FunSuite with Logging {
   }
 
 
-  test("flow can be allocated with correct bandwidth (within the agg router, and agg link is congested)") {
-    logInfo("flow can be allocated with correct bandwidth (within the agg router, and agg link is congested)")
+  test("matchfield can be allocated with correct bandwidth (within the agg router, and agg link is congested)") {
+    logInfo("matchfield can be allocated with correct bandwidth (within the agg router, and agg link is congested)")
     XmlParser.loadConf("config.xml")
     XmlParser.addProperties("scalasim.topology.locallinkrate", "100.0")
     XmlParser.addProperties("scalasim.topology.crossrouterlinkrate", "100.0")

@@ -5,10 +5,13 @@ import scala.collection.mutable.{ListBuffer, HashMap}
 import org.openflow.protocol.{OFFlowMod, OFMatch}
 import scala.collection.mutable
 import org.openflow.protocol.action.{OFActionOutput, OFAction}
+import scalasim.network.traffic.Flow
 import scalasim.simengine.SimulationEngine
 import scalasim.simengine.utils.Logging
 import network.events.OFFlowTableEntryExpireEvent
 import scala.collection.JavaConversions._
+import simengine.utils.IPAddressConvertor
+import org.openflow.util.U32
 
 class OFFlowTable extends Logging {
   class OFFlowTableEntryAttaches (table : OFFlowTable) {
@@ -34,13 +37,13 @@ class OFFlowTable extends Logging {
       val idleexpireMoment = lastAccessPoint + flowIdleDuration
       val hardexpireMoment = flowHardExpireMoment
       if (
-        (hardexpireMoment != 0 && idleDuration == 0 && expireEvent == null) &&
+        (hardexpireMoment != 0 && idleDuration == 0 && expireEvent == null) ||
           (hardexpireMoment != 0 && idleexpireMoment != 0 && hardexpireMoment < idleexpireMoment)) {
         expireMoment = hardexpireMoment
       }
       else {
         if (
-          (hardexpireMoment == 0 && idleDuration != 0) &&
+          (hardexpireMoment == 0 && idleDuration != 0) ||
           (hardexpireMoment != 0 && idleexpireMoment != 0 && idleexpireMoment < hardexpireMoment)) {
           expireMoment = idleexpireMoment
         }
@@ -106,19 +109,45 @@ class OFFlowTable extends Logging {
     }
   }
 
-  def addFlowTableEntry (flow_mod : OFFlowMod) {
-    //openflow 1.0 hasn't support pipeline processing yet
-    //so add the entry to the first table by default
+  /**
+   *
+   * @param flow_mod
+   * @return the outport number
+   */
+  def addFlowTableEntry (flow_mod : OFFlowMod) : Short = {
     if (flow_mod.getCommand != OFFlowMod.OFPFC_ADD)
-      throw new Exception("the flow must be a OFPFC_ADD Flow_Mod when you add flowtable entry")
+      throw new Exception("the matchfield must be a OFPFC_ADD Flow_Mod when you add flowtable entry")
     val entryAttach = new OFFlowTableEntryAttaches(this)
     entryAttach.matchfield = flow_mod.getMatch
     entryAttach.priority = flow_mod.getPriority
     flow_mod.getActions.toList.foreach(f => entryAttach.actions += f)
-    //schedule flow entry clean event
+    //schedule matchfield entry clean event
     entryAttach.flowHardExpireMoment = (SimulationEngine.currentTime + flow_mod.getHardTimeout).toInt
     entryAttach.flowIdleDuration = flow_mod.getIdleTimeout
     entryAttach.refreshlastAccessPoint
     entries += (entryAttach.matchfield -> entryAttach)
+    var outact : OFActionOutput = null
+    for (act <- flow_mod.getActions.toList) {
+      if (act.isInstanceOf[OFActionOutput]) {
+        outact = act.asInstanceOf[OFActionOutput]
+      }
+    }
+    outact.getPort
+  }
+}
+
+
+object OFFlowTable {
+  def createMatchField(flow : Flow) : OFMatch = {
+    val matchfield = new OFMatch
+    matchfield.setDataLayerDestination(flow.dstMac)
+    matchfield.setDataLayerSource(flow.srcMac)
+    matchfield.setDataLayerVirtualLan(flow.vlanID)
+    matchfield.setNetworkDestination(U32.t(IPAddressConvertor.DecimalStringToInt(flow.dstIP)))
+    matchfield.setNetworkSource(U32.t(IPAddressConvertor.DecimalStringToInt(flow.srcIP)))
+    matchfield.setNetworkTypeOfService((0x0800).toByte)
+    matchfield.setTransportSource(flow.srcPort)
+    matchfield.setTransportDestination(flow.dstPort)
+    matchfield
   }
 }

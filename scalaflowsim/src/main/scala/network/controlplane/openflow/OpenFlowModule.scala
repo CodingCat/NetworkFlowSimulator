@@ -2,11 +2,14 @@ package scalasim.network.controlplane.openflow
 
 
 import scalasim.network.component._
+import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
 import scalasim.network.controlplane.resource.ResourceAllocator
 import scalasim.network.controlplane.routing.{OpenFlowRouting, RoutingProtocol}
 import scalasim.network.controlplane.topology.TopologyManager
 import scalasim.network.controlplane.ControlPlane
-import scalasim.network.traffic.Flow
+import scalasim.network.events.CompleteFlowEvent
+import scalasim.network.traffic.{NewStartFlow, CompletedFlow, RunningFlow, Flow}
+import scalasim.simengine.SimulationEngine
 import scalasim.XmlParser
 import java.util.concurrent.Executors
 import org.jboss.netty.bootstrap.ClientBootstrap
@@ -18,8 +21,6 @@ import java.util
 import org.openflow.protocol.factory.BasicFactory
 import org.jboss.netty.channel.Channel
 import org.slf4j.LoggerFactory
-import scala.collection.JavaConversions._
-import org.jboss.netty.buffer.ChannelBuffers
 
 
 class OpenFlowModule (router : Router,
@@ -92,7 +93,7 @@ class OpenFlowModule (router : Router,
     //TODO: specify the switch features
     //(dpid, buffer, n_tables, capabilities, physical port
     (getDPID, 1000, ofroutingModule.flowtables.length, 7,
-      router.controlPlane.topoModule.physicalports.values.toList)
+      router.controlPlane.topoModule.linkphysicalportsMap.values.toList)
   }
 
   def setSwitchParameters(configpacket : OFSetConfig) {
@@ -126,7 +127,7 @@ class OpenFlowModule (router : Router,
 
   def sendLLDPtoController (l : Link, lldpData : Array[Byte]) {
     logger.trace("reply lldp request")
-    val port = topoModule.physicalports(l)
+    val port = topoModule.linkphysicalportsMap(l)
     //send out packet_in
     val packet_in_msg = factory.getMessage(OFType.PACKET_IN).asInstanceOf[OFPacketIn]
     packet_in_msg.setBufferId(0)
@@ -139,10 +140,10 @@ class OpenFlowModule (router : Router,
   }
 
   def sendPacketInToController(inlink: Link, ethernetFramedata: Array[Byte]) {
-    val port = topoModule.physicalports(inlink)
+    val port = topoModule.linkphysicalportsMap(inlink)
     val packet_in_msg = factory.getMessage(OFType.PACKET_IN).asInstanceOf[OFPacketIn]
     logger.trace("send PACKET_IN to controller for table missing")
-    packet_in_msg.setBufferId(1)
+    packet_in_msg.setBufferId(routingModule.asInstanceOf[OpenFlowRouting].pendingFlows.size)
       .setInPort(port.getPortNumber)
       .setPacketData(ethernetFramedata)
       .setReason(OFPacketIn.OFPacketInReason.NO_MATCH)
@@ -152,22 +153,14 @@ class OpenFlowModule (router : Router,
   }
 
   /**
-   * allowcate resource to the flow
+   * routing the matchfield
    * @param flow
    */
-  def allocate(flow: Flow): Flow = flow
+  override def routing(flow: Flow, matchfield : OFMatch, inlink : Link) {
+    routingModule.selectNextLink(flow, matchfield, inlink)
+  }
 
-  /**
-   * cleanup job when a flow is deleted
-   * @param flow
-   */
-  def finishFlow(flow: Flow) {}
-
-  /**
-   * routing the flow
-   * @param flow
-   */
-  def routing(flow: Flow, inlink : Link) {
-    routingModule.selectNextLink(flow, inlink)
+  override def allocate(flow : Flow, matchfield : OFMatch) = {
+    null
   }
 }

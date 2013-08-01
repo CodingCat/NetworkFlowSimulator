@@ -6,6 +6,7 @@ import org.jboss.netty.buffer.{ChannelBuffers, ChannelBuffer}
 import org.openflow.protocol._
 import scala.collection.JavaConversions._
 import scalasim.network.component.Router
+import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
 import scalasim.simengine.SimulationEngine
 import org.jboss.netty.handler.codec.oneone.OneToOneEncoder
 import org.openflow.protocol.statistics._
@@ -51,11 +52,16 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
     offlowmod.getCommand match {
       case OFFlowMod.OFPFC_DELETE => {
         if (offlowmod.getMatch.getWildcards == OFMatch.OFPFW_ALL) {
-          //clear to initialize flow tables;
+          //clear to initialize matchfield tables;
           for (table <- openflowPlane.ofroutingModule.flowtables) table.clear
         }
       }
-      case OFFlowMod.OFPFC_ADD => openflowPlane.ofroutingModule.flowtables(0).addFlowTableEntry(offlowmod)
+      case OFFlowMod.OFPFC_ADD => {
+        logger.trace("receive OFPFC_ADD:" + offlowmod.toString)
+        openflowPlane.ofroutingModule.addNewFlowEntry(
+          openflowPlane.ofroutingModule.pendingFlows(offlowmod.getBufferId), offlowmod)
+        openflowPlane.ofroutingModule.pendingFlows.remove(offlowmod.getBufferId)
+      }
       case _ => throw new Exception("unrecognized OFFlowMod command type:" + offlowmod.getCommand)
     }
   }
@@ -88,13 +94,13 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
         val statlist = new util.ArrayList[OFStatistics]
         if (statflowreq.getTableId == -1) {
           //read from all tables
-          logger.trace("collect flow information from all tables")
+          logger.trace("collect matchfield information from all tables")
           for (i <- 0 until openflowPlane.ofroutingModule.flowtables.length) {
-            logger.trace("collect flow information on table " + i + " with match wildcard " +
+            logger.trace("collect matchfield information on table " + i + " with match wildcard " +
               statflowreq.getMatch.getWildcards + " and outputport " +  + statflowreq.getOutPort)
             val qualifiedflows = openflowPlane.ofroutingModule.flowtables(i).
               getFlowsByMatchAndPort(statflowreq.getMatch, statflowreq.getOutPort)
-            logger.trace("qualified flow number: " + qualifiedflows.length)
+            logger.trace("qualified matchfield number: " + qualifiedflows.length)
             for (flowentry <- qualifiedflows) {
               val statflowreply = factory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.FLOW)
                 .asInstanceOf[OFFlowStatisticsReply]
@@ -110,7 +116,7 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
               statflowreply.setCookie(0)
               statflowreply.setPacketCount(flowentry.counter.receivedpacket)
               statflowreply.setByteCount(flowentry.counter.receivedbytes)
-              logger.trace("add flow reply: " + statflowreply)
+              logger.trace("add matchfield reply: " + statflowreply)
               statlist += statflowreply
             }
           }
@@ -323,11 +329,36 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
           action.getType match {
             case OFActionType.OUTPUT => {
               val outaction = action.asInstanceOf[OFActionOutput]
-              if (outaction.getPort == OFPort.OFPP_FLOOD) {
-                println("flood the packet")
+              val topoManager = openflowPlane.topoModule
+              if (outaction.getPort == OFPort.OFPP_FLOOD.getValue) {
+                //send out through all ports
+                val alllinks = topoManager.outlink.values.toList ::: topoManager.inlinks.values.toList
+                for (link <- alllinks) {
+                  if (packetoutmsg.getInPort != topoManager.linkphysicalportsMap(link).getPortNumber) {
+                    //not send back
+                    val nextnode = {
+                      if (link.end_from == openflowPlane.node) link.end_to
+                      else link.end_from
+                    }
+                    nextnode.controlPlane.routing(
+                      openflowPlane.ofroutingModule.pendingFlows.get(packetoutmsg.getBufferId - 1),
+                      OFFlowTable.createMatchField(openflowPlane.ofroutingModule.pendingFlows.get(
+                        packetoutmsg.getBufferId - 1)),
+                      link)
+                  }
+                }
               }
               else {
-                println(outaction.getPort)
+                val outlink = topoManager.reverseSelection(outaction.getPort)
+                val nextnode = {
+                  if (outlink.end_from == openflowPlane.node) outlink.end_to
+                  else outlink.end_from
+                }
+                nextnode.controlPlane.routing(
+                  openflowPlane.ofroutingModule.pendingFlows.get(packetoutmsg.getBufferId - 1),
+                  OFFlowTable.createMatchField(openflowPlane.ofroutingModule.pendingFlows.get(
+                    packetoutmsg.getBufferId - 1)),
+                  outlink)
               }
             }
             case _ => throw new Exception("unrecognizable action")

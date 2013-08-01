@@ -19,11 +19,19 @@ class TopologyManager (private [controlplane] val  node : Node) {
 
   private val runningmodel = XmlParser.getString("scalasim.simengine.model", "tcp")
 
-  private [controlplane] val physicalports = {
+  private [controlplane] val linkphysicalportsMap = {
     if (runningmodel == "openflow") {
       new HashMap[Link, OFPhysicalPort]
     }
     else null
+  }
+
+  private [controlplane] val physicalportsMap = {
+    if (runningmodel == "openflow") {
+      new HashMap[Short, OFPhysicalPort]
+    } else {
+      null
+    }
   }
 
   private [controlplane] val portcounters = {
@@ -31,6 +39,16 @@ class TopologyManager (private [controlplane] val  node : Node) {
       new HashMap[Short, OFPortCount]
     }
     else null
+  }
+
+  def getPhysicalPort(portNum : Short) = physicalportsMap.getOrElse(portNum, null)
+
+  def reverseSelection (portNum : Short) : Link = {
+    if (linkphysicalportsMap == null) throw new Exception("you're not running on openflow model")
+    for (link_port_pair <- linkphysicalportsMap) {
+      if (link_port_pair._2.getPortNumber == portNum) return link_port_pair._1
+    }
+    null
   }
 
   private def addOFPhysicalPort(l : Link, portID : Short) {
@@ -63,7 +81,8 @@ class TopologyManager (private [controlplane] val  node : Node) {
     port.setCurrentFeatures(feature)
     port.setPeerFeatures(feature)
     port.setSupportedFeatures(feature)
-    physicalports += l -> port
+    linkphysicalportsMap += l -> port
+    physicalportsMap += (port.getPortNumber -> port)
     portcounters += (port.getPortNumber -> new OFPortCount(port.getPortNumber))
   }
 

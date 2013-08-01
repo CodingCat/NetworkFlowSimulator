@@ -21,6 +21,8 @@ class Flow private (
   private [network] val dstMac : String,
   private [network] val vlanID : Short = 0,
   private [network] val prioritycode: Byte = 0,
+  private [network] val srcPort : Short = 1,
+  private [network] val dstPort : Short = 1,
   private [network] var demand : Double//in MB
   ) extends Logging {
 
@@ -96,6 +98,6 @@ class Flow private (
 object Flow {
   def apply(srcIP : String, dstIP : String, srcMac : String, dstMac : String,
             vlanID : Short = 0, prioritycode : Byte = 0, size : Double) : Flow = {
-    new Flow(srcIP, dstIP, srcMac, dstMac, vlanID, prioritycode, size)
+    new Flow(srcIP, dstIP, srcMac, dstMac, vlanID, prioritycode, demand = size)
   }
 }

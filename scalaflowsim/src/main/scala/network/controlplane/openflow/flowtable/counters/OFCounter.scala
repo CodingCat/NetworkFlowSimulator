@@ -13,7 +13,7 @@ class OFTableCount extends OFCounter("table_counter") {
 }
 
 //Per port counters
-class OFPortCount (private [openflow] port_num : Int) extends OFCounter("port_counter") {
+class OFPortCount (private [openflow] val port_num : Int) extends OFCounter("port_counter") {
   private [controlplane] var receivedpacket : Long = 0
   private [controlplane] var transmittedpacket : Long = 0
   private [controlplane] var receivedbytes : Long = 0
