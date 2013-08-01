@@ -5,7 +5,6 @@ import scalasim.network.controlplane.resource.ResourceAllocator
 import scalasim.network.controlplane.routing.RoutingProtocol
 import scalasim.network.controlplane.topology.TopologyManager
 import scalasim.network.traffic.Flow
-import scalasim.simengine.utils.Logging
 
 abstract class ControlPlane (private [controlplane] val node : Node,
                              private [controlplane] val routingModule : RoutingProtocol,

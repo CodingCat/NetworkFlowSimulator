@@ -1,13 +1,11 @@
 package scalasim.network.controlplane
 
 import scalasim.simengine.SimulationEngine
-import scalasim.XmlParser
 import scalasim.network.component.{Link, Node}
 import scalasim.network.controlplane.routing.RoutingProtocol
 import scalasim.network.traffic.{CompletedFlow, RunningFlow, NewStartFlow, Flow}
 import scalasim.network.events.CompleteFlowEvent
 import scalasim.simengine.utils.Logging
-import scala.collection.mutable.HashMap
 import scalasim.network.controlplane.topology.TopologyManager
 import scalasim.network.controlplane.resource.ResourceAllocator
 

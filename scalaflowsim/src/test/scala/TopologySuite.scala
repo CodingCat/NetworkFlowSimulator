@@ -3,7 +3,6 @@ package scalasim.test
 import scalasim.network.component.builder.{LanBuilder, AddressInstaller}
 import org.scalatest.FunSuite
 import scalasim.network.component._
-import scalasim.simengine.SimulationEngine
 import scalasim.SimulationRunner
 
 class TopologySuite extends FunSuite {

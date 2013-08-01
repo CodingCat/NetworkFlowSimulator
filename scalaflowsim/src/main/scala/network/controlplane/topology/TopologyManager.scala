@@ -2,10 +2,8 @@ package scalasim.network.controlplane.topology
 
 import scala.collection.mutable.HashMap
 import scalasim.network.component._
-import scalasim.network.controlplane.{ControlPlane, TCPControlPlane}
 import scalasim.network.controlplane.openflow.flowtable.counters.OFPortCount
 import scalasim.XmlParser
-import java.util
 import org.openflow.protocol.OFPhysicalPort
 import org.openflow.util.HexString
 

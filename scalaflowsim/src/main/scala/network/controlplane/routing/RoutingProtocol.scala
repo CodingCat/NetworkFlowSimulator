@@ -1,11 +1,10 @@
 package scalasim.network.controlplane.routing
 
 import scalasim.network.component.{Node, Host, Link}
-import scalasim.network.controlplane.openflow.OpenFlowModule
 import scalasim.network.traffic.Flow
 import scala.collection.mutable.HashMap
 import scalasim.simengine.utils.Logging
-import scalasim.network.controlplane.{ControlPlane, TCPControlPlane}
+import scalasim.network.controlplane.ControlPlane
 
 
 abstract private [controlplane] class RoutingProtocol (private val node : Node)

@@ -5,9 +5,8 @@ import scalasim.network.component._
 import scalasim.network.controlplane.resource.ResourceAllocator
 import scalasim.network.controlplane.routing.{OpenFlowRouting, RoutingProtocol}
 import scalasim.network.controlplane.topology.TopologyManager
-import scalasim.network.controlplane.{ControlPlane, TCPControlPlane}
+import scalasim.network.controlplane.ControlPlane
 import scalasim.network.traffic.Flow
-import scalasim.simengine.utils.Logging
 import scalasim.XmlParser
 import java.util.concurrent.Executors
 import org.jboss.netty.bootstrap.ClientBootstrap
@@ -15,12 +14,13 @@ import java.net.InetSocketAddress
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory
 import org.openflow.protocol._
 import org.openflow.util.HexString
-import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
 import java.util
 import org.openflow.protocol.factory.BasicFactory
-import org.jboss.netty.buffer.{ChannelBuffers, ChannelBuffer}
 import org.jboss.netty.channel.Channel
 import org.slf4j.LoggerFactory
+import scala.collection.JavaConversions._
+import org.jboss.netty.buffer.ChannelBuffers
+
 
 class OpenFlowModule (router : Router,
                       routingModule : RoutingProtocol,
@@ -109,14 +109,18 @@ class OpenFlowModule (router : Router,
   private def sendMessageToController(message : OFMessage) {
     msgPendingBuffer.add(message)
     if (status == 1) {
-      logger.trace("send " + msgPendingBuffer.size() + " pending messages")
       if (toControllerChannel.isConnected) {
+        logger.trace("send " + msgPendingBuffer.size() + " pending messages")
         toControllerChannel.write(msgPendingBuffer)
         msgPendingBuffer.clear()
       }
       else
         throw new Exception("the openflow switch " + router.ip_addr(0) +
           " has been disconnected with the controller")
+    }
+    else {
+      logger.trace("the switch hasn't been initialized, pending message number:" +
+      msgPendingBuffer.size)
     }
   }
 
@@ -125,11 +129,12 @@ class OpenFlowModule (router : Router,
     val port = topoModule.physicalports(l)
     //send out packet_in
     val packet_in_msg = factory.getMessage(OFType.PACKET_IN).asInstanceOf[OFPacketIn]
-    packet_in_msg.setBufferId(-1)
+    packet_in_msg.setBufferId(0)
       .setInPort(port.getPortNumber)
       .setPacketData(lldpData)
       .setReason(OFPacketIn.OFPacketInReason.ACTION)
       .setTotalLength(lldpData.length.toShort)
+      .setLength((lldpData.length + 18).toShort)
     sendMessageToController(packet_in_msg)
   }
 
@@ -137,11 +142,12 @@ class OpenFlowModule (router : Router,
     val port = topoModule.physicalports(inlink)
     val packet_in_msg = factory.getMessage(OFType.PACKET_IN).asInstanceOf[OFPacketIn]
     logger.trace("send PACKET_IN to controller for table missing")
-    packet_in_msg.setBufferId(0)
+    packet_in_msg.setBufferId(1)
       .setInPort(port.getPortNumber)
       .setPacketData(ethernetFramedata)
       .setReason(OFPacketIn.OFPacketInReason.NO_MATCH)
       .setTotalLength(ethernetFramedata.length.toShort)
+      .setLength((ethernetFramedata.length + 18).toShort)
     sendMessageToController(packet_in_msg)
   }
 

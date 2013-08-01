@@ -17,13 +17,13 @@
 
 package packets;
 
+import net.floodlightcontroller.util.MACAddress;
+import org.openflow.util.HexString;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
-import net.floodlightcontroller.util.MACAddress;
-import org.openflow.util.HexString;
 
 /**
  *

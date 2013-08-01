@@ -3,7 +3,6 @@ package scalasim.network.events
 import scalasim.network.component.Host
 import scalasim.simengine.{SimulationEngine, EventOfTwoEntities}
 import scalasim.network.traffic.Flow
-import scalasim.XmlParser
 
 /**
  *

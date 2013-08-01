@@ -2,14 +2,13 @@ package scalasim.network.controlplane.openflow.flowtable
 
 import scalasim.network.controlplane.openflow.flowtable.counters._
 import scala.collection.mutable.{ListBuffer, HashMap}
-import org.openflow.protocol.{OFFlowMod, OFMessage, OFMatch}
+import org.openflow.protocol.{OFFlowMod, OFMatch}
 import scala.collection.mutable
 import org.openflow.protocol.action.{OFActionOutput, OFAction}
 import scalasim.simengine.SimulationEngine
 import scalasim.simengine.utils.Logging
 import network.events.OFFlowTableEntryExpireEvent
 import scala.collection.JavaConversions._
-import java.util
 
 class OFFlowTable extends Logging {
   class OFFlowTableEntryAttaches (table : OFFlowTable) {

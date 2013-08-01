@@ -4,7 +4,6 @@ import scalasim.network.component._
 import scalasim.network.traffic.Flow
 import scalasim.network.component.ToRRouterType
 import scala.collection.mutable.ListBuffer
-import scalasim.network.controlplane.TCPControlPlane
 
 
 private [controlplane] class SimpleSymmetricRouting (node : Node)

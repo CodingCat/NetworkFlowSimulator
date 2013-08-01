@@ -10,9 +10,9 @@ import scalasim.simengine.SimulationEngine
 import org.jboss.netty.handler.codec.oneone.OneToOneEncoder
 import org.openflow.protocol.statistics._
 import java.util
-import scalasim.XmlParser
 import org.openflow.protocol.factory.BasicFactory
 import org.slf4j.LoggerFactory
+import org.openflow.protocol.action.{OFActionOutput, OFActionType}
 
 class OpenFlowMsgEncoder extends OneToOneEncoder {
 
@@ -316,11 +316,22 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
       }
       else {
         //TODO:packet_out specifies a certain buffer or entry
-        if (XmlParser.getString("scalasim.simengine.simlevel", "flow") == "flow") {
-
-        }
-        else {
-
+        //TODO: is there any difference if we are on packet-level simulation?
+        logger.trace("receive a packet_out to certain buffer:" + packetoutmsg.toString)
+        for (action <- packetoutmsg.getActions) {
+          logger.trace("action:" + action.toString)
+          action.getType match {
+            case OFActionType.OUTPUT => {
+              val outaction = action.asInstanceOf[OFActionOutput]
+              if (outaction.getPort == OFPort.OFPP_FLOOD) {
+                println("flood the packet")
+              }
+              else {
+                println(outaction.getPort)
+              }
+            }
+            case _ => throw new Exception("unrecognizable action")
+          }
         }
       }
     }

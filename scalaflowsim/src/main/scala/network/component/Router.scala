@@ -1,7 +1,6 @@
 package scalasim.network.component
 
 import scalasim.network.controlplane.openflow.OpenFlowModule
-import scalasim.XmlParser
 
 class Router (nodetype : NodeType) extends Node(nodetype) {
 
