@@ -1,8 +1,9 @@
 package scalasim.test
 
 import org.scalatest.FunSuite
-import scalasim.network.component.Pod
+import scalasim.network.component.{AggregateRouterType, Router, Pod}
 import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
+import scalasim.network.controlplane.routing.OpenFlowRouting
 import scalasim.network.traffic.Flow
 import scalasim.simengine.SimulationEngine
 import scalasim.{SimulationRunner, XmlParser}
@@ -48,8 +49,10 @@ class OpenFlowSuite extends FunSuite {
 
   test ("when add flow table entry it can schedule entry expire event correctly") {
     SimulationRunner.reset
+    val node = new Router(AggregateRouterType)
+    val ofroutingmodule = new OpenFlowRouting(node)
     val offactory = new BasicFactory
-    val table = new OFFlowTable
+    val table = new OFFlowTable(ofroutingmodule)
     val matchfield = new OFMatch
     val outaction  = new OFActionOutput
     val actionlist = new util.ArrayList[OFAction]
@@ -96,8 +99,10 @@ class OpenFlowSuite extends FunSuite {
 
   test ("flow table can match flow entry correctly") {
     SimulationRunner.reset
+    val node = new Router(AggregateRouterType)
+    val ofroutingmodule = new OpenFlowRouting(node)
     val offactory = new BasicFactory
-    val table = new OFFlowTable
+    val table = new OFFlowTable(ofroutingmodule)
     val flow_mod = offactory.getMessage(OFType.FLOW_MOD).asInstanceOf[OFFlowMod]
     val actionlist = new util.ArrayList[OFAction]
     val outaction  = new OFActionOutput

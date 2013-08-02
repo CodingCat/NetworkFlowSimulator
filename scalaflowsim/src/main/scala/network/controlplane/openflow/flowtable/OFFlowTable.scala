@@ -5,6 +5,7 @@ import scala.collection.mutable.{ListBuffer, HashMap}
 import org.openflow.protocol.{OFFlowMod, OFMatch}
 import scala.collection.mutable
 import org.openflow.protocol.action.{OFActionOutput, OFAction}
+import scalasim.network.controlplane.routing.OpenFlowRouting
 import scalasim.network.traffic.Flow
 import scalasim.simengine.SimulationEngine
 import scalasim.simengine.utils.Logging
@@ -13,7 +14,7 @@ import scala.collection.JavaConversions._
 import simengine.utils.IPAddressConvertor
 import org.openflow.util.U32
 
-class OFFlowTable extends Logging {
+class OFFlowTable (ofroutingmodule : OpenFlowRouting) extends Logging {
   class OFFlowTableEntryAttaches (table : OFFlowTable) {
     private [openflow] var matchfield : OFMatch = null
     private [openflow] val counter : OFFlowCount = new OFFlowCount
@@ -49,7 +50,7 @@ class OFFlowTable extends Logging {
         }
       }
       if (expireMoment != 0) {
-        expireEvent = new OFFlowTableEntryExpireEvent(table, matchfield, expireMoment)
+        expireEvent = new OFFlowTableEntryExpireEvent(ofroutingmodule, matchfield, expireMoment)
         SimulationEngine.addEvent(expireEvent)
       }
     }
@@ -78,7 +79,7 @@ class OFFlowTable extends Logging {
       for (action <- p.actions) {
         if (action.isInstanceOf[OFActionOutput]) return action.asInstanceOf[OFActionOutput]
       }
-      return null
+      null
     }
 
     def outputToCertainPort (outaction : OFActionOutput, port_num : Short) : Boolean = {

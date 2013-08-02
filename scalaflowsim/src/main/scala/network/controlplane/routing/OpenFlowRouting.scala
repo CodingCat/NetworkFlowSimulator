@@ -17,7 +17,7 @@ class OpenFlowRouting (node : Node) extends RoutingProtocol (node) {
 
   def init() {
     for (i <- 0 until flowtables.length)
-      flowtables(i) = new OFFlowTable
+      flowtables(i) = new OFFlowTable(this)
   }
 
   override def selectNextLink(flow : Flow, matchfield : OFMatch, inLink : Link): Link = {
