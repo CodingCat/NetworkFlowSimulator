@@ -13,7 +13,7 @@ class OpenFlowRouting (node : Node) extends RoutingProtocol (node) {
 
   private [controlplane] val flowtables = new Array[OFFlowTable](
     XmlParser.getInt("scalasim.openflow.flowtablenum", 1))
-  private [controlplane] val pendingFlows = new mutable.ListBuffer[Flow]
+  private [controlplane] val pendingFlows = new mutable.ListBuffer[Flow] with mutable.SynchronizedSet[Flow]
 
   def init() {
     for (i <- 0 until flowtables.length)

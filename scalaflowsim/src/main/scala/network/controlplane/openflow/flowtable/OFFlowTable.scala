@@ -3,7 +3,6 @@ package scalasim.network.controlplane.openflow.flowtable
 import scalasim.network.controlplane.openflow.flowtable.counters._
 import scala.collection.mutable.{ListBuffer, HashMap}
 import org.openflow.protocol.{OFFlowMod, OFMatch}
-import scala.collection.mutable
 import org.openflow.protocol.action.{OFActionOutput, OFAction}
 import scalasim.network.controlplane.routing.OpenFlowRouting
 import scalasim.network.traffic.Flow
@@ -13,6 +12,7 @@ import network.events.OFFlowTableEntryExpireEvent
 import scala.collection.JavaConversions._
 import simengine.utils.IPAddressConvertor
 import org.openflow.util.U32
+import scala.collection.mutable
 
 class OFFlowTable (ofroutingmodule : OpenFlowRouting) extends Logging {
   class OFFlowTableEntryAttaches (table : OFFlowTable) {
@@ -57,7 +57,7 @@ class OFFlowTable (ofroutingmodule : OpenFlowRouting) extends Logging {
   }
 
   private [openflow] val entries : HashMap[OFMatch, OFFlowTableEntryAttaches] =
-    new HashMap[OFMatch, OFFlowTableEntryAttaches]
+    new HashMap[OFMatch, OFFlowTableEntryAttaches] with mutable.SynchronizedMap[OFMatch, OFFlowTableEntryAttaches]
   private [openflow] val counters : OFTableCount = new OFTableCount
 
   def clear() {

@@ -7,6 +7,7 @@ import scalasim.simengine.utils.Logging
 import scalasim.network.controlplane.ControlPlane
 import org.openflow.protocol.OFMatch
 import simengine.utils.IPAddressConvertor
+import scala.collection.mutable
 
 
 abstract private [controlplane] class RoutingProtocol (private val node : Node)
@@ -14,7 +15,7 @@ abstract private [controlplane] class RoutingProtocol (private val node : Node)
 
   protected lazy val controlPlane : ControlPlane = node.controlPlane
 
-  protected val flowPathMap = new HashMap[OFMatch, Link]
+  protected val flowPathMap = new HashMap[OFMatch, Link] with mutable.SynchronizedMap[OFMatch, Link]
 
   def selectNextLink(flow : Flow, matchfield : OFMatch, inPort : Link) : Link
 

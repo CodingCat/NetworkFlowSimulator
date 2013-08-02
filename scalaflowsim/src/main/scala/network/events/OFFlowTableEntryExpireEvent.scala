@@ -1,6 +1,5 @@
 package network.events
 
-import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
 import scalasim.network.controlplane.routing.OpenFlowRouting
 import scalasim.simengine.EventOfTwoEntities
 import org.openflow.protocol.OFMatch

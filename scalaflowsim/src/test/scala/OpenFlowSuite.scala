@@ -10,7 +10,7 @@ import scalasim.{SimulationRunner, XmlParser}
 import org.openflow.util.{U32, HexString}
 import simengine.utils.IPAddressConvertor
 import org.openflow.protocol.factory.BasicFactory
-import org.openflow.protocol.action.{OFAction, OFActionOutput, OFActionType}
+import org.openflow.protocol.action.{OFAction, OFActionOutput}
 import org.openflow.protocol.{OFMatch, OFFlowMod, OFType}
 import java.util
 

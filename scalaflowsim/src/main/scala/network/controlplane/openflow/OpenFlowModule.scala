@@ -2,14 +2,11 @@ package scalasim.network.controlplane.openflow
 
 
 import scalasim.network.component._
-import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
 import scalasim.network.controlplane.resource.ResourceAllocator
 import scalasim.network.controlplane.routing.{OpenFlowRouting, RoutingProtocol}
 import scalasim.network.controlplane.topology.TopologyManager
 import scalasim.network.controlplane.ControlPlane
-import scalasim.network.events.CompleteFlowEvent
-import scalasim.network.traffic.{NewStartFlow, CompletedFlow, RunningFlow, Flow}
-import scalasim.simengine.SimulationEngine
+import scalasim.network.traffic.Flow
 import scalasim.XmlParser
 import java.util.concurrent.Executors
 import org.jboss.netty.bootstrap.ClientBootstrap
