@@ -3,6 +3,7 @@ package scalasim.test
 import org.scalatest.FunSuite
 import scalasim.network.component.Pod
 import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
+import scalasim.network.traffic.Flow
 import scalasim.simengine.SimulationEngine
 import scalasim.{SimulationRunner, XmlParser}
 import org.openflow.util.{U32, HexString}
@@ -86,9 +87,39 @@ class OpenFlowSuite extends FunSuite {
     flow_mod.setIdleTimeout(200)
     table.addFlowTableEntry(flow_mod)
     assert(SimulationEngine.Events.length === 4)
+    //sorted
     assert(SimulationEngine.Events.toList(0).getTimeStamp() === 100)
     assert(SimulationEngine.Events.toList(1).getTimeStamp() === 200)
     assert(SimulationEngine.Events.toList(2).getTimeStamp() === 200)
     assert(SimulationEngine.Events.toList(3).getTimeStamp() === 500)
+  }
+
+  test ("flow table can match flow entry correctly") {
+    SimulationRunner.reset
+    val offactory = new BasicFactory
+    val table = new OFFlowTable
+    val flow_mod = offactory.getMessage(OFType.FLOW_MOD).asInstanceOf[OFFlowMod]
+    val actionlist = new util.ArrayList[OFAction]
+    val outaction  = new OFActionOutput
+    val matchfield = new OFMatch
+    val flow = Flow("10.0.0.1", "10.0.0.2", "00:00:00:00:00:11", "00:00:00:00:00:22", size = 1)
+    val generatedmatchfield = OFFlowTable.createMatchField(flow)
+    //set matchfield
+    matchfield.setDataLayerDestination("00:00:00:00:00:22")
+    matchfield.setDataLayerSource("00:00:00:00:00:11")
+    matchfield.setNetworkDestination(U32.t(IPAddressConvertor.DecimalStringToInt("10.0.0.2")))
+    matchfield.setNetworkSource(U32.t(IPAddressConvertor.DecimalStringToInt("10.0.0.1")))
+    matchfield.setTransportSource(1)
+    matchfield.setTransportDestination(1)
+    matchfield.setWildcards(0)
+    matchfield.setDataLayerVirtualLan(0)
+    actionlist.add(outaction)
+    flow_mod.setMatch(matchfield)
+    flow_mod.setActions(actionlist)
+    flow_mod.setCommand(OFFlowMod.OFPFC_ADD)
+    flow_mod.setHardTimeout(500)
+    flow_mod.setIdleTimeout(0)
+    table.addFlowTableEntry(flow_mod)
+    assert(table.getFlowsByMatch(generatedmatchfield).length === 1)
   }
 }

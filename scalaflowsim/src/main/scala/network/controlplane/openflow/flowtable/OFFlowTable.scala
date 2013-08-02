@@ -67,10 +67,8 @@ class OFFlowTable extends Logging {
     if (match_field.getWildcards == -1) {
       logDebug("return all flows: " + entries.values.toList.length)
       entries.values.toList
-    }
-    else {
-      val entrieslist = new mutable.LinkedList[OFFlowTableEntryAttaches]{entries(match_field)}
-      entrieslist.toList
+    } else {
+      List{entries(match_field)}
     }
   }
 
@@ -145,9 +143,9 @@ object OFFlowTable {
     matchfield.setDataLayerVirtualLan(flow.vlanID)
     matchfield.setNetworkDestination(U32.t(IPAddressConvertor.DecimalStringToInt(flow.dstIP)))
     matchfield.setNetworkSource(U32.t(IPAddressConvertor.DecimalStringToInt(flow.srcIP)))
-    matchfield.setNetworkTypeOfService((0x0800).toByte)
     matchfield.setTransportSource(flow.srcPort)
     matchfield.setTransportDestination(flow.dstPort)
+    matchfield.setWildcards(0)
     matchfield
   }
 }

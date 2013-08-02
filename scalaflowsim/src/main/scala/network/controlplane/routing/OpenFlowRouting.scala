@@ -58,5 +58,10 @@ class OpenFlowRouting (node : Node) extends RoutingProtocol (node) {
     flowPathMap += (flowmod.getMatch -> node.controlPlane.topoModule.reverseSelection(outportnum))
   }
 
+  def removeFlowEntry (matchfield : OFMatch) {
+    flowPathMap -= matchfield
+    flowtables(0).removeEntry(matchfield)
+  }
+
   init
 }
