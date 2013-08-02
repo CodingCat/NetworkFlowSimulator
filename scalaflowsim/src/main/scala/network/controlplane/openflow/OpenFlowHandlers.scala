@@ -341,8 +341,8 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
                       else link.end_from
                     }
                     nextnode.controlPlane.routing(
-                      openflowPlane.ofroutingModule.pendingFlows.get(packetoutmsg.getBufferId - 1),
-                      OFFlowTable.createMatchField(openflowPlane.ofroutingModule.pendingFlows.get(
+                      openflowPlane.ofroutingModule.pendingFlows(packetoutmsg.getBufferId - 1),
+                      OFFlowTable.createMatchField(openflowPlane.ofroutingModule.pendingFlows(
                         packetoutmsg.getBufferId - 1)),
                       link)
                   }
@@ -355,8 +355,8 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
                   else outlink.end_from
                 }
                 nextnode.controlPlane.routing(
-                  openflowPlane.ofroutingModule.pendingFlows.get(packetoutmsg.getBufferId - 1),
-                  OFFlowTable.createMatchField(openflowPlane.ofroutingModule.pendingFlows.get(
+                  openflowPlane.ofroutingModule.pendingFlows(packetoutmsg.getBufferId - 1),
+                  OFFlowTable.createMatchField(openflowPlane.ofroutingModule.pendingFlows(
                     packetoutmsg.getBufferId - 1)),
                   outlink)
               }

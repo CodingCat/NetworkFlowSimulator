@@ -13,7 +13,7 @@ class OpenFlowRouting (node : Node) extends RoutingProtocol (node) {
 
   private [controlplane] val flowtables = new Array[OFFlowTable](
     XmlParser.getInt("scalasim.openflow.flowtablenum", 1))
-  private [controlplane] val pendingFlows = new mutable.ListBuffer[Flow] with mutable.SynchronizedSet[Flow]
+  private [controlplane] val pendingFlows = new mutable.HashMap[Int, Flow] with mutable.SynchronizedMap[Int, Flow]
 
   def init() {
     for (i <- 0 until flowtables.length)
@@ -42,7 +42,7 @@ class OpenFlowRouting (node : Node) extends RoutingProtocol (node) {
             .setDestinationPort((50000).toShort)
             .setPayload(new Data(dummypayload))))
       val serializedData = ethernetFrame.serialize
-      pendingFlows += flow
+      pendingFlows += (pendingFlows.size -> flow)
       node.controlPlane.asInstanceOf[OpenFlowModule].sendPacketInToController(inLink, serializedData)
     }
     else {
