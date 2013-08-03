@@ -19,11 +19,15 @@ abstract private [controlplane] class RoutingProtocol (private val node : Node)
 
   def selectNextLink(flow : Flow, matchfield : OFMatch, inPort : Link) : Link
 
+  def getfloodLinks(flow : Flow, inport : Link) : List[Link]
+
   def fetchRoutingEntry(matchfield : OFMatch) : Link = flowPathMap(matchfield)
 
   def insertFlowPath (matchfield : OFMatch, link : Link) {
     logTrace(controlPlane + " insert entry " +
-      matchfield.getNetworkSource + "->" + matchfield.getNetworkDestination)
+      IPAddressConvertor.IntToDecimalString(matchfield.getNetworkSource) + "->" +
+      IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination) +
+      " with the link " + link.toString)
     flowPathMap += (matchfield -> link)
     if (IPAddressConvertor.DecimalStringToInt(controlPlane.IP) == matchfield.getNetworkSource) {
       RoutingProtocol.globalFlowStarterMap += controlPlane.IP -> controlPlane.node.asInstanceOf[Host]

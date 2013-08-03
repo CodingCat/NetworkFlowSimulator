@@ -24,16 +24,16 @@ private [controlplane] class MaxMinAllocator (controlPlane : TCPControlPlane)
       var demand = {
         if (currentflow.status != RunningFlow) currentflow.getTempRate else currentflow.Rate
       }
-      logDebug("demand of matchfield " + currentflow + " is " + demand)
+      logDebug("demand of flow " + currentflow + " is " + demand)
       if (demand <= avrRate) {
         remainingBandwidth -= demand
       } else {
         if (currentflow.status == RunningFlow) {
           currentflow.setRate(avrRate)
-          logDebug("change matchfield " + currentflow + " rate to " + currentflow.Rate)
+          logDebug("change flow " + currentflow + " rate to " + currentflow.Rate)
         } else {
           currentflow.setTempRate(avrRate) //set to avrRate
-          logDebug("change matchfield " + currentflow + " temprate to " + currentflow.getTempRate)
+          logDebug("change flow " + currentflow + " temprate to " + currentflow.getTempRate)
         }
         remainingBandwidth -= avrRate
       }

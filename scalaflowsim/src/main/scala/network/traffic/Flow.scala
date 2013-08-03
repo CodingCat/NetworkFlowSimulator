@@ -1,8 +1,11 @@
 package scalasim.network.traffic
 
+import scalasim.network.component.Link
 import scalasim.simengine.SimulationEngine
 import scalasim.network.events.CompleteFlowEvent
 import scalasim.simengine.utils.Logging
+import scala.collection.mutable.ListBuffer
+import scala.collection.mutable
 
 /**
  *
@@ -23,13 +26,25 @@ class Flow private (
   private [network] val prioritycode: Byte = 0,
   private [network] val srcPort : Short = 1,
   private [network] val dstPort : Short = 1,
-  private [network] var demand : Double//in MB
+  private [network] var demand : Double,//in MB
+  private [network] var floodflag : Boolean = false
+  //to indicate this flow may be routed to the non-destination host
   ) extends Logging {
 
   var status : FlowStatus = NewStartFlow
   private var hop : Int = 0
   private var bindedCompleteEvent : CompleteFlowEvent = null
   private var lastChangePoint  = 0.0
+
+
+  /**
+   * it's used as the solution in flow-level simulation
+   * when the flow is finally routed to the destination,
+   * the resource allocation module can track the passed
+   * links through this
+   */
+  private val floodtrace_laststeptrack = new mutable.ListBuffer[(Link, Int)]   //(link, lastlinkindex)
+  private val floodtrace = new mutable.ListBuffer[Link]
 
   def DstIP = dstIP
   def SrcIP = srcIP
@@ -43,6 +58,7 @@ class Flow private (
   }
 
   def setRate(r : Double) {
+    logDebug("old rate : " + rate + " new rate : " + r)
     demand -= rate * (SimulationEngine.currentTime - lastChangePoint)
     lastChangePoint = SimulationEngine.currentTime
     rate = r
@@ -58,7 +74,18 @@ class Flow private (
 
   def Rate = rate
 
+  def addFloodTrace(newlink : Link, lastlink : Link) {
+    var lastlinkindex = -1
+    if (lastlink != null) lastlinkindex = floodtrace.indexOf(lastlink)
+    floodtrace_laststeptrack += Tuple2(newlink, lastlinkindex)
+    floodtrace += newlink
+  }
 
+  def getLastHop(curlink : Link) = {
+    val ret = floodtrace(floodtrace_laststeptrack(floodtrace.indexOf(curlink))._2)
+    logDebug("get the link " + curlink + " last step is " + ret)
+    ret
+  }
 
   //TODO: shall I move this method to the control plane or simulationEngine?
   private def rescheduleBindedEvent {
@@ -96,8 +123,24 @@ class Flow private (
 }
 
 object Flow {
+  /**
+   *
+   * @param srcIP
+   * @param dstIP
+   * @param srcMac
+   * @param dstMac
+   * @param sPort
+   * @param dPort
+   * @param vlanID
+   * @param prioritycode
+   * @param size
+   * @param fflag
+   * @return
+   */
   def apply(srcIP : String, dstIP : String, srcMac : String, dstMac : String,
-            vlanID : Short = 0, prioritycode : Byte = 0, size : Double) : Flow = {
-    new Flow(srcIP, dstIP, srcMac, dstMac, vlanID, prioritycode, demand = size)
+            sPort : Short = 1, dPort : Short = 1, vlanID : Short = 0,
+            prioritycode : Byte = 0, size : Double, fflag : Boolean = false) : Flow = {
+    new Flow(srcIP, dstIP, srcMac, dstMac, vlanID, prioritycode, srcPort = sPort, dstPort = dPort,
+      demand = size, floodflag = fflag)
   }
 }

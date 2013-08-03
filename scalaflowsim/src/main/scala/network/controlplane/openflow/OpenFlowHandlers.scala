@@ -340,8 +340,9 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
                       if (link.end_from == openflowPlane.node) link.end_to
                       else link.end_from
                     }
-                    nextnode.controlPlane.routing(
-                      openflowPlane.ofroutingModule.pendingFlows(packetoutmsg.getBufferId - 1),
+                    val pendingflow = openflowPlane.ofroutingModule.pendingFlows(packetoutmsg.getBufferId - 1)
+                    pendingflow.floodflag = true
+                    nextnode.controlPlane.routing(pendingflow,
                       OFFlowTable.createMatchField(openflowPlane.ofroutingModule.pendingFlows(
                         packetoutmsg.getBufferId - 1)),
                       link)
@@ -354,8 +355,9 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
                   if (outlink.end_from == openflowPlane.node) outlink.end_to
                   else outlink.end_from
                 }
-                nextnode.controlPlane.routing(
-                  openflowPlane.ofroutingModule.pendingFlows(packetoutmsg.getBufferId - 1),
+                val pendingflow = openflowPlane.ofroutingModule.pendingFlows(packetoutmsg.getBufferId - 1)
+                pendingflow.floodflag = true
+                nextnode.controlPlane.routing(pendingflow,
                   OFFlowTable.createMatchField(openflowPlane.ofroutingModule.pendingFlows(
                     packetoutmsg.getBufferId - 1)),
                   outlink)

@@ -24,7 +24,6 @@ object SimulationEngine extends Logging {
       event.process
       numPassedEvents += 1
       eventqueue -= event
-      logTrace("dequeue " + event.toString)
     }
   }
 

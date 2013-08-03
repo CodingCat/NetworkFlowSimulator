@@ -20,46 +20,71 @@ abstract class ControlPlane (private [controlplane] val node : Node,
 
   override def toString = "controlplane-" + node.toString
 
-  protected def nextNode(link : Link) : Node = {
+  protected def otherEnd (link : Link) : Node = {
     if (link.end_to == node) link.end_from
     else link.end_to
   }
 
-  def allocate (flow : Flow, matchfield : OFMatch) : Flow = {
-    if (node.ip_addr(0) == flow.DstIP) {
-      if (flow.status != RunningFlow && flow.status != CompletedFlow){
-        if (flow.status == NewStartFlow) {
-          val completeEvent = new CompleteFlowEvent(flow, RoutingProtocol.getFlowStarter(flow.SrcIP),
-            SimulationEngine.currentTime + flow.Demand / flow.getTempRate)
-          logTrace("schedule complete event " + completeEvent + " for " + flow + " at " +
-            (SimulationEngine.currentTime + flow.Demand / flow.getTempRate))
-          flow.bindEvent(completeEvent)
-          SimulationEngine.addEvent(completeEvent)
+  protected def startFlow (flow : Flow) {
+    if (flow.status == NewStartFlow) {
+      val completeEvent = new CompleteFlowEvent(flow, RoutingProtocol.getFlowStarter(flow.SrcIP),
+        SimulationEngine.currentTime + flow.Demand / flow.getTempRate)
+      logTrace("schedule complete event " + completeEvent + " for " + flow + " at " +
+        (SimulationEngine.currentTime + flow.Demand / flow.getTempRate))
+      flow.bindEvent(completeEvent)
+      SimulationEngine.addEvent(completeEvent)
+      //has found the destination, change the property
+      if (flow.floodflag) flow.floodflag = false
+    }
+    flow.run
+  }
+
+  protected def allocateOnCurrentHop(flow : Flow, link : Link) {
+    val nextnode = otherEnd(link)
+    val rpccontrolplane = {
+      if (link.end_from == node) node.controlPlane
+      else nextnode.controlPlane
+    }
+    if (flow.status == NewStartFlow)
+      rpccontrolplane.resourceModule.insertNewLinkFlowPair(link, flow)
+    rpccontrolplane.resourceModule.allocate(link)
+  }
+
+  def allocate (flow : Flow, matchfield : OFMatch, referenceLink : Link = null) {
+    if (!flow.floodflag) {
+      if (node.ip_addr(0) == flow.DstIP) startFlow(flow)
+      else {
+        val nextlink = routingModule.fetchRoutingEntry(matchfield)
+        val nextnode = otherEnd(nextlink)
+        allocateOnCurrentHop(flow, nextlink)
+        nextnode.controlPlane.allocate(flow, matchfield, nextlink)
+      }
+    } else {
+      //it's a flood flow
+      if (node.ip_addr(0) == flow.srcIP) startFlow(flow)
+      else {
+        val laststep = {
+          if (node.ip_addr(0) == flow.dstIP) referenceLink
+          else flow.getLastHop(referenceLink)
         }
-        flow.run
+        val nextnode = otherEnd(laststep)
+        logTrace("allocate for flood flow " + flow.toString() + " on " + laststep + " at node " + node)
+        allocateOnCurrentHop(flow, laststep)
+        //adding flow to the routing table in reverse order
+        //may be conflicted with the future support for multi/broadcast
+        //or, we should discard the support for multi/broadcast in flow-level simulation?
+        nextnode.controlPlane.routingModule.insertFlowPath(matchfield, laststep)
+        nextnode.controlPlane.allocate(flow, matchfield, laststep)
       }
     }
-    else {
-      val nextlink = routingModule.fetchRoutingEntry(matchfield)
-      val nextnode = nextNode(nextlink)
-      val rpccontrolplane = {
-        if (nextlink.end_from == node) node.controlPlane
-        else nextnode.controlPlane
-      }
-      if (flow.status == NewStartFlow)
-        rpccontrolplane.resourceModule.insertNewLinkFlowPair(nextlink, flow)
-      rpccontrolplane.resourceModule.allocate(nextlink)
-      nextnode.controlPlane.allocate(flow, matchfield)
-    }
-    flow
   }
 
 
   def finishFlow(flow : Flow, matchfield : OFMatch) {
     if (node.ip_addr(0) != flow.DstIP) {
-      logTrace("matchfield ended at " + node.ip_addr(0))
+      logTrace("flow ended at " + node.ip_addr(0))
       val nextlink = routingModule.fetchRoutingEntry(matchfield)
-      val nextnode = nextNode(nextlink)
+      val nextnode = otherEnd(nextlink)
       val rpccontrolplane = {
         if (nextlink.end_from == node) node.controlPlane
         else nextnode.controlPlane
@@ -67,37 +92,58 @@ abstract class ControlPlane (private [controlplane] val node : Node,
       rpccontrolplane.resourceModule.deleteFlow(flow)
       nextnode.controlPlane.finishFlow(flow, matchfield)
       //reallocate resource to other flows
+      logTrace("reallocate resource on " + node.toString)
       rpccontrolplane.resourceModule.reallocate(nextlink)
       logTrace("delete route table entry:" + flow + " at " + node.ip_addr(0))
       routingModule.deleteEntry(matchfield)
     }
   }
 
+  /**
+   *
+   * @param flow
+   * @param matchfield
+   * @param inlink it can be null (for the first hop)
+   */
   def routing (flow : Flow, matchfield : OFMatch, inlink : Link) {
     //discard the flood packets
     val srcIP = IPAddressConvertor.IntToDecimalString(matchfield.getNetworkSource)
     val dstIP = IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination)
-    if (node.ip_addr(0) !=  srcIP && node.ip_addr(0) != dstIP && node.nodetype == HostType) return
+    if (node.ip_addr(0) !=  srcIP && node.ip_addr(0) != dstIP && node.nodetype == HostType) {
+      logTrace("Discard flow " + flow + " on node " + node.toString)
+      return
+    }
 
     logTrace("arrive at " + node.ip_addr(0))
     if (node.ip_addr(0) == dstIP) {
       //arrive the destination
       //start resource allocation process
-      RoutingProtocol.getFlowStarter(srcIP).controlPlane.allocate(flow, matchfield)
+      val allocateStartNode = {
+        if (!flow.floodflag) RoutingProtocol.getFlowStarter(srcIP)
+        else node//start from the destination for flood flow
+      }
+      allocateStartNode.controlPlane.allocate(flow, matchfield, inlink)
     }
     else {
       //build matchfield match
-      val nextlink = routingModule.selectNextLink(flow, matchfield, inlink)
-      if (nextlink != null) {
-        val nextnode = nextNode(nextlink)
-        logDebug("send through " + nextlink)
-        routingModule.insertFlowPath(matchfield, nextlink)
-        nextnode.controlPlane.routing(flow, matchfield, nextlink)
+      if (!flow.floodflag) {
+        val nextlink = routingModule.selectNextLink(flow, matchfield, inlink)
+        if (nextlink != null) {
+          val nextnode = otherEnd(nextlink)
+          logDebug("send through " + nextlink)
+          routingModule.insertFlowPath(matchfield, nextlink)
+          nextnode.controlPlane.routing(flow, matchfield, nextlink)
+        } else {
+          //the nextlink is null, which means that the routing hasn't been decided, it is
+          //asynchronous, e.g. openflow, the next link will be handled in
+          //OpenFlowHandler
+          //do nothing,
+        }
       } else {
-        //the nextlink is null, which means that the routing hasn't been decided, it is
-        //asynchronous, e.g. openflow, the next link will be handled in
-        //OpenFlowHandler
-        //do nothing,
+        //it's a flood flow
+        val nextlinks = routingModule.getfloodLinks(flow, inlink)
+        //TODO : openflow flood handling in which nextlinks can be null?
+        nextlinks.foreach(l => otherEnd(l).controlPlane.routing(flow, matchfield, l))
       }
     }
   }

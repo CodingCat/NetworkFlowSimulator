@@ -64,4 +64,8 @@ class OpenFlowRouting (node : Node) extends RoutingProtocol (node) {
   }
 
   init
+
+  def getfloodLinks(flow: Flow, inport: Link): List[Link] = {
+    null
+  }
 }

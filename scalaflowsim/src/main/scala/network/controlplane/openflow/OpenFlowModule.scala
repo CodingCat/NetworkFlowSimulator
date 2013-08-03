@@ -157,7 +157,6 @@ class OpenFlowModule (router : Router,
     routingModule.selectNextLink(flow, matchfield, inlink)
   }
 
-  override def allocate(flow : Flow, matchfield : OFMatch) = {
-    null
+  override def allocate(flow : Flow, matchfield : OFMatch, inport : Link) {
   }
 }

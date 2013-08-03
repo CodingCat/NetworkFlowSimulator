@@ -16,6 +16,7 @@ class StartNewFlowEvent (flow : Flow, host : Host, timestamp : Double)
 
   def process() {
     logTrace("start the matchfield " + flow + " at " + SimulationEngine.currentTime)
+    //null in the last parameter means it's the first hop of the flow
     host.controlPlane.routing(flow, OFFlowTable.createMatchField(flow), null)
   }
 }
