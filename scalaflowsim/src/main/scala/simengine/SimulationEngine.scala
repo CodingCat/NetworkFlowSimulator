@@ -1,7 +1,8 @@
 package scalasim.simengine
 
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scalasim.simengine.utils.Logging
+import scala.collection.mutable
 
 
 object SimulationEngine extends Logging {
@@ -9,8 +10,7 @@ object SimulationEngine extends Logging {
   var currentTime : Double = 0.0
 
   //TODO:any more performant implementation?
-  private var eventqueue = new ListBuffer[Event]()
-
+  private var eventqueue : ArrayBuffer[Event] = new ArrayBuffer[Event] with mutable.SynchronizedBuffer[Event]
   private var numPassedEvents = 0
 
   def run() {

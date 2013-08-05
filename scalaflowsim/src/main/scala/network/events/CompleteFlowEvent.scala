@@ -14,7 +14,7 @@ final class CompleteFlowEvent (flow : Flow, t : Double)
   extends EventOfSingleEntity[Flow] (flow, t) {
 
   def process {
-    logInfo("matchfield " + flow + " completed at " + SimulationEngine.currentTime)
+    logInfo("flow " + flow + " completed at " + SimulationEngine.currentTime)
     flow.close()
     //ends at the flow destination
     RoutingProtocol.getFlowStarter(flow.dstIP).controlPlane.finishFlow(flow, OFFlowTable.createMatchField(flow))

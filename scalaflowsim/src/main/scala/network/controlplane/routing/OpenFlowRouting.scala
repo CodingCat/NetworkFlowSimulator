@@ -31,7 +31,7 @@ class OpenFlowRouting (node : Node) extends RoutingProtocol (node) {
 
   override def selectNextLink(flow : Flow, matchfield : OFMatch, inLink : Link): Link = {
     //TODO: matching by flowtable
-    if (!RIBIn.contains(matchfield)) {
+    if (!RIBOut.contains(matchfield)) {
       //send packet_in to controller
       val dummypayload = new Array[Byte](1)
       dummypayload(0) = (0).toByte
@@ -54,10 +54,9 @@ class OpenFlowRouting (node : Node) extends RoutingProtocol (node) {
       pendingFlows += (pendingFlows.size -> flow)
       ofcontrolplane.sendPacketInToController(inLink, serializedData)
       null
-    }
-    else {
-      //apply the actions on the matchfield/packets and return the link
-      RIBIn(matchfield)
+    } else {
+      //TODO: apply the actions on the matchfield/packets and return the link
+      RIBOut(matchfield)
     }
   }
 

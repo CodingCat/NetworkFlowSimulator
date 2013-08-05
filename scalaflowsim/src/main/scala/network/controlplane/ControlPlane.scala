@@ -99,7 +99,7 @@ abstract class ControlPlane (private [controlplane] val node : Node,
       logTrace("Discard flow " + flow + " on node " + node.toString)
       return
     }
-    logTrace("arrive at " + node.ip_addr(0) + " routing (flow : Flow, matchfield : OFMatch, inlink : Link)" +
+    logTrace("arrive at " + node.ip_addr(0) + ", routing (flow : Flow, matchfield : OFMatch, inlink : Link)" +
       " flow:" + flow + ", matchfield:" + matchfield + ", inlink:" + inlink)
     if (inlink != null) routingModule.insertInPath(matchfield, inlink)
     if (node.ip_addr(0) == flow.dstIP) {
@@ -124,6 +124,7 @@ abstract class ControlPlane (private [controlplane] val node : Node,
         }
       } else {
         //it's a flood flow
+        logTrace("flow " + flow + " is broadcasted, and is flooded out")
         routingModule.floodoutFlow(flow, matchfield, inlink)
       }
     }

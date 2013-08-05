@@ -17,12 +17,11 @@ object SimulationRunner {
 
   def main(args:Array[String]) = {
     XmlParser.addProperties("scalasim.simengine.model", "openflow")
-    XmlParser.loadConf("config.xml")
     val pod = new Pod(1, 1, 2, 2)
-    val flow1 = Flow(pod.getHost(0, 0).toString, pod.getHost(0, 1).toString,
-      pod.getHost(0, 0).mac_addr(0), pod.getHost(0, 1).mac_addr(0), size = 1)
-    //val flow2 = Flow(pod.getHost(0, 1).toString, pod.getHost(0, 0).toString,
-      //pod.getHost(0, 1).mac_addr(0), pod.getHost(0, 0).mac_addr(0), size = 1)
+    val flow1 = Flow(pod.getHost(0, 0).toString, pod.getHost(1, 1).toString,
+      pod.getHost(0, 0).mac_addr(0), pod.getHost(1, 1).mac_addr(0), size = 1)
+    /*val flow2 = Flow(pod.getHost(0, 1).toString, pod.getHost(0, 0).toString,
+      pod.getHost(0, 1).mac_addr(0), pod.getHost(0, 0).mac_addr(0), size = 1)*/
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 0), 0))
     //SimulationEngine.addEvent(new StartNewFlowEvent(flow2, pod.getHost(0, 1), 0))
     SimulationEngine.run()
