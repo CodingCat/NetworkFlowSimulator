@@ -5,8 +5,7 @@ import org.jboss.netty.channel._
 import org.jboss.netty.buffer.{ChannelBuffers, ChannelBuffer}
 import org.openflow.protocol._
 import scala.collection.JavaConversions._
-import scalasim.network.component.Router
-import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
+import scalasim.network.controlplane.routing.OpenFlowRouting
 import scalasim.simengine.SimulationEngine
 import org.jboss.netty.handler.codec.oneone.OneToOneEncoder
 import org.openflow.protocol.statistics._
@@ -299,74 +298,9 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
       openflowPlane.ioBatchBuffer += echoreply
     }
     case OFType.PACKET_OUT => {
-      logger.trace("receive a packet_out message from controller")
-      val packetoutmsg = ofm.asInstanceOf[OFPacketOut]
-      if (packetoutmsg.getBufferId == -1) {
-        //the packet data is included in the packoutmsg
-        val outData = packetoutmsg.getPacketData
-        logger.trace("receive LLDP packet from the controller with the size " + outData.length)
-        val topoManager = openflowPlane.topoModule
-        //send out through all ports
-        val allports = topoManager.outlink.values.toList ::: topoManager.inlinks.values.toList
-        for (port <- allports) {
-          //send back PACKET_IN to controller
-          openflowPlane.sendLLDPtoController(port, outData)
-          //make Neightbour send PACKET_IN with the same data
-          val neighbour = topoManager.getNeighbour(port)
-          if (neighbour.isInstanceOf[Router]) {
-            val neighbour_router = neighbour.asInstanceOf[Router]
-            //TODO: this line may not work when the neighbour code is not a openflow switch
-            neighbour_router.controlPlane.asInstanceOf[OpenFlowModule].sendLLDPtoController(port, outData)
-          }
-        }
-      }
-      else {
-        //TODO:packet_out specifies a certain buffer or entry
-        //TODO: is there any difference if we are on packet-level simulation?
-        logger.trace("receive a packet_out to certain buffer:" + packetoutmsg.toString)
-        for (action <- packetoutmsg.getActions) {
-          logger.trace("action:" + action.toString)
-          action.getType match {
-            case OFActionType.OUTPUT => {
-              val outaction = action.asInstanceOf[OFActionOutput]
-              val topoManager = openflowPlane.topoModule
-              if (outaction.getPort == OFPort.OFPP_FLOOD.getValue) {
-                //send out through all ports
-                val alllinks = topoManager.outlink.values.toList ::: topoManager.inlinks.values.toList
-                for (link <- alllinks) {
-                  if (packetoutmsg.getInPort != topoManager.linkphysicalportsMap(link).getPortNumber) {
-                    //not send back
-                    val nextnode = {
-                      if (link.end_from == openflowPlane.node) link.end_to
-                      else link.end_from
-                    }
-                    val pendingflow = openflowPlane.ofroutingModule.pendingFlows(packetoutmsg.getBufferId - 1)
-                    pendingflow.floodflag = true
-                    nextnode.controlPlane.routing(pendingflow,
-                      OFFlowTable.createMatchField(openflowPlane.ofroutingModule.pendingFlows(
-                        packetoutmsg.getBufferId - 1)),
-                      link)
-                  }
-                }
-              }
-              else {
-                val outlink = topoManager.reverseSelection(outaction.getPort)
-                val nextnode = {
-                  if (outlink.end_from == openflowPlane.node) outlink.end_to
-                  else outlink.end_from
-                }
-                val pendingflow = openflowPlane.ofroutingModule.pendingFlows(packetoutmsg.getBufferId - 1)
-                pendingflow.floodflag = true
-                nextnode.controlPlane.routing(pendingflow,
-                  OFFlowTable.createMatchField(openflowPlane.ofroutingModule.pendingFlows(
-                    packetoutmsg.getBufferId - 1)),
-                  outlink)
-              }
-            }
-            case _ => throw new Exception("unrecognizable action")
-          }
-        }
-      }
+      val pkgoutmsg = ofm.asInstanceOf[OFPacketOut]
+      logger.trace("receive a packet_out message from controller : " + pkgoutmsg.toString)
+      openflowPlane.routing(pkgoutmsg)
     }
     case _ => throw new Exception("unrecognized message type:" + ofm)
   }

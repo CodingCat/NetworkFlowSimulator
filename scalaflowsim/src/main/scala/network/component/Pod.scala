@@ -1,5 +1,7 @@
 package scalasim.network.component
 
+import scalasim.network.controlplane.openflow.OpenFlowModule
+import scalasim.simengine.utils.Logging
 import scalasim.XmlParser
 import scalasim.network.component.builder.{LanBuilder, AddressInstaller}
 ;
@@ -7,7 +9,8 @@ import scalasim.network.component.builder.{LanBuilder, AddressInstaller}
 class Pod (private val cellID : Int,
            private val aggregateRouterNumber : Int = XmlParser.getInt("scalasim.topology.cell.aggregaterouternum", 2),
            private val rackNumber : Int = XmlParser.getInt("scalasim.topology.cell.racknum", 4),
-           private val rackSize : Int = XmlParser.getInt("scalasim.topology.cell.racksize", 20)) {
+           private val rackSize : Int = XmlParser.getInt("scalasim.topology.cell.racksize", 20))
+  extends Logging {
 
   private val aggContainer = new RouterContainer
   private val torContainer = new RouterContainer
@@ -15,11 +18,28 @@ class Pod (private val cellID : Int,
 
   private def buildNetwork() {
     def initOFNetwork {
+      def topologypending : Boolean = {
+        //checking tor router
+        for (i <- 0 until rackNumber) {
+          if (!torContainer(i).controlPlane.
+            asInstanceOf[OpenFlowModule].topologyHasbeenRecognized())
+            return false
+        }
+        //checking agg router
+        for (i <- 0 until numAggRouters) {
+          if (!aggContainer(i).controlPlane.
+            asInstanceOf[OpenFlowModule].topologyHasbeenRecognized())
+            return false
+        }
+        true
+      }
       if (XmlParser.getString("scalasim.simengine.model", "tcp") == "openflow") {
         //aggeregate routers
         for (i <- 0 until aggregateRouterNumber) aggContainer(i).connectTOController()
         //ToR routers
         for (i <- 0 until numRacks) torContainer(i).connectTOController()
+        //waiting for controller to process the topology
+        while (!topologypending) Thread.sleep(1000)
       }
     }
 

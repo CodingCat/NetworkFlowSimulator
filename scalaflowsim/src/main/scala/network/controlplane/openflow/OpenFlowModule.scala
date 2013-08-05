@@ -2,6 +2,7 @@ package scalasim.network.controlplane.openflow
 
 
 import scalasim.network.component._
+import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
 import scalasim.network.controlplane.resource.ResourceAllocator
 import scalasim.network.controlplane.routing.{OpenFlowRouting, RoutingProtocol}
 import scalasim.network.controlplane.topology.TopologyManager
@@ -18,7 +19,8 @@ import java.util
 import org.openflow.protocol.factory.BasicFactory
 import org.jboss.netty.channel.Channel
 import org.slf4j.LoggerFactory
-
+import org.openflow.protocol.action.{OFActionOutput, OFActionType, OFAction}
+import scala.collection.JavaConverters._
 
 class OpenFlowModule (router : Router,
                       routingModule : RoutingProtocol,
@@ -35,6 +37,8 @@ class OpenFlowModule (router : Router,
   private var miss_send_len : Short = 0
 
   private val logger = LoggerFactory.getLogger("OpenFlowModule")
+
+  private var lldpcnt = 0;
 
   /**
    * 0 - handshaking
@@ -89,7 +93,7 @@ class OpenFlowModule (router : Router,
   def getSwitchFeature() = {
     //TODO: specify the switch features
     //(dpid, buffer, n_tables, capabilities, physical port
-    (getDPID, 1000, ofroutingModule.flowtables.length, 7,
+    (getDPID, 1000, ofroutingModule.flowtables.length, 0xffff,
       router.controlPlane.topoModule.linkphysicalportsMap.values.toList)
   }
 
@@ -115,25 +119,10 @@ class OpenFlowModule (router : Router,
       else
         throw new Exception("the openflow switch " + router.ip_addr(0) +
           " has been disconnected with the controller")
-    }
-    else {
+    } else {
       logger.trace("the switch hasn't been initialized, pending message number:" +
       msgPendingBuffer.size)
     }
-  }
-
-  def sendLLDPtoController (l : Link, lldpData : Array[Byte]) {
-    logger.trace("reply lldp request")
-    val port = topoModule.linkphysicalportsMap(l)
-    //send out packet_in
-    val packet_in_msg = factory.getMessage(OFType.PACKET_IN).asInstanceOf[OFPacketIn]
-    packet_in_msg.setBufferId(0)
-      .setInPort(port.getPortNumber)
-      .setPacketData(lldpData)
-      .setReason(OFPacketIn.OFPacketInReason.ACTION)
-      .setTotalLength(lldpData.length.toShort)
-      .setLength((lldpData.length + 18).toShort)
-    sendMessageToController(packet_in_msg)
   }
 
   def sendPacketInToController(inlink: Link, ethernetFramedata: Array[Byte]) {
@@ -150,13 +139,94 @@ class OpenFlowModule (router : Router,
   }
 
   /**
-   * routing the matchfield
+   *
    * @param flow
+   * @param matchfield
+   * @param inlink
+   * @param outlink
    */
-  override def routing(flow: Flow, matchfield : OFMatch, inlink : Link) {
-    routingModule.selectNextLink(flow, matchfield, inlink)
+  def routing(flow : Flow, matchfield : OFMatch, inlink : Link, outlink : Link = null) {
+    if (outlink == null) {
+      routing(flow, matchfield, inlink)
+    } else {
+      //the output link has been indicated
+      Link.otherEnd(outlink, node).controlPlane.routing(flow, matchfield, outlink)
+    }
   }
 
-  override def allocate(flow : Flow, matchfield : OFMatch, inport : Link) {
+  def sendLLDPtoController (l : Link, lldpData : Array[Byte]) {
+    logger.trace("reply lldp request")
+    val port = topoModule.linkphysicalportsMap(l)
+    //send out packet_in
+    val packet_in_msg = factory.getMessage(OFType.PACKET_IN).asInstanceOf[OFPacketIn]
+    packet_in_msg.setBufferId(-1)
+      .setInPort(port.getPortNumber)
+      .setPacketData(lldpData)
+      .setReason(OFPacketIn.OFPacketInReason.ACTION)
+      .setTotalLength(lldpData.length.toShort)
+      .setLength((lldpData.length + 18).toShort)
+    sendMessageToController(packet_in_msg)
+  }
+
+  def topologyHasbeenRecognized() = (lldpcnt >= (inlinks.size + outlinks.size))
+
+  private def replyLLDP (lldpdata : Array[Byte]) {
+    //send out through all ports
+    val allports = topoModule.outlink.values.toList ::: topoModule.inlinks.values.toList
+    lldpcnt = lldpcnt + 1
+    for (port <- allports) {
+      //send back PACKET_IN to controller
+      sendLLDPtoController(port, lldpdata)
+      //make neighbors send PACKET_IN with the same data
+      val neighbour = topoModule.getNeighbour(port)
+      if (neighbour.isInstanceOf[Router]) {
+        val neighbour_router = neighbour.asInstanceOf[Router]
+        //TODO: this line may not work when the neighbour code is not a openflow switch
+        neighbour_router.controlPlane.asInstanceOf[OpenFlowModule].sendLLDPtoController(port, lldpdata)
+      }
+    }
+  }
+
+  /**
+   * called by the openflowhandler
+   * routing according to the pktoutmsg
+   * @param pktoutmsg
+   */
+  def routing(pktoutmsg : OFPacketOut) {
+    //-1 is reserved for lldp packets
+    if (pktoutmsg.getBufferId == -1) {
+      //the packet data is included in the packoutmsg
+      val outData = pktoutmsg.getPacketData
+      log.trace("receive LLDP packet from the controller with the size " + outData.length)
+      replyLLDP(outData)
+    }
+    else {
+      //TODO: is there any difference if we are on packet-level simulation?
+      val pendingflow = ofroutingModule.pendingFlows(pktoutmsg.getBufferId - 1)
+      log.trace("receive a packet_out to certain buffer:" + pktoutmsg.toString)
+      for (action : OFAction <- pktoutmsg.getActions.asScala) {
+        action.getType match {
+          //only support output for now
+          case OFActionType.OUTPUT => {
+            val outaction = action.asInstanceOf[OFActionOutput]
+            if (outaction.getPort == OFPort.OFPP_FLOOD.getValue) {
+              //flood the flow since the controller does not know hte location of the destination
+              logTrace("flood the flow " + pendingflow + " at " + node)
+              pendingflow.floodflag = true
+              routing(pendingflow, OFFlowTable.createMatchField(pendingflow),
+                topoModule.reverseSelection(pktoutmsg.getInPort))
+            } else {
+              val ilink = topoModule.reverseSelection(pktoutmsg.getInPort)
+              val olink = topoModule.reverseSelection(outaction.getPort)
+              logTrace("forward the flow " + pendingflow + " through " + olink)
+              pendingflow.floodflag = false
+              routing(pendingflow, OFFlowTable.createMatchField(pendingflow),
+                inlink = ilink, outlink = olink)
+            }
+          }
+          case _ => throw new Exception("unrecognizable action")
+        }
+      }
+    }
   }
 }

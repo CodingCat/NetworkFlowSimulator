@@ -1,4 +1,4 @@
-package scalasim.test
+package floodlight
 
 import scalasim.network.component.Pod
 import scalasim.application.ApplicationRunner

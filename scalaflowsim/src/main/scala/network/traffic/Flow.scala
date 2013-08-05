@@ -38,13 +38,11 @@ class Flow private (
 
 
   /**
-   * it's used as the solution in flow-level simulation
-   * when the flow is finally routed to the destination,
-   * the resource allocation module can track the passed
-   * links through this
+   * track the flow's hops,
+   * used to allocate resource in reverse order
    */
-  private val floodtrace_laststeptrack = new mutable.ListBuffer[(Link, Int)]   //(link, lastlinkindex)
-  private val floodtrace = new mutable.ListBuffer[Link]
+  private val trace_laststeptrack = new mutable.ListBuffer[(Link, Int)]   //(link, lastlinkindex)
+  private val trace = new mutable.ListBuffer[Link]
 
   def DstIP = dstIP
   def SrcIP = srcIP
@@ -74,15 +72,17 @@ class Flow private (
 
   def Rate = rate
 
-  def addFloodTrace(newlink : Link, lastlink : Link) {
+  def addTrace(newlink : Link, lastlink : Link) {
     var lastlinkindex = -1
-    if (lastlink != null) lastlinkindex = floodtrace.indexOf(lastlink)
-    floodtrace_laststeptrack += Tuple2(newlink, lastlinkindex)
-    floodtrace += newlink
+    if (lastlink != null) lastlinkindex = trace.indexOf(lastlink)
+    trace_laststeptrack += Tuple2(newlink, lastlinkindex)
+    trace += newlink
   }
 
-  def getLastHop(curlink : Link) = {
-    val ret = floodtrace(floodtrace_laststeptrack(floodtrace.indexOf(curlink))._2)
+  def getLastHop(curlink : Link) : Link = {
+    val laststepindex = trace_laststeptrack(trace.indexOf(curlink))._2
+    if (laststepindex < 0) return null
+    val ret = trace(laststepindex)
     logDebug("get the link " + curlink + " last step is " + ret)
     ret
   }

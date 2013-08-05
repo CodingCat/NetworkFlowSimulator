@@ -7,3 +7,10 @@ class Link (val end_from : Node,
 
   override def toString = "link-" + end_from.ip_addr(0) + "-" + end_to.ip_addr(0)
 }
+
+object Link {
+  def otherEnd (link : Link, node : Node) : Node = {
+    if (link.end_to == node) link.end_from
+    else link.end_to
+  }
+}

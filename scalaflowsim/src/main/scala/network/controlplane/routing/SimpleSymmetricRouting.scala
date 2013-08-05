@@ -47,7 +47,7 @@ private [controlplane] class SimpleSymmetricRouting (node : Node)
 
   override def selectNextLink(flow : Flow, matchfield : OFMatch, inlink : Link): Link = {
     if (flow.floodflag) throw new Exception("you cannot call this method for a flood flow")
-    if (flowPathMap.contains(matchfield)) return flowPathMap(matchfield)
+    if (RIBOut.contains(matchfield)) return RIBOut(matchfield)
     if (controlPlane.node.nodetype != HostType) {
       getDstParameters(matchfield)
       val dstIP = IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination)
@@ -95,26 +95,11 @@ private [controlplane] class SimpleSymmetricRouting (node : Node)
         }
       }
     } else {
-      if (flowPathMap.contains(matchfield)) return flowPathMap(matchfield)
       //it's a host
+      if (RIBOut.contains(matchfield)) return RIBOut(matchfield)
       val l = selectRandomOutlink(matchfield)
       if (l == null) throw new Exception("failed on the first hop")
       l
     }
-  }
-
-  def getfloodLinks(flow: Flow, inport: Link): List[Link] = {
-    if (!flow.floodflag) throw new Exception("you cannot call this method on a non-flood flow")
-    val returnList = new mutable.MutableList[Link]
-    val alllink = {
-      if (node.nodetype != HostType)
-        node.controlPlane.topoModule.inlinks.values.toList :::
-          node.controlPlane.topoModule.outlink.values.toList
-      else node.controlPlane.topoModule.outlink.values.toList
-    }
-    alllink.foreach(l => if (l != inport) returnList += l)
-    //add to flow's flood trace
-    returnList.foreach(l => flow.addFloodTrace(l, inport))
-    returnList.toList
   }
 }

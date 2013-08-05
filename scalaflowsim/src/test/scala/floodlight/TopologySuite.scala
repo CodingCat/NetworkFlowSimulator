@@ -1,4 +1,4 @@
-package scalasim.test
+package floodlight
 
 import scalasim.network.component.builder.{LanBuilder, AddressInstaller}
 import org.scalatest.FunSuite

@@ -1,10 +1,12 @@
-package scalasim.test
+package floodlight
 
 import org.scalatest.FunSuite
-import scalasim.network.component.{AggregateRouterType, Router, Pod}
+import scalasim.network.component._
+import scalasim.network.component.builder.{LanBuilder, AddressInstaller}
 import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
 import scalasim.network.controlplane.routing.OpenFlowRouting
-import scalasim.network.traffic.Flow
+import scalasim.network.events.StartNewFlowEvent
+import scalasim.network.traffic.{CompletedFlow, Flow}
 import scalasim.simengine.SimulationEngine
 import scalasim.{SimulationRunner, XmlParser}
 import org.openflow.util.{U32, HexString}
@@ -17,20 +19,13 @@ import java.util
 class OpenFlowSuite extends FunSuite {
   test ("routers can be assigned with DPID address correctly") {
     SimulationRunner.reset
-    XmlParser.addProperties("scalasim.topology.cell.aggregaterouternum", "1")
-    XmlParser.addProperties("scalasim.topology.cell.racknum", "2")
-    XmlParser.addProperties("scalasim.topology.cell.racksize", "20")
     XmlParser.addProperties("scalasim.simengine.model", "openflow")
-    XmlParser.loadConf("config.xml")
-    val cellnet = new Pod(1)
-    for (i <- 0 until cellnet.numAggRouters) {
-      assert(cellnet.getAggregatRouter(i).getDPID === HexString.toLong("01:01:" +
-        cellnet.getAggregatRouter(i).mac_addr(0)))
-    }
-    for (i <- 0 until cellnet.numRacks) {
-      assert(cellnet.getToRRouter(i).getDPID === HexString.toLong("00:01:" +
-        cellnet.getToRRouter(i).mac_addr(0)))
-    }
+    val aggrouter = new Router(AggregateRouterType)
+    val torrouter = new Router(ToRRouterType)
+    AddressInstaller.assignIPAddress(aggrouter, "10.1.0.1")
+    AddressInstaller.assignIPAddress(torrouter, "10.1.0.2")
+    assert(aggrouter.getDPID === HexString.toLong("01:01:" + aggrouter.mac_addr(0)))
+    assert(torrouter.getDPID === HexString.toLong("00:01:" + torrouter.mac_addr(0)))
   }
 
   test ("decimal dot ip address can be translated into integer correctly") {

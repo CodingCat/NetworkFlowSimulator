@@ -1,4 +1,4 @@
-package scalasim.test
+package floodlight
 
 import org.scalatest.FunSuite
 import scalasim.simengine.{SimulationEngine, EventOfSingleEntity}

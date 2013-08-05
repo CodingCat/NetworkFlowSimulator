@@ -11,7 +11,7 @@ import scalasim.network.traffic.Flow
  * @param host the invoker of the matchfield
  * @param timestamp the timestamp of the event
  */
-class StartNewFlowEvent (flow : Flow, host : Host, timestamp : Double)
+final class StartNewFlowEvent (flow : Flow, host : Host, timestamp : Double)
   extends EventOfTwoEntities [Flow, Host] (flow, host, timestamp) {
 
   def process() {

@@ -1,6 +1,6 @@
 package scalasim.network.controlplane.routing
 
-import scalasim.network.component.{Node, Host, Link}
+import scalasim.network.component.{HostType, Node, Host, Link}
 import scalasim.network.traffic.Flow
 import scala.collection.mutable.HashMap
 import scalasim.simengine.utils.Logging
@@ -15,26 +15,65 @@ abstract private [controlplane] class RoutingProtocol (private val node : Node)
 
   protected lazy val controlPlane : ControlPlane = node.controlPlane
 
-  protected val flowPathMap = new HashMap[OFMatch, Link] with mutable.SynchronizedMap[OFMatch, Link]
+  protected val RIBIn = new HashMap[OFMatch, Link] with mutable.SynchronizedMap[OFMatch, Link]
+  protected val RIBOut = new HashMap[OFMatch, Link] with mutable.SynchronizedMap[OFMatch, Link]
 
   def selectNextLink(flow : Flow, matchfield : OFMatch, inPort : Link) : Link
 
-  def getfloodLinks(flow : Flow, inport : Link) : List[Link]
+  def getfloodLinks(flow: Flow, inport: Link): List[Link] = {
+    assert(flow.floodflag == true)
+    val returnList = new mutable.MutableList[Link]
+    val alllink = {
+      if (node.nodetype != HostType)
+        node.controlPlane.topoModule.inlinks.values.toList :::
+          node.controlPlane.topoModule.outlink.values.toList
+      else node.controlPlane.topoModule.outlink.values.toList
+    }
+    alllink.foreach(l => if (l != inport) returnList += l)
+    //add to flow's flood trace
+    returnList.foreach(l => flow.addTrace(l, inport))
+    returnList.toList
+  }
 
-  def fetchRoutingEntry(matchfield : OFMatch) : Link = flowPathMap(matchfield)
+  def floodoutFlow(flow : Flow, matchfield : OFMatch, inlink : Link) {
+    val nextlinks = getfloodLinks(flow, inlink)
+    //TODO : openflow flood handling in which nextlinks can be null?
+    nextlinks.foreach(l => Link.otherEnd(l, node).controlPlane.routing(flow, matchfield, l))
+  }
 
-  def insertFlowPath (matchfield : OFMatch, link : Link) {
-    logTrace(controlPlane + " insert entry " +
+  def fetchInRoutingEntry(matchfield : OFMatch) : Link = RIBIn(matchfield)
+  def fetchOutRoutingEntry(matchfield : OFMatch) : Link = RIBOut(matchfield)
+
+  def insertOutPath (matchfield : OFMatch, link : Link) {
+    logTrace(controlPlane + " insert outRIB entry " +
       IPAddressConvertor.IntToDecimalString(matchfield.getNetworkSource) + "->" +
       IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination) +
       " with the link " + link.toString)
-    flowPathMap += (matchfield -> link)
+    RIBOut += (matchfield -> link)
     if (IPAddressConvertor.DecimalStringToInt(controlPlane.IP) == matchfield.getNetworkSource) {
       RoutingProtocol.globalFlowStarterMap += controlPlane.IP -> controlPlane.node.asInstanceOf[Host]
     }
   }
 
-  def deleteEntry(matchfield : OFMatch) {flowPathMap -= matchfield}
+  def insertInPath (matchfield : OFMatch, link : Link) {
+    logTrace(controlPlane + " insert inRIB entry " +
+      IPAddressConvertor.IntToDecimalString(matchfield.getNetworkSource) + "->" +
+      IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination) +
+      " with the link " + link.toString)
+    RIBIn += (matchfield -> link)
+    if (IPAddressConvertor.DecimalStringToInt(controlPlane.IP) == matchfield.getNetworkDestination) {
+      RoutingProtocol.globalFlowStarterMap += controlPlane.IP -> controlPlane.node.asInstanceOf[Host]
+    }
+  }
+
+  def deleteInEntry(matchfield : OFMatch) {RIBIn -= matchfield}
+
+  def deleteOutEntry(matchfield : OFMatch) {RIBOut -= matchfield}
+
+  def deleteEntry(matchfield : OFMatch) {
+    deleteInEntry(matchfield)
+    deleteOutEntry(matchfield)
+  }
 }
 
 private [network] object RoutingProtocol {

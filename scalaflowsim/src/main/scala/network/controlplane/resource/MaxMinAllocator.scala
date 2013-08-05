@@ -52,9 +52,10 @@ private [controlplane] class MaxMinAllocator (controlPlane : TCPControlPlane)
     demandingflows = demandingflows.sorted(FlowRateOrdering)
     while (demandingflows.size != 0 && remainingBandwidth != 0) {
       val currentflow = demandingflows.head
-      RoutingProtocol.getFlowStarter(currentflow.SrcIP).controlPlane.allocate(
-        currentflow,
-        OFFlowTable.createMatchField(currentflow))
+      val flowdest = RoutingProtocol.getFlowStarter(currentflow.dstIP)
+      val matchfield = OFFlowTable.createMatchField(currentflow)
+      flowdest.controlPlane.allocate(currentflow, matchfield,
+        flowdest.controlPlane.routingModule.fetchInRoutingEntry(matchfield))
       demandingflows.remove(0)
       if (demandingflows.size != 0) avrRate = remainingBandwidth / demandingflows.size
     }
