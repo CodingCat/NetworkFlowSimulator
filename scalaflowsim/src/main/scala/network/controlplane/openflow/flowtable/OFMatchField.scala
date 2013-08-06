@@ -21,10 +21,14 @@ class OFMatchField extends OFMatch {
       result = prime * result + dataLayerVirtualLanPriorityCodePoint
     if ((wildcards & OFMatch.OFPFW_IN_PORT) == 0)
       result = prime * result + inputPort
-    result = prime * result +
-      cidrToString(networkDestination, getNetworkDestinationMaskLen).hashCode
-    result = prime * result +
-      cidrToString(networkSource, getNetworkSourceMaskLen).hashCode
+    val dstmasklen = Math.min(getNetworkDestinationMaskLen, 32)
+    val srcmasklen = Math.min(getNetworkSourceMaskLen, 32)
+    val dstmask = ~((1 << (32 - dstmasklen)) - 1)
+    val srcmask = ~((1 << (32 - srcmasklen)) - 1)
+    val dst =  networkDestination & dstmask
+    val src = networkSource & srcmask
+    result = prime * result + src
+    result = prime * result + dst
     if ((wildcards & OFMatch.OFPFW_NW_PROTO) == 0)
       result = prime * result + networkProtocol
     if ((wildcards & OFMatch.OFPFW_NW_TOS) == 0)
@@ -64,7 +68,6 @@ class OFMatchField extends OFMatch {
     //compare network layer src/dst
     val dstmasklen = getNetworkDestinationMaskLen
     val srcmasklen = getNetworkSourceMaskLen
-    println("dstmasklen:" + dstmasklen + ", srcmasklen:" + srcmasklen)
     if (dstmasklen >= 32 && networkDestination != toCompare.getNetworkDestination)
       return false
     if (srcmasklen >= 32 && networkSource != toCompare.getNetworkSource)
@@ -85,31 +88,5 @@ class OFMatchField extends OFMatch {
       this.transportSource != toCompare.getTransportSource)
       return false
     true
-  }
-
-  private def cidrToString(ip : Int, prefix : Int) : String = {
-    var str : String = null
-    if (prefix >= 32) {
-      str = OFMatch.ipToString(ip)
-    } else {
-      // use the negation of mask to fake endian magic
-      val mask = ~((1 << (32 - prefix)) - 1)
-      str = OFMatch.ipToString(ip & mask) + "/" + prefix
-    }
-
-    str
-  }
-
-  override def getNetworkDestinationMaskLen() : Int = {
-    return Math
-      .max(32 - ((wildcards & OFMatch.OFPFW_NW_DST_MASK) >> OFMatch.OFPFW_NW_DST_SHIFT),
-      0)
-  }
-
-  override def getNetworkSourceMaskLen() : Int = {
-    println((wildcards & OFMatch.OFPFW_NW_SRC_MASK) >> OFMatch.OFPFW_NW_SRC_SHIFT)
-    return Math
-      .max(32 - ((wildcards & OFMatch.OFPFW_NW_SRC_MASK) >> OFMatch.OFPFW_NW_SRC_SHIFT),
-      0)
   }
 }
