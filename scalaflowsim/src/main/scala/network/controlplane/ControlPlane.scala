@@ -106,7 +106,8 @@ abstract class ControlPlane (private [controlplane] val node : Node,
     if (inlink != null) {
       routingModule.insertInPath(flow, inlink)
       //only valid in openflow model
-      if (XmlParser.getString("scalasim.simengine.model", "tcp") == "openflow")
+      if (XmlParser.getString("scalasim.simengine.model", "tcp") == "openflow" &&
+        node.nodetype != HostType)
         flow.inport = topoModule.getPortByLink(inlink).getPortNumber
     }
     if (node.ip_addr(0) == flow.dstIP) {

@@ -20,14 +20,14 @@ class TopologyManager (private [controlplane] val  node : Node) {
   private val runningmodel = XmlParser.getString("scalasim.simengine.model", "tcp")
 
   private [controlplane] val linkphysicalportsMap = {
-    if (runningmodel == "openflow") {
+    if (runningmodel == "openflow" && node.nodetype != HostType) {
       new HashMap[Link, OFPhysicalPort]
     }
     else null
   }
 
   private [controlplane] val physicalportsMap = {
-    if (runningmodel == "openflow") {
+    if (runningmodel == "openflow" && node.nodetype != HostType) {
       new HashMap[Short, OFPhysicalPort]
     } else {
       null
@@ -49,7 +49,6 @@ class TopologyManager (private [controlplane] val  node : Node) {
   }
 
   def reverseSelection (portNum : Short) : Link = {
-    if (linkphysicalportsMap == null) throw new Exception("you're not running on openflow model")
     for (link_port_pair <- linkphysicalportsMap) {
       if (link_port_pair._2.getPortNumber == portNum) return link_port_pair._1
     }
