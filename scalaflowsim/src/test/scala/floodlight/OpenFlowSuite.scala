@@ -15,6 +15,7 @@ import org.openflow.protocol.factory.BasicFactory
 import org.openflow.protocol.action.{OFAction, OFActionOutput}
 import org.openflow.protocol.{OFMatch, OFFlowMod, OFType}
 import java.util
+import network.controlplane.openflow.flowtable.OFMatchField
 
 class OpenFlowSuite extends FunSuite {
   test ("routers can be assigned with DPID address correctly") {
@@ -95,31 +96,22 @@ class OpenFlowSuite extends FunSuite {
   test ("flow table can match flow entry correctly") {
     SimulationRunner.reset
     val node = new Router(AggregateRouterType)
-    val ofroutingmodule = new OpenFlowRouting(node)
-    val offactory = new BasicFactory
-    val table = new OFFlowTable(ofroutingmodule)
-    val flow_mod = offactory.getMessage(OFType.FLOW_MOD).asInstanceOf[OFFlowMod]
-    val actionlist = new util.ArrayList[OFAction]
-    val outaction  = new OFActionOutput
-    val matchfield = new OFMatch
+    val matchfield = new OFMatchField
     val flow = Flow("10.0.0.1", "10.0.0.2", "00:00:00:00:00:11", "00:00:00:00:00:22", size = 1)
-    val generatedmatchfield = OFFlowTable.createMatchField(flow)
+    val generatedmatchfield = OFFlowTable.createMatchField(flow, 0)
     //set matchfield
+    matchfield.setInputPort(2)
     matchfield.setDataLayerDestination("00:00:00:00:00:22")
     matchfield.setDataLayerSource("00:00:00:00:00:11")
     matchfield.setNetworkDestination(U32.t(IPAddressConvertor.DecimalStringToInt("10.0.0.2")))
     matchfield.setNetworkSource(U32.t(IPAddressConvertor.DecimalStringToInt("10.0.0.1")))
-    matchfield.setTransportSource(1)
-    matchfield.setTransportDestination(1)
-    matchfield.setWildcards(0)
+    matchfield.setWildcards(OFMatch.OFPFW_ALL
+      & ~OFMatch.OFPFW_DL_VLAN
+      & ~OFMatch.OFPFW_DL_SRC
+      & ~OFMatch.OFPFW_DL_DST
+      & ~OFMatch.OFPFW_NW_SRC_MASK
+      & ~OFMatch.OFPFW_NW_DST_MASK)
     matchfield.setDataLayerVirtualLan(0)
-    actionlist.add(outaction)
-    flow_mod.setMatch(matchfield)
-    flow_mod.setActions(actionlist)
-    flow_mod.setCommand(OFFlowMod.OFPFC_ADD)
-    flow_mod.setHardTimeout(500)
-    flow_mod.setIdleTimeout(0)
-    table.addFlowTableEntry(flow_mod)
-    assert(table.getFlowsByMatch(generatedmatchfield).length === 1)
+    assert(matchfield.matching(generatedmatchfield) === true)
   }
 }

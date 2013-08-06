@@ -7,6 +7,7 @@ import scala.collection.mutable.ListBuffer
 import org.openflow.protocol.OFMatch
 import simengine.utils.IPAddressConvertor
 import scala.collection.mutable
+import network.controlplane.openflow.flowtable.OFMatchField
 
 
 private [controlplane] class SimpleSymmetricRouting (node : Node)
@@ -45,8 +46,7 @@ private [controlplane] class SimpleSymmetricRouting (node : Node)
     dstCellID = getCellID(dstIP)
   }
 
-  override def selectNextLink(flow : Flow, matchfield : OFMatch, inlink : Link): Link = {
-    if (flow.floodflag) throw new Exception("you cannot call this method for a flood flow")
+  override def selectNextLink(matchfield : OFMatchField, inlink : Link): Link = {
     if (RIBOut.contains(matchfield)) return RIBOut(matchfield)
     if (controlPlane.node.nodetype != HostType) {
       getDstParameters(matchfield)

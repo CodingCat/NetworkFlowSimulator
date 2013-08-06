@@ -43,6 +43,11 @@ class TopologyManager (private [controlplane] val  node : Node) {
 
   def getPhysicalPort(portNum : Short) = physicalportsMap.getOrElse(portNum, null)
 
+  def getPortByLink (l : Link) = {
+    assert(linkphysicalportsMap.contains(l) == true)
+    linkphysicalportsMap(l)
+  }
+
   def reverseSelection (portNum : Short) : Link = {
     if (linkphysicalportsMap == null) throw new Exception("you're not running on openflow model")
     for (link_port_pair <- linkphysicalportsMap) {

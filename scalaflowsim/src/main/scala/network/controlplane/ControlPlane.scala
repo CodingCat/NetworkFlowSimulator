@@ -1,15 +1,18 @@
 package scalasim.network.controlplane
 
 import scalasim.network.component.{HostType, Link, Node}
+import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
 import scalasim.network.controlplane.resource.ResourceAllocator
-import scalasim.network.controlplane.routing.RoutingProtocol
+import scalasim.network.controlplane.routing.{OpenFlowRouting, RoutingProtocol}
 import scalasim.network.controlplane.topology.TopologyManager
 import scalasim.network.events.CompleteFlowEvent
 import scalasim.network.traffic.{NewStartFlow, CompletedFlow, RunningFlow, Flow}
 import scalasim.simengine.SimulationEngine
 import scalasim.simengine.utils.Logging
 import org.openflow.protocol.OFMatch
+import scalasim.XmlParser
 import simengine.utils.IPAddressConvertor
+import network.controlplane.openflow.flowtable.OFMatchField
 
 abstract class ControlPlane (private [controlplane] val node : Node,
                              private [controlplane] val routingModule : RoutingProtocol,
@@ -50,7 +53,7 @@ abstract class ControlPlane (private [controlplane] val node : Node,
     rpccontrolplane.resourceModule.allocate(link)
   }
 
-  def allocate (flow : Flow, matchfield : OFMatch, referenceLink : Link = null) {
+  def allocate (flow : Flow, referenceLink : Link = null) {
     if (node.ip_addr(0) == flow.srcIP) {
       startFlow(flow)
     } else {
@@ -59,9 +62,9 @@ abstract class ControlPlane (private [controlplane] val node : Node,
         else flow.getLastHop(referenceLink)
       }
       val nextnode = Link.otherEnd(laststep, node)
-      logTrace("allocate for flood flow " + flow.toString() + " on " + laststep + " at node " + node)
+      logTrace("allocate for flow " + flow.toString() + " on " + laststep + " at node " + node)
       allocateOnCurrentHop(flow, laststep)
-      nextnode.controlPlane.allocate(flow, matchfield, laststep)
+      nextnode.controlPlane.allocate(flow, laststep)
     }
   }
 
@@ -90,37 +93,39 @@ abstract class ControlPlane (private [controlplane] val node : Node,
   /**
    *
    * @param flow
-   * @param matchfield
    * @param inlink it can be null (for the first hop)
    */
-  def routing (flow : Flow, matchfield : OFMatch, inlink : Link) {
+  def routing (flow : Flow, matchfield : OFMatchField, inlink : Link) {
     //discard the flood packets
     if (node.ip_addr(0) !=  flow.srcIP && node.ip_addr(0) != flow.dstIP && node.nodetype == HostType) {
       logTrace("Discard flow " + flow + " on node " + node.toString)
       return
     }
     logTrace("arrive at " + node.ip_addr(0) + ", routing (flow : Flow, matchfield : OFMatch, inlink : Link)" +
-      " flow:" + flow + ", matchfield:" + matchfield + ", inlink:" + inlink)
-    if (inlink != null) routingModule.insertInPath(matchfield, inlink)
+      " flow:" + flow + ", inlink:" + inlink)
+    if (inlink != null) {
+      routingModule.insertInPath(flow, inlink)
+      //only valid in openflow model
+      if (XmlParser.getString("scalasim.simengine.model", "tcp") == "openflow")
+        flow.inport = topoModule.getPortByLink(inlink).getPortNumber
+    }
     if (node.ip_addr(0) == flow.dstIP) {
       //arrive the destination
       //start resource allocation process
-      node.controlPlane.allocate(flow, matchfield, inlink)
+      node.controlPlane.allocate(flow, inlink)
     }
     else {
       if (!flow.floodflag) {
-        val nextlink = routingModule.selectNextLink(flow, matchfield, inlink)
+        val nextlink = routingModule.selectNextLink(matchfield, inlink)
         if (nextlink != null) {
           val nextnode = Link.otherEnd(nextlink, node)
           logDebug("send through " + nextlink)
-          routingModule.insertOutPath(matchfield, nextlink)
+          routingModule.insertOutPath(flow, nextlink)
           flow.addTrace(nextlink, inlink)
           nextnode.controlPlane.routing(flow, matchfield, nextlink)
         } else {
-          //the nextlink is null, which means that the routing hasn't been decided, it is
-          //asynchronous, e.g. openflow, the next link will be handled in
-          //OpenFlowHandler
-          //do nothing,
+          val ofrouting = routingModule.asInstanceOf[OpenFlowRouting]
+          ofrouting.pendingFlows += (ofrouting.pendingFlows.size -> flow)
         }
       } else {
         //it's a flood flow

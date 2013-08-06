@@ -24,8 +24,8 @@ class Flow private (
   private [network] val dstMac : String,
   private [network] val vlanID : Short = 0,
   private [network] val prioritycode: Byte = 0,
-  private [network] val srcPort : Short = 1,
-  private [network] val dstPort : Short = 1,
+  private [network] val srcPort : Short = 0,
+  private [network] val dstPort : Short = 0,//set to 0 to wildcarding src/dst ports
   private [network] var demand : Double,//in MB
   private [network] var floodflag : Boolean = false
   //to indicate this flow may be routed to the non-destination host
@@ -36,6 +36,9 @@ class Flow private (
   private var bindedCompleteEvent : CompleteFlowEvent = null
   private var lastChangePoint  = 0.0
 
+  //this value is dynamic,
+  //mainly used by the openflow protocol to match flowtable
+  private [network] var inport : Short = 0
 
   /**
    * track the flow's hops,
@@ -75,15 +78,17 @@ class Flow private (
   def addTrace(newlink : Link, lastlink : Link) {
     var lastlinkindex = -1
     if (lastlink != null) lastlinkindex = trace.indexOf(lastlink)
+    logDebug("add trace, currentlink:" + newlink + ", lastlink:" + lastlink +
+      ", flow:" + this.toString)
     trace_laststeptrack += Tuple2(newlink, lastlinkindex)
     trace += newlink
   }
 
   def getLastHop(curlink : Link) : Link = {
+    logDebug("get the link " + curlink + "'s last step, flow:" + this.toString)
     val laststepindex = trace_laststeptrack(trace.indexOf(curlink))._2
     if (laststepindex < 0) return null
     val ret = trace(laststepindex)
-    logDebug("get the link " + curlink + " last step is " + ret)
     ret
   }
 

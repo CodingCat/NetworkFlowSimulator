@@ -57,9 +57,7 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
       }
       case OFFlowMod.OFPFC_ADD => {
         logger.trace("receive OFPFC_ADD:" + offlowmod.toString)
-        openflowPlane.ofroutingModule.addNewFlowEntry(
-          openflowPlane.ofroutingModule.pendingFlows(offlowmod.getBufferId), offlowmod)
-        openflowPlane.ofroutingModule.pendingFlows.remove(offlowmod.getBufferId)
+        openflowPlane.ofroutingModule.addNewFlowEntry(offlowmod)
       }
       case _ => throw new Exception("unrecognized OFFlowMod command type:" + offlowmod.getCommand)
     }
@@ -98,7 +96,7 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
             logger.trace("collect matchfield information on table " + i + " with match wildcard " +
               statflowreq.getMatch.getWildcards + " and outputport " +  + statflowreq.getOutPort)
             val qualifiedflows = openflowPlane.ofroutingModule.flowtables(i).
-              getFlowsByMatchAndPort(statflowreq.getMatch, statflowreq.getOutPort)
+              getFlowsByMatchAndOutPort(statflowreq.getMatch, statflowreq.getOutPort)
             logger.trace("qualified matchfield number: " + qualifiedflows.length)
             for (flowentry <- qualifiedflows) {
               val statflowreply = factory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.FLOW)
@@ -122,7 +120,7 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
         }
         else {
           val referredtable = openflowPlane.ofroutingModule.flowtables(statflowreq.getTableId)
-          val qualifiedflows = referredtable.getFlowsByMatchAndPort(statflowreq.getMatch,
+          val qualifiedflows = referredtable.getFlowsByMatchAndOutPort(statflowreq.getMatch,
             statflowreq.getOutPort)
           for (flowentry <- qualifiedflows) {
             val statflowreply = factory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.FLOW)

@@ -1,6 +1,7 @@
 package scalasim.network.controlplane.routing
 
 import scalasim.network.component.{HostType, Node, Host, Link}
+import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
 import scalasim.network.traffic.Flow
 import scala.collection.mutable.HashMap
 import scalasim.simengine.utils.Logging
@@ -8,6 +9,7 @@ import scalasim.network.controlplane.ControlPlane
 import org.openflow.protocol.OFMatch
 import simengine.utils.IPAddressConvertor
 import scala.collection.mutable
+import network.controlplane.openflow.flowtable.OFMatchField
 
 
 abstract private [controlplane] class RoutingProtocol (private val node : Node)
@@ -15,13 +17,16 @@ abstract private [controlplane] class RoutingProtocol (private val node : Node)
 
   protected lazy val controlPlane : ControlPlane = node.controlPlane
 
-  protected val RIBIn = new HashMap[OFMatch, Link] with mutable.SynchronizedMap[OFMatch, Link]
-  protected val RIBOut = new HashMap[OFMatch, Link] with mutable.SynchronizedMap[OFMatch, Link]
+  protected val RIBIn = new HashMap[OFMatchField, Link] with mutable.SynchronizedMap[OFMatchField, Link]
+  protected val RIBOut = new HashMap[OFMatchField, Link] with mutable.SynchronizedMap[OFMatchField, Link]
 
-  def selectNextLink(flow : Flow, matchfield : OFMatch, inPort : Link) : Link
+  protected var wildcard = OFMatch.OFPFW_ALL &
+    ~OFMatch.OFPFW_NW_DST_MASK &
+    ~OFMatch.OFPFW_NW_SRC_MASK
 
-  def getfloodLinks(flow: Flow, inport: Link): List[Link] = {
-    assert(flow.floodflag == true)
+  def selectNextLink(matchfield : OFMatchField, inPort : Link) : Link
+
+  def getfloodLinks(inport: Link): List[Link] = {
     val returnList = new mutable.MutableList[Link]
     val alllink = {
       if (node.nodetype != HostType)
@@ -30,45 +35,66 @@ abstract private [controlplane] class RoutingProtocol (private val node : Node)
       else node.controlPlane.topoModule.outlink.values.toList
     }
     alllink.foreach(l => if (l != inport) returnList += l)
-    //add to flow's flood trace
-    returnList.foreach(l => flow.addTrace(l, inport))
     returnList.toList
   }
 
-  def floodoutFlow(flow : Flow, matchfield : OFMatch, inlink : Link) {
-    val nextlinks = getfloodLinks(flow, inlink)
+  def floodoutFlow(flow : Flow, matchfield : OFMatchField, inlink : Link) {
+    val nextlinks = getfloodLinks(inlink)
     //TODO : openflow flood handling in which nextlinks can be null?
-    nextlinks.foreach(l => Link.otherEnd(l, node).controlPlane.routing(flow, matchfield, l))
+    nextlinks.foreach(l => {
+      flow.addTrace(l, inlink)
+      Link.otherEnd(l, node).controlPlane.routing(flow, matchfield, l)
+    })
   }
 
-  def fetchInRoutingEntry(matchfield : OFMatch) : Link = RIBIn(matchfield)
-  def fetchOutRoutingEntry(matchfield : OFMatch) : Link = RIBOut(matchfield)
+  def fetchInRoutingEntry(ofmatch : OFMatch) : Link = {
+    val matchfield = OFFlowTable.createMatchField(ofmatch, wildcard)
+    assert(RIBIn.contains(matchfield) == true)
+    RIBIn(matchfield)
+  }
 
-  def insertOutPath (matchfield : OFMatch, link : Link) {
+  def fetchOutRoutingEntry(ofmatch : OFMatch) : Link = {
+    val matchfield = OFFlowTable.createMatchField(ofmatch, wildcard)
+    assert(RIBOut.contains(matchfield) == true)
+    RIBOut(matchfield)
+  }
+
+  def insertOutPath (flow : Flow, link : Link) {
     logTrace(controlPlane + " insert outRIB entry " +
-      IPAddressConvertor.IntToDecimalString(matchfield.getNetworkSource) + "->" +
-      IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination) +
-      " with the link " + link.toString)
+      flow.srcIP + "->" + flow.dstIP + " with the link " + link.toString)
+    //create the matchfield
+    val matchfield = OFFlowTable.createMatchField(flow = flow, wcard = wildcard)
     RIBOut += (matchfield -> link)
     if (IPAddressConvertor.DecimalStringToInt(controlPlane.IP) == matchfield.getNetworkSource) {
       RoutingProtocol.globalFlowStarterMap += controlPlane.IP -> controlPlane.node.asInstanceOf[Host]
     }
   }
 
-  def insertInPath (matchfield : OFMatch, link : Link) {
-    logTrace(controlPlane + " insert inRIB entry " +
-      IPAddressConvertor.IntToDecimalString(matchfield.getNetworkSource) + "->" +
-      IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination) +
+  def insertOutPath (ofmatch : OFMatch, link : Link)  {
+    logTrace(controlPlane + " insert outRIB entry " +
+      IPAddressConvertor.IntToDecimalString(ofmatch.getNetworkSource) + "->" +
+      IPAddressConvertor.IntToDecimalString(ofmatch.getNetworkDestination) +
       " with the link " + link.toString)
+    val matchfield = OFFlowTable.createMatchField(ofmatch = ofmatch, wcard = wildcard)
+    RIBOut += (matchfield -> link)
+    if (IPAddressConvertor.DecimalStringToInt(controlPlane.IP) == matchfield.getNetworkSource) {
+      RoutingProtocol.globalFlowStarterMap += controlPlane.IP -> controlPlane.node.asInstanceOf[Host]
+    }
+  }
+
+  def insertInPath (flow : Flow, link : Link) {
+    logTrace(controlPlane + " insert outRIB entry " +
+      flow.srcIP + "->" + flow.dstIP + " with the link " + link.toString)
+    val matchfield = OFFlowTable.createMatchField(flow = flow, wcard = wildcard)
     RIBIn += (matchfield -> link)
     if (IPAddressConvertor.DecimalStringToInt(controlPlane.IP) == matchfield.getNetworkDestination) {
       RoutingProtocol.globalFlowStarterMap += controlPlane.IP -> controlPlane.node.asInstanceOf[Host]
     }
   }
 
-  def deleteInEntry(matchfield : OFMatch) {RIBIn -= matchfield}
+  def deleteInEntry(matchfield : OFMatch) {RIBIn -= OFFlowTable.createMatchField(matchfield, wildcard)}
 
-  def deleteOutEntry(matchfield : OFMatch) {RIBOut -= matchfield}
+  def deleteOutEntry(matchfield : OFMatch) {RIBOut -= OFFlowTable.createMatchField(matchfield, wildcard)}
 
   def deleteEntry(matchfield : OFMatch) {
     deleteInEntry(matchfield)

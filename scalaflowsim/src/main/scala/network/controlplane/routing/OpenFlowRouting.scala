@@ -8,6 +8,9 @@ import packets._
 import scalasim.XmlParser
 import scala.collection.mutable
 import org.openflow.protocol._
+import network.controlplane.openflow.flowtable.OFMatchField
+import org.openflow.protocol.action.OFActionOutput
+import scala.collection.JavaConversions._
 
 class OpenFlowRouting (node : Node) extends RoutingProtocol (node) {
 
@@ -22,17 +25,10 @@ class OpenFlowRouting (node : Node) extends RoutingProtocol (node) {
       flowtables(i) = new OFFlowTable(this)
   }
 
-  /*override def floodoutFlow(flow : Flow, matchfield : OFMatch, inlink : Link) {
-    val nextlinks = getfloodLinks(flow, inlink)
-    flow.floodflag = false
-    //TODO : openflow flood handling in which nextlinks can be null?
-    nextlinks.foreach(l => Link.otherEnd(l, node).controlPlane.routing(flow, matchfield, l))
-  } */
-
-  override def selectNextLink(flow : Flow, matchfield : OFMatch, inLink : Link): Link = {
-    //TODO: matching by flowtable
+  override def selectNextLink(matchfield : OFMatchField, inLink : Link): Link = {
     if (!RIBOut.contains(matchfield)) {
       //send packet_in to controller
+      logDebug("miss the matchfield:" + matchfield.toString)
       val dummypayload = new Array[Byte](1)
       dummypayload(0) = (0).toByte
       val ethernetFrame = new Ethernet
@@ -47,26 +43,37 @@ class OpenFlowRouting (node : Node) extends RoutingProtocol (node) {
           .setDestinationAddress(matchfield.getNetworkDestination)
           .setVersion(4)
           .setPayload(new TCP()
-            .setSourcePort(flow.srcPort)
-            .setDestinationPort(flow.dstPort)
+            .setSourcePort(matchfield.getTransportSource)
+            .setDestinationPort(matchfield.getTransportDestination)
             .setPayload(new Data(dummypayload))))
       val serializedData = ethernetFrame.serialize
-      pendingFlows += (pendingFlows.size -> flow)
       ofcontrolplane.sendPacketInToController(inLink, serializedData)
       null
     } else {
-      //TODO: apply the actions on the matchfield/packets and return the link
-      RIBOut(matchfield)
+      //openflow 1.0
+      //assume return only one result
+      for (entryattach <- flowtables(0).getFlowsByMatch(matchfield)) {
+        //TODO: support other actions
+        entryattach.actions.foreach(action =>
+          if (action.isInstanceOf[OFActionOutput]) return RIBOut(matchfield))
+      }
+      null
     }
   }
 
-  def addNewFlowEntry (flow : Flow, flowmod : OFFlowMod) {
+  def addNewFlowEntry (flowmod : OFFlowMod) {
     //for openflow 1.0
-    val outportnum = flowtables(0).addFlowTableEntry(flowmod)
-    RIBOut += (flowmod.getMatch -> node.controlPlane.topoModule.reverseSelection(outportnum))
+    flowtables(0).addFlowTableEntry(flowmod)
+    var opnum = 0
+    flowmod.getActions.foreach(action => {
+      if (action.isInstanceOf[OFActionOutput])
+        opnum = action.asInstanceOf[OFActionOutput].getPort
+    } )
+    val link = node.controlPlane.topoModule.reverseSelection(opnum.toShort)
+    insertOutPath(flowmod.getMatch, link)
   }
 
-  def removeFlowEntry (matchfield : OFMatch) {
+  def removeFlowEntry (matchfield : OFMatchField) {
     //for openflow 1.0
     flowtables(0).removeEntry(matchfield)
     RIBOut -= matchfield

@@ -6,6 +6,7 @@ import scalasim.network.controlplane.TCPControlPlane
 import scalasim.network.controlplane.routing.RoutingProtocol
 import scalasim.network.component.Link
 import scalasim.simengine.utils.Logging
+import org.openflow.protocol.OFMatch
 
 private [controlplane] class MaxMinAllocator (controlPlane : TCPControlPlane)
   extends ResourceAllocator (controlPlane) with Logging {
@@ -53,8 +54,9 @@ private [controlplane] class MaxMinAllocator (controlPlane : TCPControlPlane)
     while (demandingflows.size != 0 && remainingBandwidth != 0) {
       val currentflow = demandingflows.head
       val flowdest = RoutingProtocol.getFlowStarter(currentflow.dstIP)
-      val matchfield = OFFlowTable.createMatchField(currentflow)
-      flowdest.controlPlane.allocate(currentflow, matchfield,
+      val matchfield = OFFlowTable.createMatchField(flow = currentflow,
+        wcard = (OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_DST_MASK & ~OFMatch.OFPFW_NW_SRC_MASK))
+      flowdest.controlPlane.allocate(currentflow,
         flowdest.controlPlane.routingModule.fetchInRoutingEntry(matchfield))
       demandingflows.remove(0)
       if (demandingflows.size != 0) avrRate = remainingBandwidth / demandingflows.size

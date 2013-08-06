@@ -137,22 +137,6 @@ class OpenFlowModule (router : Router,
     sendMessageToController(packet_in_msg)
   }
 
-  /**
-   *
-   * @param flow
-   * @param matchfield
-   * @param inlink
-   * @param outlink
-   */
-  def routing(flow : Flow, matchfield : OFMatch, inlink : Link, outlink : Link = null) {
-    if (outlink == null) {
-      routing(flow, matchfield, inlink)
-    } else {
-      //the output link has been indicated
-      Link.otherEnd(outlink, node).controlPlane.routing(flow, matchfield, outlink)
-    }
-  }
-
   def sendLLDPtoController (l : Link, lldpData : Array[Byte]) {
     val port = topoModule.linkphysicalportsMap(l)
     //send out packet_in
@@ -200,20 +184,23 @@ class OpenFlowModule (router : Router,
           //only support output for now
           case OFActionType.OUTPUT => {
             val outaction = action.asInstanceOf[OFActionOutput]
+            val wildcard = (OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_DST_MASK & ~OFMatch.OFPFW_NW_SRC_MASK)
+            val matchfield = OFFlowTable.createMatchField(flow = pendingflow, wcard = wildcard)
+            val ilink = topoModule.reverseSelection(pktoutmsg.getInPort)
+            val olink = topoModule.reverseSelection(outaction.getPort)
             if (outaction.getPort == OFPort.OFPP_FLOOD.getValue) {
-              //flood the flow since the controller does not know hte location of the destination
+              //flood the flow since the controller does not know the location of the destination
               logTrace("flood the flow " + pendingflow + " at " + node)
               pendingflow.floodflag = true
-              routing(pendingflow, OFFlowTable.createMatchField(pendingflow),
+              routing(pendingflow, matchfield,
                 topoModule.reverseSelection(pktoutmsg.getInPort))
             } else {
-              val ilink = topoModule.reverseSelection(pktoutmsg.getInPort)
-              val olink = topoModule.reverseSelection(outaction.getPort)
               logTrace("forward the flow " + pendingflow + " through " + olink)
               pendingflow.floodflag = false
-              routing(pendingflow, OFFlowTable.createMatchField(pendingflow),
-                inlink = ilink, outlink = olink)
+              routing(pendingflow, matchfield, inlink = ilink)
             }
+            log.trace("removing flow " + pendingflow + " from pending buffer ")
+            ofroutingModule.pendingFlows -= (pktoutmsg.getBufferId - 1)
           }
           case _ => throw new Exception("unrecognizable action")
         }
