@@ -95,7 +95,6 @@ class OpenFlowSuite extends FunSuite {
 
   test ("flow table can match flow entry correctly") {
     SimulationRunner.reset
-    val node = new Router(AggregateRouterType)
     val matchfield = new OFMatchField
     val flow = Flow("10.0.0.1", "10.0.0.2", "00:00:00:00:00:11", "00:00:00:00:00:22", size = 1)
     val generatedmatchfield = OFFlowTable.createMatchField(flow, 0)
@@ -111,6 +110,28 @@ class OpenFlowSuite extends FunSuite {
       & ~OFMatch.OFPFW_DL_DST
       & ~OFMatch.OFPFW_NW_SRC_MASK
       & ~OFMatch.OFPFW_NW_DST_MASK)
+    matchfield.setDataLayerVirtualLan(0)
+    assert(matchfield.matching(generatedmatchfield) === true)
+  }
+
+  test ("flow table can match flow entry correctly (with ip mask)") {
+    SimulationRunner.reset
+    val matchfield = new OFMatchField
+    val flow = Flow("10.0.0.1", "10.0.0.2", "00:00:00:00:00:11", "00:00:00:00:00:22", size = 1)
+    val generatedmatchfield = OFFlowTable.createMatchField(flow, 0)
+    //set matchfield
+    matchfield.setInputPort(2)
+    matchfield.setDataLayerDestination("00:00:00:00:00:22")
+    matchfield.setDataLayerSource("00:00:00:00:00:11")
+    matchfield.setNetworkSource(U32.t(IPAddressConvertor.DecimalStringToInt("10.0.0.3")))
+    matchfield.setNetworkDestination(U32.t(IPAddressConvertor.DecimalStringToInt("10.0.0.4")))
+    matchfield.setWildcards(OFMatch.OFPFW_ALL
+      & ~OFMatch.OFPFW_DL_VLAN
+      & ~OFMatch.OFPFW_DL_SRC
+      & ~OFMatch.OFPFW_DL_DST
+      & ~(39 << OFMatch.OFPFW_NW_DST_SHIFT)
+      & ~(39 << OFMatch.OFPFW_NW_SRC_SHIFT)
+    )
     matchfield.setDataLayerVirtualLan(0)
     assert(matchfield.matching(generatedmatchfield) === true)
   }

@@ -62,12 +62,22 @@ class OFMatchField extends OFMatch {
       this.networkTypeOfService != toCompare.getNetworkTypeOfService)
       return false
     //compare network layer src/dst
-    if (!cidrToString(this.networkDestination, getNetworkDestinationMaskLen).equals(
-      cidrToString(toCompare.getNetworkDestination, getNetworkDestinationMaskLen)))
+    val dstmasklen = getNetworkDestinationMaskLen
+    val srcmasklen = getNetworkSourceMaskLen
+    println("dstmasklen:" + dstmasklen + ", srcmasklen:" + srcmasklen)
+    if (dstmasklen >= 32 && networkDestination != toCompare.getNetworkDestination)
       return false
-    if (!cidrToString(this.networkSource, getNetworkSourceMaskLen).equals(
-      cidrToString(toCompare.getNetworkSource, getNetworkSourceMaskLen)))
+    if (srcmasklen >= 32 && networkSource != toCompare.getNetworkSource)
       return false
+    val dstmask = ~((1 << (32 - dstmasklen)) - 1)
+    val srcmask = ~((1 << (32 - srcmasklen)) - 1)
+    if (dstmasklen < 32 &&
+      (networkDestination & dstmask) != (toCompare.getNetworkDestination & dstmask))
+      return false
+    if (srcmasklen < 32 &&
+      (networkSource & srcmask) != (toCompare.getNetworkSource & srcmask))
+      return false
+    //layer - 4
     if ((wildcards & OFMatch.OFPFW_TP_DST) == 0 &&
       this.transportDestination != toCompare.getTransportDestination)
       return false
@@ -88,5 +98,18 @@ class OFMatchField extends OFMatch {
     }
 
     str
+  }
+
+  override def getNetworkDestinationMaskLen() : Int = {
+    return Math
+      .max(32 - ((wildcards & OFMatch.OFPFW_NW_DST_MASK) >> OFMatch.OFPFW_NW_DST_SHIFT),
+      0)
+  }
+
+  override def getNetworkSourceMaskLen() : Int = {
+    println((wildcards & OFMatch.OFPFW_NW_SRC_MASK) >> OFMatch.OFPFW_NW_SRC_SHIFT)
+    return Math
+      .max(32 - ((wildcards & OFMatch.OFPFW_NW_SRC_MASK) >> OFMatch.OFPFW_NW_SRC_SHIFT),
+      0)
   }
 }
