@@ -93,7 +93,7 @@ class OpenFlowModule (router : Router,
   def getSwitchFeature() = {
     //TODO: specify the switch features
     //(dpid, buffer, n_tables, capabilities, physical port
-    (getDPID, 1000, ofroutingModule.flowtables.length, 0xffff,
+    (getDPID, 1000, ofroutingModule.flowtables.length, 0x27,
       router.controlPlane.topoModule.linkphysicalportsMap.values.toList)
   }
 
@@ -112,7 +112,6 @@ class OpenFlowModule (router : Router,
     msgPendingBuffer.add(message)
     if (status == 1) {
       if (toControllerChannel.isConnected) {
-        logger.trace("send " + msgPendingBuffer.size() + " pending messages")
         toControllerChannel.write(msgPendingBuffer)
         msgPendingBuffer.clear()
       }
@@ -155,7 +154,6 @@ class OpenFlowModule (router : Router,
   }
 
   def sendLLDPtoController (l : Link, lldpData : Array[Byte]) {
-    logger.trace("reply lldp request")
     val port = topoModule.linkphysicalportsMap(l)
     //send out packet_in
     val packet_in_msg = factory.getMessage(OFType.PACKET_IN).asInstanceOf[OFPacketIn]
@@ -170,21 +168,16 @@ class OpenFlowModule (router : Router,
 
   def topologyHasbeenRecognized() = (lldpcnt >= (inlinks.size + outlinks.size))
 
-  private def replyLLDP (lldpdata : Array[Byte]) {
+  private def replyLLDP (pktoutMsg : OFPacketOut) {
     //send out through all ports
-    val allports = topoModule.outlink.values.toList ::: topoModule.inlinks.values.toList
+    log.trace("reply LLDP at " + node)
     lldpcnt = lldpcnt + 1
-    for (port <- allports) {
-      //send back PACKET_IN to controller
-      sendLLDPtoController(port, lldpdata)
-      //make neighbors send PACKET_IN with the same data
-      val neighbour = topoModule.getNeighbour(port)
-      if (neighbour.isInstanceOf[Router]) {
-        val neighbour_router = neighbour.asInstanceOf[Router]
-        //TODO: this line may not work when the neighbour code is not a openflow switch
-        neighbour_router.controlPlane.asInstanceOf[OpenFlowModule].sendLLDPtoController(port, lldpdata)
-      }
-    }
+    val outport = pktoutMsg.getActions.get(0).asInstanceOf[OFActionOutput].getPort
+    val outlink = topoModule.reverseSelection(outport)
+    val neighbor = Link.otherEnd(outlink, node)
+    val lldpdata = pktoutMsg.getPacketData
+    if (neighbor.nodetype != HostType)
+      neighbor.controlPlane.asInstanceOf[OpenFlowModule].sendLLDPtoController(outlink, lldpdata)
   }
 
   /**
@@ -196,9 +189,7 @@ class OpenFlowModule (router : Router,
     //-1 is reserved for lldp packets
     if (pktoutmsg.getBufferId == -1) {
       //the packet data is included in the packoutmsg
-      val outData = pktoutmsg.getPacketData
-      log.trace("receive LLDP packet from the controller with the size " + outData.length)
-      replyLLDP(outData)
+      replyLLDP(pktoutmsg)
     }
     else {
       //TODO: is there any difference if we are on packet-level simulation?

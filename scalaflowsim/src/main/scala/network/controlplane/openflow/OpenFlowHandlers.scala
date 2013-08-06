@@ -241,7 +241,6 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
 
   private def processMessage(ofm : OFMessage) = ofm.getType match {
     case OFType.HELLO => {
-      logger.trace("receive a hello message from controller")
       val helloreply = factory.getMessage(OFType.HELLO).asInstanceOf[OFHello]
       helloreply.setLength(8)
       helloreply.setType(OFType.HELLO)
@@ -250,7 +249,6 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
       openflowPlane.ioBatchBuffer += helloreply
     }
     case OFType.FEATURES_REQUEST => {
-      logger.trace("receive a feature request message from controller")
       val featurereply = factory.getMessage(OFType.FEATURES_REPLY).asInstanceOf[OFFeaturesReply]
       val featurelist = openflowPlane.getSwitchFeature
       featurereply.setDatapathId(featurelist._1)
@@ -259,17 +257,16 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
       featurereply.setCapabilities(featurelist._4)
       featurereply.setPorts(featurelist._5)
       featurereply.setLength((32 + featurereply.getPorts.length * 48).toShort)
+      //TODO: only support output action for now
+      featurereply.setActions(1)
       featurereply.setXid(ofm.getXid)
       openflowPlane.ioBatchBuffer += featurereply
     }
     case OFType.SET_CONFIG => {
       val m = ofm.asInstanceOf[OFSetConfig]
-      logger.trace("receive a set config message from controller, miss_send_length:" + m.getMissSendLength +
-        " , flags:" + m.getFlags)
       openflowPlane.setSwitchParameters(ofm.asInstanceOf[OFSetConfig])
     }
     case OFType.GET_CONFIG_REQUEST => {
-      logger.trace("receive a get config request from controller")
       val getconfigreply = factory.getMessage(OFType.GET_CONFIG_REPLY).asInstanceOf[OFGetConfigReply]
       val config = openflowPlane.getSwitchParameters
       getconfigreply.setFlags(config._1)
@@ -278,7 +275,6 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
       openflowPlane.ioBatchBuffer += getconfigreply
     }
     case OFType.STATS_REQUEST => {
-      logger.trace("receive a stat request message from controller")
       processStatRequest(ofm.asInstanceOf[OFStatisticsRequest])
       if (openflowPlane.status == 0) {
         logger.trace("change the switch " + openflowPlane.node.toString + " to running")
@@ -286,11 +282,9 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
       }
     }
     case OFType.FLOW_MOD => {
-      logger.trace("receive a flow_mod message from controller")
       processFlowMod(ofm.asInstanceOf[OFFlowMod])
     }
     case OFType.ECHO_REQUEST => {
-      logger.trace("receive a echo_request message from controller")
       val echoreq = ofm.asInstanceOf[OFEchoRequest]
       val echoreply = factory.getMessage(OFType.ECHO_REPLY).asInstanceOf[OFEchoReply]
       echoreply.setXid(echoreq.getXid)
@@ -299,7 +293,6 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
     }
     case OFType.PACKET_OUT => {
       val pkgoutmsg = ofm.asInstanceOf[OFPacketOut]
-      logger.trace("receive a packet_out message from controller : " + pkgoutmsg.toString)
       openflowPlane.routing(pkgoutmsg)
     }
     case _ => throw new Exception("unrecognized message type:" + ofm)

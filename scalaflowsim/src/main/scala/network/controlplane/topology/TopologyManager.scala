@@ -63,24 +63,23 @@ class TopologyManager (private [controlplane] val  node : Node) {
     port.setHardwareAddress(HexString.fromHexString(podid + ":" + order + ":" + portnumhex))
     //port name
     //TODO:convert name into 16 bytes array
-    val portname = {
-      if (l.end_from == node) l.end_to.toString
-      else l.end_from.toString
-    }
+    val portname = Link.otherEnd(l, node).toString
     port.setName(portname)
     //port features
     //TODO: limited support feature?
     var feature = 0
     if (l.bandwidth == 100) {
-      feature = (1 << 3) | (1 << 12) | (1 << 13)
+      feature = (1 << 3)
     }
     else {
-      if (l.bandwidth == 1000) feature = (1 << 5) | (1 << 12) | (1 << 13)
+      if (l.bandwidth == 1000) feature = (1 << 5)
     }
     port.setAdvertisedFeatures(feature)
     port.setCurrentFeatures(feature)
     port.setPeerFeatures(feature)
     port.setSupportedFeatures(feature)
+    port.setConfig(0)
+    port.setState(0)
     linkphysicalportsMap += l -> port
     physicalportsMap += (port.getPortNumber -> port)
     portcounters += (port.getPortNumber -> new OFPortCount(port.getPortNumber))
