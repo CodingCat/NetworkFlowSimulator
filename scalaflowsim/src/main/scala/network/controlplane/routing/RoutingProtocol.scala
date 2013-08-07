@@ -83,7 +83,7 @@ abstract private [controlplane] class RoutingProtocol (private val node : Node)
   }
 
   def insertInPath (flow : Flow, link : Link) {
-    logTrace(controlPlane + " insert outRIB entry " +
+    logTrace(controlPlane + " insert inRIB entry " +
       flow.srcIP + "->" + flow.dstIP + " with the link " + link.toString)
     val matchfield = OFFlowTable.createMatchField(flow = flow, wcard = wildcard)
     RIBIn += (matchfield -> link)

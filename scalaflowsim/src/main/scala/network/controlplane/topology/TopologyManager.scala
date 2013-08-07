@@ -48,6 +48,11 @@ class TopologyManager (private [controlplane] val  node : Node) {
     linkphysicalportsMap(l)
   }
 
+  /**
+   * choose the link via port number
+   * @param portNum the port number
+   * @return the link
+   */
   def reverseSelection (portNum : Short) : Link = {
     for (link_port_pair <- linkphysicalportsMap) {
       if (link_port_pair._2.getPortNumber == portNum) return link_port_pair._1

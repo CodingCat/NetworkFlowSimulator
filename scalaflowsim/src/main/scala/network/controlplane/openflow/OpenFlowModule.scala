@@ -21,6 +21,8 @@ import org.jboss.netty.channel.Channel
 import org.slf4j.LoggerFactory
 import org.openflow.protocol.action.{OFActionOutput, OFActionType, OFAction}
 import scala.collection.JavaConverters._
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable
 
 class OpenFlowModule (router : Router,
                       routingModule : RoutingProtocol,
@@ -40,19 +42,14 @@ class OpenFlowModule (router : Router,
 
   private var lldpcnt = 0;
 
-  /**
-   * 0 - handshaking
-   * 1 - running
-   * 2 - closed
-   */
-  private [openflow] var status : Int = 0
-
   private val factory = new BasicFactory
 
   private [openflow] var toControllerChannel : Channel = null
 
-  private [openflow] val ioBatchBuffer = new util.ArrayList[OFMessage]
-  private [openflow] val msgPendingBuffer = new util.ArrayList[OFMessage]
+  private [openflow] val ioBatchBuffer = new ArrayBuffer[OFMessage] with
+    mutable.SynchronizedBuffer[OFMessage]
+  private [openflow] val msgPendingBuffer = new ArrayBuffer[OFMessage] with
+    mutable.SynchronizedBuffer[OFMessage]
 
   //build channel to the controller
   def connectToController() {
@@ -109,25 +106,20 @@ class OpenFlowModule (router : Router,
   def getSwitchDescription = router.ip_addr(0)
 
   private def sendMessageToController(message : OFMessage) {
-    msgPendingBuffer.add(message)
-    if (status == 1) {
-      if (toControllerChannel.isConnected) {
-        toControllerChannel.write(msgPendingBuffer)
-        msgPendingBuffer.clear()
-      }
-      else
-        throw new Exception("the openflow switch " + router.ip_addr(0) +
-          " has been disconnected with the controller")
-    } else {
-      logger.trace("the switch hasn't been initialized, pending message number:" +
-      msgPendingBuffer.size)
+    msgPendingBuffer += message
+    if (toControllerChannel.isConnected) {
+      toControllerChannel.write(msgPendingBuffer)
+      msgPendingBuffer.clear()
     }
+    else
+      throw new Exception("the openflow switch " + router.ip_addr(0) +
+        " has been disconnected with the controller")
   }
 
   def sendPacketInToController(inlink: Link, ethernetFramedata: Array[Byte]) {
     val port = topoModule.linkphysicalportsMap(inlink)
     val packet_in_msg = factory.getMessage(OFType.PACKET_IN).asInstanceOf[OFPacketIn]
-    logger.trace("send PACKET_IN to controller for table missing")
+    logger.trace("send PACKET_IN to controller for table missing at node " + node)
     packet_in_msg.setBufferId(routingModule.asInstanceOf[OpenFlowRouting].pendingFlows.size)
       .setInPort(port.getPortNumber)
       .setPacketData(ethernetFramedata)
@@ -177,7 +169,7 @@ class OpenFlowModule (router : Router,
     }
     else {
       //TODO: is there any difference if we are on packet-level simulation?
-      val pendingflow = ofroutingModule.pendingFlows(pktoutmsg.getBufferId - 1)
+      val pendingflow = ofroutingModule.pendingFlows(pktoutmsg.getBufferId)
       log.trace("receive a packet_out to certain buffer:" + pktoutmsg.toString)
       for (action : OFAction <- pktoutmsg.getActions.asScala) {
         action.getType match {
@@ -192,14 +184,13 @@ class OpenFlowModule (router : Router,
               //flood the flow since the controller does not know the location of the destination
               logTrace("flood the flow " + pendingflow + " at " + node)
               pendingflow.floodflag = true
-              routing(pendingflow, matchfield,
-                topoModule.reverseSelection(pktoutmsg.getInPort))
+              routing(pendingflow, matchfield, ilink)
             } else {
-              logTrace("forward the flow " + pendingflow + " through " + olink)
+              logTrace("forward the flow " + pendingflow + " through " + olink + " at node " + node)
               pendingflow.floodflag = false
               routing(pendingflow, matchfield, inlink = ilink)
             }
-            log.trace("removing flow " + pendingflow + " from pending buffer ")
+            log.trace("removing flow " + pendingflow + " from pending buffer " + " at node " + node)
             ofroutingModule.pendingFlows -= (pktoutmsg.getBufferId - 1)
           }
           case _ => throw new Exception("unrecognizable action")

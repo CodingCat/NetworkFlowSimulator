@@ -13,21 +13,18 @@ import java.util
 import org.openflow.protocol.factory.BasicFactory
 import org.slf4j.LoggerFactory
 import org.openflow.protocol.action.{OFActionOutput, OFActionType}
+import scala.collection.mutable.ArrayBuffer
 
 class OpenFlowMsgEncoder extends OneToOneEncoder {
 
   override def encode(ctx: ChannelHandlerContext, channel: Channel, msg: AnyRef): AnyRef = {
-    if (!msg.isInstanceOf[java.util.ArrayList[_]]) return msg
-    val msglist = msg.asInstanceOf[java.util.ArrayList[OFMessage]]
+    if (!msg.isInstanceOf[ArrayBuffer[_]]) return msg
+    val msglist = msg.asInstanceOf[ArrayBuffer[OFMessage]]
     var size: Int = 0
-    for (ofm <- msglist) {
-      size += ofm.getLength
-    }
+    msglist.foreach(ofm => size += ofm.getLength)
     val buf: ChannelBuffer = ChannelBuffers.buffer(size)
-    for (ofm <- msglist) {
-      ofm.writeTo(buf)
-    }
-    return buf
+    msglist.foreach(ofmessage => ofmessage.writeTo(buf))
+    buf
   }
 }
 
@@ -274,10 +271,6 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
     }
     case OFType.STATS_REQUEST => {
       processStatRequest(ofm.asInstanceOf[OFStatisticsRequest])
-      if (openflowPlane.status == 0) {
-        logger.trace("change the switch " + openflowPlane.node.toString + " to running")
-        openflowPlane.status = 1
-      }
     }
     case OFType.FLOW_MOD => {
       processFlowMod(ofm.asInstanceOf[OFFlowMod])

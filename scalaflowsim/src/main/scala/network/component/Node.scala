@@ -28,7 +28,7 @@ class Node (val nodetype : NodeType) {
         ResourceAllocator("MaxMin", controlPlane),
         new TopologyManager(this))
     else {
-      if (XmlParser.getString("scalasim.simengine.model", "tcp") == "openflow") {
+      if (XmlParser.getString("scalasim.simengine.model", "tcp") == "openflow" && nodetype != HostType) {
         new OpenFlowModule(this.asInstanceOf[Router],
           RoutingProtocol("OpenFlow", this),
           ResourceAllocator("MaxMin", controlPlane),
