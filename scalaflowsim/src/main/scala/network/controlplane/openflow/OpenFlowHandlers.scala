@@ -20,7 +20,7 @@ class OpenFlowMsgEncoder extends OneToOneEncoder {
     val msglist = msg.asInstanceOf[ArrayBuffer[OFMessage]]
     var size: Int = 0
     msglist.foreach(ofm => size += ofm.getLength)
-    val buf: ChannelBuffer = ChannelBuffers.buffer(size)
+    val buf = ChannelBuffers.buffer(size)
     msglist.foreach(ofmessage => ofmessage.writeTo(buf))
     buf
   }
@@ -91,12 +91,13 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
             logger.trace("collect matchfield information on table " + i + " with match wildcard " +
               statflowreq.getMatch.getWildcards + " and outputport " +  + statflowreq.getOutPort)
             val qualifiedflows = openflowPlane.ofroutingModule.flowtables(i).
-              getFlowsByMatchAndOutPort(statflowreq.getMatch, statflowreq.getOutPort)
+              queryTableByMatchAndOutport(statflowreq.getMatch, statflowreq.getOutPort)
             logger.trace("qualified matchfield number: " + qualifiedflows.length)
             for (flowentry <- qualifiedflows) {
               val statflowreply = factory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.FLOW)
                 .asInstanceOf[OFFlowStatisticsReply]
-              statflowreply.setLength(88)
+              var actionlistlength = 0
+              flowentry.actions.foreach(action => actionlistlength += action.getLength)
               statflowreply.setMatch(statflowreq.getMatch)
               statflowreply.setTableId(i.toByte)
               statflowreply.setDurationNanoseconds(flowentry.counter.durationNanoSeconds)
@@ -108,19 +109,22 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
               statflowreply.setCookie(0)
               statflowreply.setPacketCount(flowentry.counter.receivedpacket)
               statflowreply.setByteCount(flowentry.counter.receivedbytes)
+              statflowreply.setActions(flowentry.actions)
+              statflowreply.setLength((88 + actionlistlength).toShort)
               logger.trace("add matchfield reply: " + statflowreply)
               statlist += statflowreply
             }
           }
-        }
-        else {
+        } else {
           val referredtable = openflowPlane.ofroutingModule.flowtables(statflowreq.getTableId)
-          val qualifiedflows = referredtable.getFlowsByMatchAndOutPort(statflowreq.getMatch,
+          val qualifiedflows = referredtable.queryTableByMatchAndOutport(statflowreq.getMatch,
             statflowreq.getOutPort)
           for (flowentry <- qualifiedflows) {
             val statflowreply = factory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.FLOW)
               .asInstanceOf[OFFlowStatisticsReply]
-            statflowreply.setLength(88)
+            var actionlistlength = 0
+            flowentry.actions.foreach(action => actionlistlength += action.getLength)
+            statflowreply.setLength((88 + actionlistlength).toShort)
             statflowreply.setMatch(statflowreq.getMatch)
             statflowreply.setTableId(statflowreq.getTableId)
             statflowreply.setDurationNanoseconds(flowentry.counter.durationNanoSeconds)
@@ -203,6 +207,7 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
           .asInstanceOf[OFAggregateStatisticsReply]
         val statreply = factory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
         val table_id = stataggreq.getTableId
+        val statList = new util.ArrayList[OFStatistics]
         if (table_id >= 0 && table_id < openflowPlane.ofroutingModule.flowtables.length) {
           val referred_table = openflowPlane.ofroutingModule.flowtables(table_id)
           stataggreply.setFlowCount(referred_table.counters.referencecount)
@@ -213,13 +218,12 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
         else {
           for (i <- 0 until openflowPlane.ofroutingModule.flowtables.length) {
             val referred_table = openflowPlane.ofroutingModule.flowtables(i)
-            stataggreply.setFlowCount(referred_table.counters.referencecount)
-            stataggreply.setPacketCount(referred_table.counters.packetlookup +
+            stataggreply.setFlowCount(stataggreply.getFlowCount + referred_table.counters.referencecount)
+            stataggreply.setPacketCount(stataggreply.getPacketCount + referred_table.counters.packetlookup +
               referred_table.counters.packetmatches)
-            stataggreply.setByteCount(referred_table.counters.flowbytes)
+            stataggreply.setByteCount(stataggreply.getByteCount + referred_table.counters.flowbytes)
           }
         }
-        val statList = new util.ArrayList[OFStatistics]
         statList += stataggreply
         statreply.setStatisticType(OFStatisticsType.AGGREGATE)
         statreply.setStatistics(statList)

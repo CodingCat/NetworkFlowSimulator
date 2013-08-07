@@ -38,7 +38,7 @@ class OpenFlowModule (router : Router,
 
   private val logger = LoggerFactory.getLogger("OpenFlowModule")
 
-  private var lldpcnt = 0;
+  private var lldpcnt = 0
 
   private val factory = new BasicFactory
 

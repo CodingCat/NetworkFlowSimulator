@@ -24,7 +24,7 @@ object SimulationRunner {
       pod.getHost(0, 1).mac_addr(0), pod.getHost(0, 0).mac_addr(0), size = 1)
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 0), 0))
     SimulationEngine.addEvent(new StartNewFlowEvent(flow2, pod.getHost(0, 1), 0))
-    SimulationEngine.run()
+    SimulationEngine.run
    // assert(flow1.status == CompletedFlow)
    // assert(flow2.status == CompletedFlow)
   }

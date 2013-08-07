@@ -68,23 +68,30 @@ class OFFlowTable (ofroutingmodule : OpenFlowRouting) extends Logging {
     entries.clear()
   }
 
-  private def queryTable(matchfield : OFMatch, topk : Int = 1) : List[OFFlowTableEntryAttaches] = {
+  def matchFlow(flowmatch : OFMatch, topk : Int = 1) : List[OFFlowTableEntryAttaches] = {
     assert(topk > 0)
     val ret = new ListBuffer[OFFlowTableEntryAttaches]
-    entries.foreach(entry => {if (entry._1.matching(matchfield)) ret += entry._2})
+    entries.foreach(entry => {if (entry._1.matching(flowmatch)) ret += entry._2})
     ret.toList.sortWith(_.priority > _.priority).slice(0, topk)
   }
 
-  def getFlowsByMatch(ofmatch : OFMatch) : List[OFFlowTableEntryAttaches] = {
+  private def queryTable(matchrule : OFMatchField, topk : Int = 1) : List[OFFlowTableEntryAttaches] = {
+    assert(topk > 0)
+    val ret = new ListBuffer[OFFlowTableEntryAttaches]
+    entries.foreach(entry => {if (matchrule.matching(entry._1)) ret += entry._2})
+    ret.toList.sortWith(_.priority > _.priority).slice(0, topk)
+  }
+
+  def queryTableByMatch(ofmatch : OFMatch) : List[OFFlowTableEntryAttaches] = {
     if (ofmatch.getWildcards == -1) {
       logDebug("return all flows: " + entries.values.toList.length)
       entries.values.toList
     } else {
-      queryTable(ofmatch)
+      queryTable(OFFlowTable.createMatchField(ofmatch, ofmatch.getWildcards))
     }
   }
 
-  def getFlowsByMatchAndOutPort(match_field : OFMatch, outport_num : Short,
+  def queryTableByMatchAndOutport (match_field : OFMatch, outport_num : Short,
                                  topk : Int = 1) : List[OFFlowTableEntryAttaches] = {
 
     def containsOutputAction (p : OFFlowTableEntryAttaches) : OFActionOutput = {
@@ -100,7 +107,7 @@ class OFFlowTable (ofroutingmodule : OpenFlowRouting) extends Logging {
       port_num == outaction.getPort
     }
 
-    val filteredByMatch = getFlowsByMatch(match_field)
+    val filteredByMatch = queryTableByMatch(match_field)
     logTrace("filteredByMatchLength: " + filteredByMatch.length)
     if (outport_num == -1) return filteredByMatch
     filteredByMatch.filter(p => filterByOutputPort(containsOutputAction(p), outport_num)).toList.
@@ -109,12 +116,6 @@ class OFFlowTable (ofroutingmodule : OpenFlowRouting) extends Logging {
 
   def removeEntry (matchfield : OFMatchField) {
     entries -= matchfield
-  }
-
-  def matchFlow(matchfield : OFMatchField) {
-    if (entries.contains(matchfield)) {
-      entries(matchfield).refreshlastAccessPoint()
-    }
   }
 
   /**

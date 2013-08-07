@@ -52,7 +52,7 @@ class OpenFlowRouting (node : Node) extends RoutingProtocol (node) {
     } else {
       //openflow 1.0
       //assume return only one result
-      for (entryattach <- flowtables(0).getFlowsByMatch(matchfield)) {
+      for (entryattach <- flowtables(0).matchFlow(matchfield)) {
         //TODO: support other actions
         entryattach.actions.foreach(action =>
           if (action.isInstanceOf[OFActionOutput]) return RIBOut(matchfield))
