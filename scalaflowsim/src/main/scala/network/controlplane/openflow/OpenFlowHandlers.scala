@@ -84,6 +84,7 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
         val statflowreq = statflowreqmsg.getStatistics.get(0).asInstanceOf[OFFlowStatisticsRequest]
         val statflowreplymsg = factory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
         val statlist = new util.ArrayList[OFStatistics]
+        var statreplieslength = 0
         if (statflowreq.getTableId == -1) {
           //read from all tables
           logger.trace("collect matchfield information from all tables")
@@ -111,6 +112,7 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
               statflowreply.setByteCount(flowentry.counter.receivedbytes)
               statflowreply.setActions(flowentry.actions)
               statflowreply.setLength((88 + actionlistlength).toShort)
+              statreplieslength += statflowreply.getLength
               logger.trace("add matchfield reply: " + statflowreply)
               statlist += statflowreply
             }
@@ -137,10 +139,11 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
             statflowreply.setPacketCount(flowentry.counter.receivedpacket)
             statflowreply.setByteCount(flowentry.counter.receivedbytes)
             statflowreply.setActions(flowentry.actions)
+            statreplieslength += statflowreply.getLength
             statlist += statflowreply
           }
         }
-        statflowreplymsg.setLength((statflowreplymsg.getLength + statlist.length * 88).toShort)
+        statflowreplymsg.setLength((statflowreplymsg.getLength + statreplieslength).toShort)
         statflowreplymsg.setStatisticType(OFStatisticsType.FLOW)
         statflowreplymsg.setStatistics(statlist)
         statflowreplymsg.setStatisticsFactory(factory)
@@ -159,43 +162,43 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
           val counters = openflowPlane.topoModule.portcounters
           for (counter_pair <- counters) {
             val counter = counter_pair._2
+            statportreply.setCollisions(counter.collisions)
             statportreply.setPortNumber(counter_pair._1)
-            statportreply.setreceivePackets(counter.receivedpacket)
-            statportreply.setTransmitPackets(counter.transmittedpacket)
             statportreply.setReceiveBytes(counter.receivedbytes)
-            statportreply.setTransmitBytes(counter.transmittedbytes)
+            statportreply.setreceivePackets(counter.receivedpacket)
             statportreply.setReceiveDropped(counter.receivedrops)
-            statportreply.setTransmitDropped(counter.transmitdrops)
             statportreply.setreceiveErrors(counter.receiveerror)
-            statportreply.setTransmitErrors(counter.transmiterror)
             statportreply.setReceiveFrameErrors(counter.receiveframe_align_error)
             statportreply.setReceiveOverrunErrors(counter.receive_overrun_error)
             statportreply.setReceiveCRCErrors(counter.receive_crc_error)
-            statportreply.setCollisions(counter.collisions)
+            statportreply.setTransmitPackets(counter.transmittedpacket)
+            statportreply.setTransmitBytes(counter.transmittedbytes)
+            statportreply.setTransmitDropped(counter.transmitdrops)
+            statportreply.setTransmitErrors(counter.transmiterror)
             statList += statportreply
           }
         }
         else {
           val counter = openflowPlane.topoModule.portcounters(port_num)
+          statportreply.setCollisions(counter.collisions)
           statportreply.setPortNumber(port_num)
-          statportreply.setreceivePackets(counter.receivedpacket)
-          statportreply.setTransmitPackets(counter.transmittedpacket)
           statportreply.setReceiveBytes(counter.receivedbytes)
-          statportreply.setTransmitBytes(counter.transmittedbytes)
+          statportreply.setreceivePackets(counter.receivedpacket)
           statportreply.setReceiveDropped(counter.receivedrops)
-          statportreply.setTransmitDropped(counter.transmitdrops)
           statportreply.setreceiveErrors(counter.receiveerror)
-          statportreply.setTransmitErrors(counter.transmiterror)
           statportreply.setReceiveFrameErrors(counter.receiveframe_align_error)
           statportreply.setReceiveOverrunErrors(counter.receive_overrun_error)
           statportreply.setReceiveCRCErrors(counter.receive_crc_error)
-          statportreply.setCollisions(counter.collisions)
+          statportreply.setTransmitPackets(counter.transmittedpacket)
+          statportreply.setTransmitBytes(counter.transmittedbytes)
+          statportreply.setTransmitDropped(counter.transmitdrops)
+          statportreply.setTransmitErrors(counter.transmiterror)
           statList += statportreply
         }
         statreply.setStatisticType(OFStatisticsType.PORT)
         statreply.setStatistics(statList)
         statreply.setStatisticsFactory(factory)
-        statreply.setLength((statreply.getLength + statportreply.getLength * statList.size).toShort)
+        statreply.setLength((12 + statportreply.getLength * statList.size).toShort)
         statreply.setXid(ofstatreq.getXid)
         openflowPlane.ioBatchBuffer += statreply
       }
@@ -253,15 +256,15 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
       featurereply.setTables(featurelist._3.toByte)
       featurereply.setCapabilities(featurelist._4)
       featurereply.setPorts(featurelist._5)
-      featurereply.setLength((32 + featurereply.getPorts.length * 48).toShort)
+      featurereply.setLength((32 + featurereply.getPorts.length * OFPhysicalPort.MINIMUM_LENGTH).toShort)
       //TODO: only support output action for now
-      featurereply.setActions(1)
+      featurereply.setActions(1) //only support output action for now
       featurereply.setXid(ofm.getXid)
       openflowPlane.ioBatchBuffer += featurereply
     }
     case OFType.SET_CONFIG => {
-      val m = ofm.asInstanceOf[OFSetConfig]
-      openflowPlane.setSwitchParameters(ofm.asInstanceOf[OFSetConfig])
+      val ofsetconfig = ofm.asInstanceOf[OFSetConfig]
+      openflowPlane.setSwitchParameters(ofsetconfig.getFlags, ofsetconfig.getMissSendLength)
     }
     case OFType.GET_CONFIG_REQUEST => {
       val getconfigreply = factory.getMessage(OFType.GET_CONFIG_REPLY).asInstanceOf[OFGetConfigReply]
@@ -269,6 +272,7 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
       getconfigreply.setFlags(config._1)
       getconfigreply.setMissSendLength(config._2)
       getconfigreply.setXid(ofm.getXid)
+      getconfigreply.setLength(20)
       openflowPlane.ioBatchBuffer += getconfigreply
     }
     case OFType.STATS_REQUEST => {
@@ -282,6 +286,7 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
       val echoreply = factory.getMessage(OFType.ECHO_REPLY).asInstanceOf[OFEchoReply]
       echoreply.setXid(echoreq.getXid)
       echoreply.setPayload(echoreq.getPayload)
+      echoreply.setLength((OFMessage.MINIMUM_LENGTH + echoreq.getPayload.length).toShort)
       openflowPlane.ioBatchBuffer += echoreply
     }
     case OFType.PACKET_OUT => {

@@ -85,16 +85,16 @@ class OpenFlowModule (router : Router,
   }
 
 
-  def getSwitchFeature() = {
+  def getSwitchFeature = {
     //TODO: specify the switch features
     //(dpid, buffer, n_tables, capabilities, physical port
-    (getDPID, 1000, ofroutingModule.flowtables.length, 0x27,
+    (getDPID, 1000, ofroutingModule.flowtables.length, 0xff,
       router.controlPlane.topoModule.linkphysicalportsMap.values.toList)
   }
 
-  def setSwitchParameters(configpacket : OFSetConfig) {
-    config_flags = configpacket.getFlags
-    miss_send_len = configpacket.getMissSendLength
+  def setSwitchParameters(config_flag : Short, miss_send_length : Short) {
+    config_flags = config_flag
+    miss_send_len = miss_send_length
   }
 
   def getSwitchParameters() : (Short, Short) = {
