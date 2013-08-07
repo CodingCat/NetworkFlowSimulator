@@ -5,14 +5,12 @@ import org.jboss.netty.channel._
 import org.jboss.netty.buffer.{ChannelBuffers, ChannelBuffer}
 import org.openflow.protocol._
 import scala.collection.JavaConversions._
-import scalasim.network.controlplane.routing.OpenFlowRouting
 import scalasim.simengine.SimulationEngine
 import org.jboss.netty.handler.codec.oneone.OneToOneEncoder
 import org.openflow.protocol.statistics._
 import java.util
 import org.openflow.protocol.factory.BasicFactory
 import org.slf4j.LoggerFactory
-import org.openflow.protocol.action.{OFActionOutput, OFActionType}
 import scala.collection.mutable.ArrayBuffer
 
 class OpenFlowMsgEncoder extends OneToOneEncoder {

@@ -4,7 +4,6 @@ import scalasim.network.component.Link
 import scalasim.simengine.SimulationEngine
 import scalasim.network.events.CompleteFlowEvent
 import scalasim.simengine.utils.Logging
-import scala.collection.mutable.ListBuffer
 import scala.collection.mutable
 
 /**

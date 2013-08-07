@@ -7,7 +7,6 @@ import scalasim.network.controlplane.resource.ResourceAllocator
 import scalasim.network.controlplane.routing.{OpenFlowRouting, RoutingProtocol}
 import scalasim.network.controlplane.topology.TopologyManager
 import scalasim.network.controlplane.ControlPlane
-import scalasim.network.traffic.Flow
 import scalasim.XmlParser
 import java.util.concurrent.Executors
 import org.jboss.netty.bootstrap.ClientBootstrap
@@ -15,7 +14,6 @@ import java.net.InetSocketAddress
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory
 import org.openflow.protocol._
 import org.openflow.util.HexString
-import java.util
 import org.openflow.protocol.factory.BasicFactory
 import org.jboss.netty.channel.Channel
 import org.slf4j.LoggerFactory

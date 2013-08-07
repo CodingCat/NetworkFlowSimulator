@@ -2,7 +2,7 @@ package scalasim.network.events
 
 import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
 import scalasim.network.controlplane.routing.RoutingProtocol
-import scalasim.simengine.{EventOfSingleEntity, EventOfTwoEntities, SimulationEngine}
+import scalasim.simengine.{EventOfSingleEntity, SimulationEngine}
 import scalasim.network.traffic.Flow
 import org.openflow.protocol.OFMatch
 

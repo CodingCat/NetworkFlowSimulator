@@ -2,7 +2,7 @@ package scalasim
 
 import scalasim.application.ApplicationRunner
 import scalasim.network.events.StartNewFlowEvent
-import scalasim.network.traffic.{CompletedFlow, Flow}
+import scalasim.network.traffic.Flow
 import scalasim.simengine.SimulationEngine
 import scalasim.network.component.Pod
 

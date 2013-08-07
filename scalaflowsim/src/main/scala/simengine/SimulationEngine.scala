@@ -1,6 +1,6 @@
 package scalasim.simengine
 
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable.ArrayBuffer
 import scalasim.simengine.utils.Logging
 import scala.collection.mutable
 

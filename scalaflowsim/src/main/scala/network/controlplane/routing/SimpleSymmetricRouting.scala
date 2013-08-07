@@ -1,12 +1,10 @@
 package scalasim.network.controlplane.routing
 
 import scalasim.network.component._
-import scalasim.network.traffic.Flow
 import scalasim.network.component.ToRRouterType
 import scala.collection.mutable.ListBuffer
 import org.openflow.protocol.OFMatch
 import simengine.utils.IPAddressConvertor
-import scala.collection.mutable
 import network.controlplane.openflow.flowtable.OFMatchField
 
 

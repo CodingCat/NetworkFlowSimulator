@@ -2,11 +2,10 @@ package floodlight
 
 import org.scalatest.FunSuite
 import scalasim.network.component._
-import scalasim.network.component.builder.{LanBuilder, AddressInstaller}
+import scalasim.network.component.builder.AddressInstaller
 import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
 import scalasim.network.controlplane.routing.OpenFlowRouting
-import scalasim.network.events.StartNewFlowEvent
-import scalasim.network.traffic.{CompletedFlow, Flow}
+import scalasim.network.traffic.Flow
 import scalasim.simengine.SimulationEngine
 import scalasim.{SimulationRunner, XmlParser}
 import org.openflow.util.{U32, HexString}

@@ -1,17 +1,15 @@
 package scalasim.network.controlplane
 
 import scalasim.network.component.{HostType, Link, Node}
-import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
 import scalasim.network.controlplane.resource.ResourceAllocator
 import scalasim.network.controlplane.routing.{OpenFlowRouting, RoutingProtocol}
 import scalasim.network.controlplane.topology.TopologyManager
 import scalasim.network.events.CompleteFlowEvent
-import scalasim.network.traffic.{NewStartFlow, CompletedFlow, RunningFlow, Flow}
+import scalasim.network.traffic.{NewStartFlow, Flow}
 import scalasim.simengine.SimulationEngine
 import scalasim.simengine.utils.Logging
 import org.openflow.protocol.OFMatch
 import scalasim.XmlParser
-import simengine.utils.IPAddressConvertor
 import network.controlplane.openflow.flowtable.OFMatchField
 
 abstract class ControlPlane (private [controlplane] val node : Node,
