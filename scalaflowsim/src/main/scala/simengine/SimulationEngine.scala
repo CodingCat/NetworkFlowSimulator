@@ -14,25 +14,17 @@ object SimulationEngine extends Logging {
   private var eventqueue : ArrayBuffer[Event] = new ArrayBuffer[Event] with mutable.SynchronizedBuffer[Event]
   private var numPassedEvents = 0
 
-  private val duration = XmlParser.getDouble("scalasim.simengine.duration", 1000.0)
-
-  def run() {
-    while (true) {
-      if (!eventqueue.isEmpty) {
-        val event = eventqueue.head
-        if (event.getTimeStamp < currentTime) {
-          throw new Exception("cannot execute an event happened before, event timestamp: " +
-            event.getTimeStamp + ", currentTime:" + currentTime)
-        }
-        currentTime = event.getTimeStamp
-        event.process
-        numPassedEvents += 1
-        eventqueue -= event
+  def run {
+    while (!eventqueue.isEmpty) {
+      val event = eventqueue.head
+      if (event.getTimeStamp < currentTime) {
+        throw new Exception("cannot execute an event happened before, event timestamp: " +
+          event.getTimeStamp + ", currentTime:" + currentTime)
       }
-      //exit code
-      if (currentTime >= duration) return
-      if (XmlParser.getString("scalasim.simengine.model", "tcp") == "tcp" &&
-        eventqueue.isEmpty) return
+      currentTime = event.getTimeStamp
+      event.process
+      numPassedEvents += 1
+      eventqueue -= event
     }
   }
 

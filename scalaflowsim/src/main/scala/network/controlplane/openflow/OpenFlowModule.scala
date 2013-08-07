@@ -144,7 +144,6 @@ class OpenFlowModule (router : Router,
 
   private def replyLLDP (pktoutMsg : OFPacketOut) {
     //send out through all ports
-    log.trace("reply LLDP at " + node)
     lldpcnt = lldpcnt + 1
     val outport = pktoutMsg.getActions.get(0).asInstanceOf[OFActionOutput].getPort
     val outlink = topoModule.reverseSelection(outport)
