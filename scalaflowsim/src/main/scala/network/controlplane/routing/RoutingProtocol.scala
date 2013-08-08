@@ -38,17 +38,13 @@ abstract private [controlplane] class RoutingProtocol (private val node : Node)
     returnList.toList
   }
 
-  def floodoutFlow(flow : Flow, matchfield : OFMatchField, inlink : Link) {
-    val nextlinks = getfloodLinks(inlink)
-    //TODO : openflow flood handling in which nextlinks can be null?
-    nextlinks.foreach(l => {
-      flow.addTrace(l, inlink)
-      Link.otherEnd(l, node).controlPlane.routing(flow, matchfield, l)
-    })
-  }
 
   def fetchInRoutingEntry(ofmatch : OFMatch) : Link = {
     val matchfield = OFFlowTable.createMatchField(ofmatch, wildcard)
+    logDebug("quering matchfield: " + matchfield + "(" + matchfield.hashCode + ")" +
+      " node:" + controlPlane.node)
+    RIBIn.foreach(matchlinkpair => println(matchlinkpair._1 + "(" + matchlinkpair._1.hashCode +
+      "):" + matchlinkpair._2))
     assert(RIBIn.contains(matchfield) == true)
     RIBIn(matchfield)
   }
@@ -83,22 +79,20 @@ abstract private [controlplane] class RoutingProtocol (private val node : Node)
   }
 
   def insertInPath (flow : Flow, link : Link) {
-    logTrace(controlPlane + " insert inRIB entry " +
-      flow.srcIP + "->" + flow.dstIP + " with the link " + link.toString)
     val matchfield = OFFlowTable.createMatchField(flow = flow, wcard = wildcard)
+    logTrace(controlPlane + " insert inRIB entry " + matchfield + "(" + matchfield.hashCode
+      + ") -> " + link)
     RIBIn += (matchfield -> link)
     if (IPAddressConvertor.DecimalStringToInt(controlPlane.IP) == matchfield.getNetworkDestination) {
       RoutingProtocol.globalFlowStarterMap += controlPlane.IP -> controlPlane.node.asInstanceOf[Host]
     }
   }
 
-  def deleteInEntry(matchfield : OFMatch) {RIBIn -= OFFlowTable.createMatchField(matchfield, wildcard)}
-
-  def deleteOutEntry(matchfield : OFMatch) {RIBOut -= OFFlowTable.createMatchField(matchfield, wildcard)}
-
-  def deleteEntry(matchfield : OFMatch) {
-    deleteInEntry(matchfield)
-    deleteOutEntry(matchfield)
+  def deleteEntry(ofmatch : OFMatch) {
+    val matchfield = OFFlowTable.createMatchField(ofmatch, wildcard)
+    logTrace("delete entry:" + matchfield + " at node:" + controlPlane.IP)
+    RIBIn -= matchfield
+    RIBOut -= matchfield
   }
 }
 

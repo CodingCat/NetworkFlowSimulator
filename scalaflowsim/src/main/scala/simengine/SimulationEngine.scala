@@ -4,10 +4,12 @@ import scala.collection.mutable.ArrayBuffer
 import scalasim.simengine.utils.Logging
 import scala.collection.mutable
 import scalasim.XmlParser
+import scala.concurrent.Lock
 
 
 object SimulationEngine extends Logging {
 
+  val atomicLock = new Lock
   var currentTime : Double = 0.0
 
   //TODO:any more performant implementation?
@@ -16,12 +18,15 @@ object SimulationEngine extends Logging {
 
   def run {
     while (!eventqueue.isEmpty) {
+      atomicLock.acquire()
       val event = eventqueue.head
+      atomicLock.release()
       if (event.getTimeStamp < currentTime) {
         throw new Exception("cannot execute an event happened before, event timestamp: " +
           event.getTimeStamp + ", currentTime:" + currentTime)
       }
       currentTime = event.getTimeStamp
+      //every event should be atomic
       event.process
       numPassedEvents += 1
       eventqueue -= event

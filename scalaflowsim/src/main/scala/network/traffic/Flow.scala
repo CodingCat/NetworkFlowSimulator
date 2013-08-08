@@ -58,8 +58,9 @@ class Flow private (
   }
 
   def setRate(r : Double) {
-    logDebug("old rate : " + rate + " new rate : " + r)
+    logDebug("old rate : " + rate + " new rate : " + r + ", lastChangePoint = " + lastChangePoint)
     demand -= rate * (SimulationEngine.currentTime - lastChangePoint)
+    logTrace("change " + this + "'s lastChangePoint to " + SimulationEngine.currentTime)
     lastChangePoint = SimulationEngine.currentTime
     rate = r
     //TODO: may causing some duplicated rescheduling in successive links
@@ -92,7 +93,7 @@ class Flow private (
   }
 
   //TODO: shall I move this method to the control plane or simulationEngine?
-  private def rescheduleBindedEvent {
+  private def rescheduleBindedEvent () {
     //TODO: in test ControlPlaneSuite "ordering" test, bindedCompleteEvent can be true
     //TODO: that test case need to be polished, but not that urgent
     if (bindedCompleteEvent != null) {

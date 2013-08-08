@@ -86,6 +86,12 @@ class Pod (private val cellID : Int,
     initOFNetwork
   }
 
+  def shutDownOpenFlowNetwork() {
+    //aggeregate routers
+    for (i <- 0 until aggregateRouterNumber) aggContainer(i).disconnectFromController()
+    //ToR routers
+    for (i <- 0 until numRacks) torContainer(i).disconnectFromController()
+  }
 
   def numAggRouters = aggregateRouterNumber
   def numRacks = rackNumber

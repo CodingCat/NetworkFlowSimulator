@@ -8,8 +8,13 @@ class Router (nodetype : NodeType) extends Node(nodetype) {
 
   def connectTOController() {
     if (controlPlane.isInstanceOf[OpenFlowModule]) {
-      controlPlane.asInstanceOf[OpenFlowModule].connectToController
+      controlPlane.asInstanceOf[OpenFlowModule].connectToController()
     }
+  }
+
+  def disconnectFromController() {
+    if (controlPlane.isInstanceOf[OpenFlowModule])
+      controlPlane.asInstanceOf[OpenFlowModule].disconnectFormController()
   }
 
   def setrid (r : Int) { rid = r }

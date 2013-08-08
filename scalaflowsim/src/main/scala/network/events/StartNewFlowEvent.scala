@@ -18,6 +18,7 @@ final class StartNewFlowEvent (flow : Flow, host : Host, timestamp : Double)
   def process() {
     logTrace("start the flow " + flow + " at " + SimulationEngine.currentTime)
     //null in the last parameter means it's the first hop of the flow
+    SimulationEngine.atomicLock.acquire()
     host.controlPlane.routing(flow,
       OFFlowTable.createMatchField(flow = flow,
         wcard = OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_DST_MASK & ~OFMatch.OFPFW_NW_SRC_MASK),

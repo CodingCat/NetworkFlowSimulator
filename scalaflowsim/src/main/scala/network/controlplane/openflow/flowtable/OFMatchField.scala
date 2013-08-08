@@ -40,7 +40,7 @@ class OFMatchField extends OFMatch {
     result
   }
 
-  def matching(toCompare : OFMatch) : Boolean = {
+  def matching(toCompare : OFMatchField) : Boolean = {
     if ((wildcards & OFMatch.OFPFW_IN_PORT) == 0 &&
       this.inputPort != toCompare.getInputPort)
       return false
@@ -88,5 +88,11 @@ class OFMatchField extends OFMatch {
       this.transportSource != toCompare.getTransportSource)
       return false
     true
+  }
+
+  override def equals(obj : Any) : Boolean = {
+    if (!obj.isInstanceOf[OFMatchField])
+      return false
+    matching(obj.asInstanceOf[OFMatchField])
   }
 }

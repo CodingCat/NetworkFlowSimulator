@@ -64,6 +64,11 @@ class OpenFlowModule (router : Router,
     }
   }
 
+  def disconnectFormController() {
+    if (toControllerChannel != null && toControllerChannel.isConnected)
+      toControllerChannel.disconnect()
+  }
+
   def setParameter(f : Short, m : Short) {
     config_flags = f
     miss_send_len = miss_send_len
@@ -181,11 +186,15 @@ class OpenFlowModule (router : Router,
               //flood the flow since the controller does not know the location of the destination
               logTrace("flood the flow " + pendingflow + " at " + node)
               pendingflow.floodflag = true
-              routing(pendingflow, matchfield, ilink)
+              floodoutFlow(pendingflow, matchfield, ilink)
             } else {
               logTrace("forward the flow " + pendingflow + " through " + olink + " at node " + node)
-              pendingflow.floodflag = false
-              routing(pendingflow, matchfield, inlink = ilink)
+              if (ilink != olink) {
+                pendingflow.floodflag = false
+                forward(olink, ilink, pendingflow, matchfield)
+              } else {
+                routingModule.deleteEntry(matchfield)
+              }
             }
             log.trace("removing flow " + pendingflow + " from pending buffer " + " at node " + node)
             ofroutingModule.pendingFlows -= (pktoutmsg.getBufferId - 1)

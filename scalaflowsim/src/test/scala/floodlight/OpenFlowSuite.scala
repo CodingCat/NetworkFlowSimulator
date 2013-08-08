@@ -2,10 +2,11 @@ package floodlight
 
 import org.scalatest.FunSuite
 import scalasim.network.component._
-import scalasim.network.component.builder.AddressInstaller
+import scalasim.network.component.builder.{LanBuilder, AddressInstaller}
 import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
 import scalasim.network.controlplane.routing.OpenFlowRouting
-import scalasim.network.traffic.Flow
+import scalasim.network.events.StartNewFlowEvent
+import scalasim.network.traffic.{CompletedFlow, Flow}
 import scalasim.simengine.SimulationEngine
 import scalasim.{SimulationRunner, XmlParser}
 import org.openflow.util.{U32, HexString}
@@ -17,7 +18,7 @@ import java.util
 import network.controlplane.openflow.flowtable.OFMatchField
 
 class OpenFlowSuite extends FunSuite {
-  test ("routers can be assigned with DPID address correctly") {
+  /*test ("routers can be assigned with DPID address correctly") {
     SimulationRunner.reset
     XmlParser.addProperties("scalasim.simengine.model", "openflow")
     val aggrouter = new Router(AggregateRouterType)
@@ -161,5 +162,23 @@ class OpenFlowSuite extends FunSuite {
     )
     matchfield.setDataLayerVirtualLan(0)
     assert(matchfield.hashCode === generatedmatchfield.hashCode)
+  }*/
+
+
+
+  test("flow can be routed within a rack (openflow)") {
+    SimulationRunner.reset
+    XmlParser.addProperties("scalasim.simengine.model", "openflow")
+    val pod = new Pod(0, 1, 1, 20)
+    val flow1 = Flow(pod.getHost(0, 0).toString, pod.getHost(0, 1).toString,
+      pod.getHost(0, 0).mac_addr(0), pod.getHost(0, 1).mac_addr(0), size = 1)
+    val flow2 = Flow(pod.getHost(0, 1).toString, pod.getHost(0, 0).toString,
+      pod.getHost(0, 1).mac_addr(0), pod.getHost(0, 0).mac_addr(0), size = 1)
+    SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 0), 0))
+    SimulationEngine.addEvent(new StartNewFlowEvent(flow2, pod.getHost(0, 1), 0))
+    SimulationEngine.run
+    assert(flow1.status === CompletedFlow)
+    assert(flow2.status === CompletedFlow)
+    pod.shutDownOpenFlowNetwork()
   }
 }

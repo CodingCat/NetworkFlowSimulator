@@ -66,7 +66,7 @@ class SimEngineSuite extends FunSuite{
     SimulationEngine.addEvent(e1)
     SimulationEngine.addEvent(e2)
     SimulationEngine.addEvent(e3)
-    SimulationEngine.run()
+    SimulationEngine.run
     assert(SimulationEngine.numFinishedEvents === 4)
   }
 
@@ -79,7 +79,7 @@ class SimEngineSuite extends FunSuite{
     SimulationEngine.addEvent(e1)
     SimulationEngine.addEvent(e2)
     SimulationEngine.addEvent(e3)
-    SimulationEngine.run()
+    SimulationEngine.run
     assert(SimulationEngine.currentTime === 20)
   }
 }

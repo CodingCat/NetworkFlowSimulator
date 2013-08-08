@@ -27,7 +27,7 @@ class ControlPlaneSuite extends FunSuite with Logging {
       rackservers(1).mac_addr(0), rackservers(0).mac_addr(0), size = 1)
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, rackservers(0), 0))
     SimulationEngine.addEvent(new StartNewFlowEvent(flow2, rackservers(1), 0))
-    SimulationEngine.run()
+    SimulationEngine.run
     assert(flow1.status === CompletedFlow)
     assert(flow2.status === CompletedFlow)
   }
@@ -43,7 +43,7 @@ class ControlPlaneSuite extends FunSuite with Logging {
     val flow1 = Flow(rackservers(0).toString, rackservers(1).toString,
       rackservers(0).mac_addr(0), rackservers(1).mac_addr(0), fflag = true, size = 1)
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, rackservers(0), 0))
-    SimulationEngine.run()
+    SimulationEngine.run
     assert(flow1.status === CompletedFlow)
   }
 
@@ -56,7 +56,7 @@ class ControlPlaneSuite extends FunSuite with Logging {
       pod.getHost(3, 1).mac_addr(0), pod.getHost(2, 1).mac_addr(0), size = 1)
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 1), 0))
     SimulationEngine.addEvent(new StartNewFlowEvent(flow2, pod.getHost(3, 1), 0))
-    SimulationEngine.run()
+    SimulationEngine.run
     assert(flow1.status === CompletedFlow)
     assert(flow2.status === CompletedFlow)
   }
@@ -66,13 +66,13 @@ class ControlPlaneSuite extends FunSuite with Logging {
     val pod = new Pod(1, 1, 2, 2)
     val flow1 = Flow(pod.getHost(0, 1).toString, pod.getHost(1, 1).toString,
       pod.getHost(0, 1).mac_addr(0), pod.getHost(1, 1).mac_addr(0), fflag = true, size = 1)
-    /*val flow2 = Flow(pod.getHost(3, 1).toString, pod.getHost(2, 1).toString,
-      pod.getHost(3, 1).mac_addr(0), pod.getHost(2, 1).mac_addr(0), fflag = true, size = 1)*/
+    val flow2 = Flow(pod.getHost(0, 0).toString, pod.getHost(1, 0).toString,
+      pod.getHost(0, 0).mac_addr(0), pod.getHost(1, 0).mac_addr(0), fflag = true, size = 1)
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 1), 0))
-    //SimulationEngine.addEvent(new StartNewFlowEvent(flow2, pod.getHost(3, 1), 0))
-    SimulationEngine.run()
+    SimulationEngine.addEvent(new StartNewFlowEvent(flow2, pod.getHost(0, 0), 0))
+    SimulationEngine.run
     assert(flow1.status === CompletedFlow)
-    //assert(flow2.status === CompletedFlow)
+    assert(flow2.status === CompletedFlow)
   }
 
   test ("flows in a collection can be ordered according to their rate or temprate") {
@@ -104,7 +104,7 @@ class ControlPlaneSuite extends FunSuite with Logging {
       pod.getHost(0, 1).mac_addr(0), pod.getHost(0, 0).mac_addr(0), size = 1)
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 0), 0))
     SimulationEngine.addEvent(new StartNewFlowEvent(flow2, pod.getHost(0, 1), 0))
-    SimulationEngine.run()
+    SimulationEngine.run
     assert(flow1.LastCheckPoint === 0.02)
     assert(flow2.LastCheckPoint === 0.02)
   }
@@ -119,7 +119,7 @@ class ControlPlaneSuite extends FunSuite with Logging {
       pod.getHost(0, 1).mac_addr(0), pod.getHost(0, 0).mac_addr(0), fflag = true, size = 1)
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 0), 0))
     SimulationEngine.addEvent(new StartNewFlowEvent(flow2, pod.getHost(0, 1), 0))
-    SimulationEngine.run()
+    SimulationEngine.run
     assert(flow1.LastCheckPoint === 0.02)
     assert(flow2.LastCheckPoint === 0.02)
   }
@@ -136,7 +136,7 @@ class ControlPlaneSuite extends FunSuite with Logging {
       flowlist += flow
       SimulationEngine.addEvent(new StartNewFlowEvent(flow, pod.getHost(i, j), 0))
     }
-    SimulationEngine.run()
+    SimulationEngine.run
     for (flow <- flowlist) {
       assert(flow.LastCheckPoint === 0.02)
     }
@@ -153,7 +153,7 @@ class ControlPlaneSuite extends FunSuite with Logging {
       flowlist += flow
       SimulationEngine.addEvent(new StartNewFlowEvent(flow, pod.getHost(i, j), 0))
     }
-    SimulationEngine.run()
+    SimulationEngine.run
     for (flow <- flowlist) {
       assert(flow.LastCheckPoint === 0.02)
     }
@@ -178,7 +178,7 @@ class ControlPlaneSuite extends FunSuite with Logging {
       pod.getHost(0, 1).mac_addr(0), pod.getHost(1, 1).mac_addr(0), size = 7.5)
     flowlist += flow1
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 1), 0))
-    SimulationEngine.run()
+    SimulationEngine.run
     for (i <- 0 until flowlist.size) {
       if (i != flowlist.size - 1) assert(flowlist(i).LastCheckPoint === 0.04)
       else {
@@ -207,7 +207,7 @@ class ControlPlaneSuite extends FunSuite with Logging {
       pod.getHost(0, 1).mac_addr(0), pod.getHost(1, 1).mac_addr(0), fflag = true, size = 7.5)
     flowlist += flow1
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 1), 0))
-    SimulationEngine.run()
+    SimulationEngine.run
     for (i <- 0 until flowlist.size) {
       if (i != flowlist.size - 1) assert(flowlist(i).LastCheckPoint === 0.04)
       else {
@@ -234,7 +234,7 @@ class ControlPlaneSuite extends FunSuite with Logging {
       flowlist += flow
       SimulationEngine.addEvent(new StartNewFlowEvent(flow, pod.getHost(i, j), 0))
     }
-    SimulationEngine.run()
+    SimulationEngine.run
     for (i <- 0 until flowlist.size) {
       assert(flowlist(i).LastCheckPoint === 0.08)
     }
@@ -256,7 +256,7 @@ class ControlPlaneSuite extends FunSuite with Logging {
       flowlist += flow
       SimulationEngine.addEvent(new StartNewFlowEvent(flow, pod.getHost(i, j), 0))
     }
-    SimulationEngine.run()
+    SimulationEngine.run
     for (i <- 0 until flowlist.size) {
       assert(flowlist(i).LastCheckPoint === 0.08)
     }
