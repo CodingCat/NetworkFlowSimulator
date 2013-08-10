@@ -11,6 +11,7 @@ import org.openflow.protocol._
 import network.controlplane.openflow.flowtable.OFMatchField
 import org.openflow.protocol.action.OFActionOutput
 import scala.collection.JavaConversions._
+import scala.concurrent.Lock
 
 class OpenFlowRouting (node : Node) extends RoutingProtocol (node) {
 
@@ -18,14 +19,17 @@ class OpenFlowRouting (node : Node) extends RoutingProtocol (node) {
 
   private [controlplane] val flowtables = new Array[OFFlowTable](
     XmlParser.getInt("scalasim.openflow.flowtablenum", 1))
-  private [controlplane] val pendingFlows = new mutable.HashMap[Int, Flow] with mutable.SynchronizedMap[Int, Flow]
+
+  private [controlplane] val pendingFlows = new mutable.HashMap[Int, Flow]
+    with mutable.SynchronizedMap[Int, Flow]
+  private [controlplane] val bufferLock = new Lock
 
   def init() {
     for (i <- 0 until flowtables.length)
       flowtables(i) = new OFFlowTable(this)
   }
 
-  override def selectNextLink(matchfield : OFMatchField, inLink : Link): Link = {
+  override def selectNextLink(flow : Flow, matchfield : OFMatchField, inLink : Link): Link = {
     if (!RIBOut.contains(matchfield)) {
       //send packet_in to controller
       logDebug("miss the matchfield:" + matchfield.toString)
@@ -47,10 +51,11 @@ class OpenFlowRouting (node : Node) extends RoutingProtocol (node) {
             .setDestinationPort(matchfield.getTransportDestination)
             .setPayload(new Data(dummypayload))))
       val serializedData = ethernetFrame.serialize
-      ofcontrolplane.sendPacketInToController(inLink, serializedData)
+      ofcontrolplane.sendPacketInToController(flow , inLink, serializedData)
       null
     } else {
       //openflow 1.0
+      logDebug("hit RIBOut with " + matchfield.toString)
       //assume return only one result
       for (entryattach <- flowtables(0).matchFlow(matchfield)) {
         //TODO: support other actions

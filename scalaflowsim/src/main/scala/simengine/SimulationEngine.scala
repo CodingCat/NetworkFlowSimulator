@@ -19,8 +19,10 @@ object SimulationEngine extends Logging {
   def run {
     while (!eventqueue.isEmpty) {
       atomicLock.acquire()
+      logDebug("acquire lock at SimulationEngine")
       val event = eventqueue.head
       atomicLock.release()
+      logDebug("release lock at SimulationEngine")
       if (event.getTimeStamp < currentTime) {
         throw new Exception("cannot execute an event happened before, event timestamp: " +
           event.getTimeStamp + ", currentTime:" + currentTime)

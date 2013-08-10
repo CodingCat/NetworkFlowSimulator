@@ -63,13 +63,13 @@ class Pod (private val cellID : Int,
 
     def buildLanOnAggregate() {
       for (i <- 0 until aggregateRouterNumber) {
-        LanBuilder.buildLan(aggContainer(i).asInstanceOf[Router], torContainer, 0, torContainer.size - 1)
+        LanBuilder.buildLan(aggContainer(i), torContainer, 0, torContainer.size - 1)
       }
     }
 
     def buildLanOnRack() {
       for (i <- 0 until rackNumber) {
-        LanBuilder.buildLan(torContainer(i).asInstanceOf[Router], hostsContainer, i * rackSize,
+        LanBuilder.buildLan(torContainer(i), hostsContainer, i * rackSize,
           (i + 1) * rackSize - 1)
       }
     }

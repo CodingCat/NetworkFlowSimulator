@@ -72,7 +72,10 @@ class OFFlowTable (ofroutingmodule : OpenFlowRouting) extends Logging {
     assert(topk > 0)
     val ret = new ListBuffer[OFFlowTableEntryAttaches]
     val matchfield = OFFlowTable.createMatchField(flowmatch, flowmatch.getWildcards)
-    entries.foreach(entry => {if (entry._1.matching(matchfield)) ret += entry._2})
+    entries.foreach(entry => {
+      logDebug(entry._1.toCompleteString() + "\t" + matchfield.toCompleteString())
+      if (entry._1.matching(matchfield)) ret += entry._2
+    })
     ret.toList.sortWith(_.priority > _.priority).slice(0, topk)
   }
 
@@ -168,8 +171,7 @@ object OFFlowTable {
    */
   def createMatchField(ofmatch : OFMatch, wcard : Int) : OFMatchField = {
     val matchfield = new OFMatchField
-    val wildcard = OFMatch.OFPFW_ALL & wcard
-    matchfield.setWildcards(wildcard)
+    matchfield.setWildcards(OFMatch.OFPFW_ALL & wcard)
     matchfield.setInputPort(ofmatch.getInputPort)
     matchfield.setDataLayerDestination(ofmatch.getDataLayerDestination)
     matchfield.setDataLayerSource(ofmatch.getDataLayerSource)

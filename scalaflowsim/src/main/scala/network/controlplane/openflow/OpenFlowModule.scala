@@ -7,6 +7,7 @@ import scalasim.network.controlplane.resource.ResourceAllocator
 import scalasim.network.controlplane.routing.{OpenFlowRouting, RoutingProtocol}
 import scalasim.network.controlplane.topology.TopologyManager
 import scalasim.network.controlplane.ControlPlane
+import scalasim.network.traffic.Flow
 import scalasim.XmlParser
 import java.util.concurrent.Executors
 import org.jboss.netty.bootstrap.ClientBootstrap
@@ -21,6 +22,7 @@ import org.openflow.protocol.action.{OFActionOutput, OFActionType, OFAction}
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable
+import network.controlplane.openflow.flowtable.OFMatchField
 
 class OpenFlowModule (router : Router,
                       routingModule : RoutingProtocol,
@@ -84,7 +86,6 @@ class OpenFlowModule (router : Router,
       case CoreRouterType => "02"
     }
     val t = router.ip_addr(0).substring(router.ip_addr(0).indexOf('.') + 1, router.ip_addr(0).size)
-    //TODO: implicitly limit the maximum number of pods, improve?
     val podid = HexString.toHexString(Integer.parseInt(t.substring(0, t.indexOf('.'))), 1)
     HexString.toLong(impl_dependent + ":" + podid + ":" + node.mac_addr(0))
   }
@@ -110,20 +111,24 @@ class OpenFlowModule (router : Router,
 
   private def sendMessageToController(message : OFMessage) {
     msgPendingBuffer += message
-    if (toControllerChannel.isConnected) {
+    if (toControllerChannel != null && toControllerChannel.isConnected) {
       toControllerChannel.write(msgPendingBuffer)
       msgPendingBuffer.clear()
     }
-    else
-      throw new Exception("the openflow switch " + router.ip_addr(0) +
-        " has been disconnected with the controller")
   }
 
-  def sendPacketInToController(inlink: Link, ethernetFramedata: Array[Byte]) {
+  def sendPacketInToController(flow : Flow, inlink: Link, ethernetFramedata: Array[Byte]) {
     val port = topoModule.linkphysicalportsMap(inlink)
     val packet_in_msg = factory.getMessage(OFType.PACKET_IN).asInstanceOf[OFPacketIn]
+    var bufferid = 0
+    ofroutingModule.bufferLock.acquire()
+    bufferid = ofroutingModule.pendingFlows.size
     logger.trace("send PACKET_IN to controller for table missing at node " + node)
-    packet_in_msg.setBufferId(routingModule.asInstanceOf[OpenFlowRouting].pendingFlows.size)
+    logger.debug("buffering flow " + flow + " at buffer " + bufferid +
+        " at node " + node)
+    ofroutingModule.pendingFlows += (bufferid -> flow)
+    ofroutingModule.bufferLock.release()
+    packet_in_msg.setBufferId(bufferid)
       .setInPort(port.getPortNumber)
       .setPacketData(ethernetFramedata)
       .setReason(OFPacketIn.OFPacketInReason.NO_MATCH)
@@ -136,6 +141,7 @@ class OpenFlowModule (router : Router,
     val port = topoModule.linkphysicalportsMap(l)
     //send out packet_in
     val packet_in_msg = factory.getMessage(OFType.PACKET_IN).asInstanceOf[OFPacketIn]
+    lldpcnt = lldpcnt + 1
     packet_in_msg.setBufferId(-1)
       .setInPort(port.getPortNumber)
       .setPacketData(lldpData)
@@ -145,17 +151,37 @@ class OpenFlowModule (router : Router,
     sendMessageToController(packet_in_msg)
   }
 
-  def topologyHasbeenRecognized() = (lldpcnt >= (inlinks.size + outlinks.size))
+  def topologyHasbeenRecognized() : Boolean = {
+    def getLLDPNeighbourNumber : Int = {
+      var ret = 0
+      val alllink = {
+        if (node.nodetype != HostType)
+          node.controlPlane.topoModule.inlinks.values.toList :::
+            node.controlPlane.topoModule.outlink.values.toList
+        else node.controlPlane.topoModule.outlink.values.toList
+      }
+      alllink.foreach(l => if (Link.otherEnd(l, node).nodetype != HostType) ret += 1)
+      ret
+    }
+    lldpcnt >= getLLDPNeighbourNumber
+  }
 
   private def replyLLDP (pktoutMsg : OFPacketOut) {
     //send out through all ports
-    lldpcnt = lldpcnt + 1
     val outport = pktoutMsg.getActions.get(0).asInstanceOf[OFActionOutput].getPort
     val outlink = topoModule.reverseSelection(outport)
     val neighbor = Link.otherEnd(outlink, node)
     val lldpdata = pktoutMsg.getPacketData
     if (neighbor.nodetype != HostType)
       neighbor.controlPlane.asInstanceOf[OpenFlowModule].sendLLDPtoController(outlink, lldpdata)
+  }
+
+  override protected def inFlowRegistration(matchfield : OFMatchField, inlink : Link) {
+    routingModule.insertInPath(matchfield, inlink)
+    //only valid in openflow model
+    if (node.nodetype != HostType) {
+      matchfield.setInputPort(topoModule.getPortByLink(inlink).getPortNumber)
+    }
   }
 
   /**
@@ -171,8 +197,8 @@ class OpenFlowModule (router : Router,
     }
     else {
       //TODO: is there any difference if we are on packet-level simulation?
+      log.trace("receive a packet_out to certain buffer:" + pktoutmsg.toString + " at " + node)
       val pendingflow = ofroutingModule.pendingFlows(pktoutmsg.getBufferId)
-      log.trace("receive a packet_out to certain buffer:" + pktoutmsg.toString)
       for (action : OFAction <- pktoutmsg.getActions.asScala) {
         action.getType match {
           //only support output for now
@@ -182,10 +208,15 @@ class OpenFlowModule (router : Router,
             val matchfield = OFFlowTable.createMatchField(flow = pendingflow, wcard = wildcard)
             val ilink = topoModule.reverseSelection(pktoutmsg.getInPort)
             val olink = topoModule.reverseSelection(outaction.getPort)
+            log.trace("removing flow " + pendingflow + " from pending buffer " + pktoutmsg.getBufferId +
+              " at node " + node)
+            ofroutingModule.bufferLock.acquire()
+            ofroutingModule.pendingFlows -= (pktoutmsg.getBufferId)
+            ofroutingModule.bufferLock.release()
             if (outaction.getPort == OFPort.OFPP_FLOOD.getValue) {
               //flood the flow since the controller does not know the location of the destination
               logTrace("flood the flow " + pendingflow + " at " + node)
-              pendingflow.floodflag = true
+              pendingflow.floodflag = false
               floodoutFlow(pendingflow, matchfield, ilink)
             } else {
               logTrace("forward the flow " + pendingflow + " through " + olink + " at node " + node)
@@ -196,8 +227,6 @@ class OpenFlowModule (router : Router,
                 routingModule.deleteEntry(matchfield)
               }
             }
-            log.trace("removing flow " + pendingflow + " from pending buffer " + " at node " + node)
-            ofroutingModule.pendingFlows -= (pktoutmsg.getBufferId - 1)
           }
           case _ => throw new Exception("unrecognizable action")
         }

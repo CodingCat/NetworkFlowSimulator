@@ -1,0 +1,36 @@
+[0m[[0minfo[0m] [0mLoading global plugins from /Users/zhunan/.sbt/plugins[0m
+[0m[[0minfo[0m] [0mLoading project definition from /Users/zhunan/codes/NetworkFlowSimulator/scalaflowsim/project[0m
+[0m[[0minfo[0m] [0mSet current project to scalaflowsim (in build file:/Users/zhunan/codes/NetworkFlowSimulator/scalaflowsim/)[0m
+[0m[[0minfo[0m] [0m[32mAppSuite:[0m[0m
+[0m[[0minfo[0m] [0m[32m- PermuMatrixApp can build the matrix correctly[0m[0m
+[0m[[0minfo[0m] [0m[32mSimEngineSuite:[0m[0m
+[0m[[0minfo[0m] [0m[32m- Events should be ordered with their timestamp[0m[0m
+[0m[[0minfo[0m] [0m[32m- Events can be rescheduled[0m[0m
+[0m[[0minfo[0m] [0m[32m- eventqueue can be dynamically modified[0m[0m
+[0m[[0minfo[0m] [0m[32m- SimEngine can update the current system time[0m[0m
+[0m[[0minfo[0m] [0m[32mTopologySuite:[0m[0m
+[0m[[0minfo[0m] [0m[32m- AddressInstaller can assign IPs to a host/router[0m[0m
+[0m[[0minfo[0m] [0m[32m- AddressInstaller can assign IPs to host/router container[0m[0m
+[0m[[0minfo[0m] [0m[32m- LanBuilder cannot build the lan for router-hosts before all involved elements are assigned with IP addresses[0m[0m
+[0m[[0minfo[0m] [0m[32m- LanBuilder cannot build the lan for router-routers before all involved elements are assigned with IP addresses[0m[0m
+[0m[[0minfo[0m] [0m[32m- LanBuilder should be able to create the local area network for router-hosts[0m[0m
+[0m[[0minfo[0m] [0m[32m- LanBuilder should be able to create the local area network for router-routers[0m[0m
+[0m[[0minfo[0m] [0m[32m- Pod network can be created correctly[0m[0m
+21:44:24,503 |-INFO in ch.qos.logback.core.joran.action.AppenderAction - About to instantiate appender of type [ch.qos.logback.core.FileAppender]
+21:44:24,509 |-INFO in ch.qos.logback.core.joran.action.AppenderAction - Naming appender as [TraceFileAppender]
+21:44:24,612 |-INFO in ch.qos.logback.core.joran.action.NestedComplexPropertyIA - Assuming default type [ch.qos.logback.classic.encoder.PatternLayoutEncoder] for [encoder] property
+21:44:24,706 |-INFO in ch.qos.logback.core.FileAppender[TraceFileAppender] - File property is set to [testFile.log]
+21:44:24,711 |-INFO in ch.qos.logback.core.joran.action.AppenderAction - About to instantiate appender of type [ch.qos.logback.core.ConsoleAppender]
+21:44:24,724 |-INFO in ch.qos.logback.core.joran.action.AppenderAction - Naming appender as [STDOUT]
+21:44:24,753 |-INFO in ch.qos.logback.core.joran.action.NestedComplexPropertyIA - Assuming default type [ch.qos.logback.classic.encoder.PatternLayoutEncoder] for [encoder] property
+21:44:24,774 |-INFO in ch.qos.logback.classic.joran.action.RootLoggerAction - Setting level of ROOT logger to TRACE
+21:44:24,774 |-INFO in ch.qos.logback.core.joran.action.AppenderRefAction - Attaching appender named [TraceFileAppender] to Logger[ROOT]
+21:44:24,779 |-INFO in ch.qos.logback.core.joran.action.AppenderRefAction - Attaching appender named [STDOUT] to Logger[ROOT]
+21:44:24,779 |-INFO in ch.qos.logback.classic.joran.action.ConfigurationAction - End of configuration.
+
+21:44:26.303 TRACE s.network.events.StartNewFlowEvent - start the flow Flow-10.1.0.3-10.1.1.3 at 0.0
+21:44:26.318 TRACE s.n.controlplane.TCPControlPlane - arrive at 10.1.0.3, routing (flow : Flow, matchfield : OFMatch, inlink : Link) flow:Flow-10.1.0.3-10.1.1.3, inlink:null
+21:44:26.326 TRACE s.n.c.routing.SimpleSymmetricRouting - TCPControlPlane-10.1.0.3 insert outRIB entry 10.1.0.3->10.1.1.3 with the link link-10.1.0.3-10.1.0.1
+21:44:26.337 TRACE s.n.c.openflow.OpenFlowModule - arrive at 10.1.0.1, routing (flow : Flow, matchfield : OFMatch, inlink : Link) flow:Flow-10.1.0.3-10.1.1.3, inlink:link-10.1.0.3-10.1.0.1
+21:44:26.344 TRACE s.n.c.routing.OpenFlowRouting - controlplane-10.1.0.1 insert inRIB entry OFMatch[nw_dst=10.1.1.3,nw_src=10.1.0.3](679757205) -> link-10.1.0.3-10.1.0.1
+21:44:26.358 TRACE OpenFlowModule - send PACKET_IN to controller for table missing at node 10.1.0.1

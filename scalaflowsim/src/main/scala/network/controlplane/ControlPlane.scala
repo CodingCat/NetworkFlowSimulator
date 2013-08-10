@@ -11,6 +11,8 @@ import scalasim.simengine.utils.Logging
 import org.openflow.protocol.OFMatch
 import scalasim.XmlParser
 import network.controlplane.openflow.flowtable.OFMatchField
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable
 
 abstract class ControlPlane (private [controlplane] val node : Node,
                              private [controlplane] val routingModule : RoutingProtocol,
@@ -21,6 +23,8 @@ abstract class ControlPlane (private [controlplane] val node : Node,
 
   override def toString = "controlplane-" + node.toString
 
+  private val floodlist = new ArrayBuffer[Flow] with mutable.SynchronizedBuffer[Flow]
+
   /**
    *
    * @param flow
@@ -28,12 +32,15 @@ abstract class ControlPlane (private [controlplane] val node : Node,
    * @param inlink
    */
   def floodoutFlow(flow : Flow, matchfield : OFMatchField, inlink : Link) {
-    val nextlinks = routingModule.getfloodLinks(inlink)
-    //TODO : openflow flood handling in which nextlinks can be null?
-    nextlinks.foreach(l => {
-      flow.addTrace(l, inlink)
-      Link.otherEnd(l, node).controlPlane.routing(flow, matchfield, l)
-    })
+    if (!floodlist.contains(flow)) {
+      val nextlinks = routingModule.getfloodLinks(inlink)
+      //TODO : openflow flood handling in which nextlinks can be null?
+      nextlinks.foreach(l => {
+        flow.addTrace(l, inlink)
+        Link.otherEnd(l, node).controlPlane.routing(flow, matchfield, l)
+      })
+      floodlist += flow
+    }
   }
 
   private def startFlow (flow : Flow) {
@@ -50,6 +57,7 @@ abstract class ControlPlane (private [controlplane] val node : Node,
     }
     flow.run
     SimulationEngine.atomicLock.release()
+    logDebug("release lock at ControlPlane")
   }
 
   private def allocateOnCurrentHop(flow : Flow, link : Link) {
@@ -100,6 +108,20 @@ abstract class ControlPlane (private [controlplane] val node : Node,
     }
   }
 
+  protected def passbyFlow(flow : Flow) : Boolean = {
+    if (node.ip_addr(0) !=  flow.srcIP && node.ip_addr(0) != flow.dstIP && node.nodetype == HostType) {
+      logTrace("Discard flow " + flow + " on node " + node.toString)
+      true
+    } else {
+      false
+    }
+  }
+
+  protected def inFlowRegistration(matchfield : OFMatchField, inlink : Link) {
+    routingModule.insertInPath(matchfield, inlink)
+
+  }
+
   /**
    *
    * @param flow
@@ -107,36 +129,22 @@ abstract class ControlPlane (private [controlplane] val node : Node,
    */
   def routing (flow : Flow, matchfield : OFMatchField, inlink : Link) {
     //discard the flood packets
-    if (node.ip_addr(0) !=  flow.srcIP && node.ip_addr(0) != flow.dstIP && node.nodetype == HostType) {
-      logTrace("Discard flow " + flow + " on node " + node.toString)
-      return
-    }
+    if (passbyFlow(flow)) return
     logTrace("arrive at " + node.ip_addr(0) + ", routing (flow : Flow, matchfield : OFMatch, inlink : Link)" +
       " flow:" + flow + ", inlink:" + inlink)
-    if (inlink != null) {
-      routingModule.insertInPath(flow, inlink)
-      //only valid in openflow model
-      if (XmlParser.getString("scalasim.simengine.model", "tcp") == "openflow" &&
-        node.nodetype != HostType)
-        flow.inport = topoModule.getPortByLink(inlink).getPortNumber
-    }
+    if (inlink != null) inFlowRegistration(matchfield, inlink)
     if (node.ip_addr(0) == flow.dstIP) {
-      //arrive the destination
       //start resource allocation process
       node.controlPlane.allocate(flow, inlink)
-    }
-    else {
+    } else {
       if (!flow.floodflag) {
-        val nextlink = routingModule.selectNextLink(matchfield, inlink)
+        val nextlink = routingModule.selectNextLink(flow, matchfield, inlink)
         if (nextlink != null) {
           forward(nextlink, inlink, flow, matchfield)
-        } else {
-          val ofrouting = routingModule.asInstanceOf[OpenFlowRouting]
-          ofrouting.pendingFlows += (ofrouting.pendingFlows.size -> flow)
         }
       } else {
         //it's a flood flow
-        logTrace("flow " + flow + " is flooded out")
+        logTrace("flow " + flow + " is flooded out at " + node)
         floodoutFlow(flow, matchfield, inlink)
       }
     }
@@ -145,7 +153,6 @@ abstract class ControlPlane (private [controlplane] val node : Node,
   def forward (olink : Link, inlink : Link, flow : Flow, matchfield : OFMatchField) {
     val nextnode = Link.otherEnd(olink, node)
     logDebug("send through " + olink)
-    routingModule.insertOutPath(flow, olink)
     flow.addTrace(olink, inlink)
     nextnode.controlPlane.routing(flow, matchfield, olink)
   }

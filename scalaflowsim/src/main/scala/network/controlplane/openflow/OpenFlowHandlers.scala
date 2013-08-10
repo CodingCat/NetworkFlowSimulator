@@ -22,6 +22,7 @@ class OpenFlowMsgEncoder extends OneToOneEncoder {
     msglist.foreach(ofm => size += ofm.getLength)
     val buf = ChannelBuffers.buffer(size)
     msglist.foreach(ofmessage => ofmessage.writeTo(buf))
+    msglist.clear()
     buf
   }
 }
@@ -284,9 +285,13 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
     case OFType.ECHO_REQUEST => {
       val echoreq = ofm.asInstanceOf[OFEchoRequest]
       val echoreply = factory.getMessage(OFType.ECHO_REPLY).asInstanceOf[OFEchoReply]
+      val payloadlength = {
+        if (echoreq.getPayload != null) echoreq.getPayload.length
+        else 0
+      }
       echoreply.setXid(echoreq.getXid)
       echoreply.setPayload(echoreq.getPayload)
-      echoreply.setLength((OFMessage.MINIMUM_LENGTH + echoreq.getPayload.length).toShort)
+      echoreply.setLength((OFMessage.MINIMUM_LENGTH + payloadlength).toShort)
       openflowPlane.ioBatchBuffer += echoreply
     }
     case OFType.PACKET_OUT => {
@@ -313,8 +318,8 @@ class OpenFlowChannelHandler (private val openflowPlane : OpenFlowModule)
       }
     }
     //send out all messages
-    e.getChannel.write(openflowPlane.ioBatchBuffer)
-    openflowPlane.ioBatchBuffer.clear
+    if (e.getChannel != null && e.getChannel.isConnected)
+      e.getChannel.write(openflowPlane.ioBatchBuffer)
   }
 
   override def exceptionCaught (ctx : ChannelHandlerContext, e : ExceptionEvent) {

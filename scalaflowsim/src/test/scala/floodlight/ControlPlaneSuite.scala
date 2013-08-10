@@ -10,12 +10,13 @@ import scalasim.network.component.ToRRouterType
 import scalasim.{XmlParser, SimulationRunner}
 import scalasim.simengine.utils.Logging
 import scalasim.network.events.StartNewFlowEvent
+import network.device.GlobalDeviceManager
 
 class ControlPlaneSuite extends FunSuite with Logging {
 
   test("flow can be routed within a rack") {
     SimulationRunner.reset
-    val torrouter = new Router(ToRRouterType)
+    val torrouter = new Router(ToRRouterType, GlobalDeviceManager.globaldevicecounter)
     val rackservers = new HostContainer
     rackservers.create(2)
     AddressInstaller.assignIPAddress(torrouter, "10.0.0.1")
@@ -34,7 +35,7 @@ class ControlPlaneSuite extends FunSuite with Logging {
 
   test("flow (flood) can be routed within a rack") {
     SimulationRunner.reset
-    val torrouter = new Router(ToRRouterType)
+    val torrouter = new Router(ToRRouterType, GlobalDeviceManager.globaldevicecounter)
     val rackservers = new HostContainer
     rackservers.create(3)
     AddressInstaller.assignIPAddress(torrouter, "10.0.0.1")

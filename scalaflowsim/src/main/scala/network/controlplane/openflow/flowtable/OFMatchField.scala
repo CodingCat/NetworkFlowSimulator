@@ -3,8 +3,11 @@ package network.controlplane.openflow.flowtable
 import org.openflow.protocol.OFMatch
 import java.util
 import java.util.Arrays
+import scalasim.simengine.utils.Logging
+import simengine.utils.IPAddressConvertor
+import org.openflow.util.HexString
 
-class OFMatchField extends OFMatch {
+class OFMatchField extends OFMatch with Logging {
 
   override def hashCode = {
     val prime: Int = 131
@@ -40,6 +43,18 @@ class OFMatchField extends OFMatch {
     result
   }
 
+  def toCompleteString() : String = {
+    val sb = StringBuilder.newBuilder
+    sb.append("inport :" + this.inputPort + ", ")
+    sb.append("dl src:" + HexString.toHexString(this.dataLayerSource) + ", ")
+    sb.append("dl dst:" + HexString.toHexString(this.dataLayerDestination) + ", ")
+    sb.append("nw src:" + IPAddressConvertor.IntToDecimalString(networkSource) + ", ")
+    sb.append("nw dst:" + IPAddressConvertor.IntToDecimalString(networkDestination) + ", ")
+    sb.append("vlan id:" + this.dataLayerVirtualLan + ", ")
+    sb.append("wildcards:" + this.wildcards)
+    sb.toString()
+  }
+
   def matching(toCompare : OFMatchField) : Boolean = {
     if ((wildcards & OFMatch.OFPFW_IN_PORT) == 0 &&
       this.inputPort != toCompare.getInputPort)
@@ -68,16 +83,17 @@ class OFMatchField extends OFMatch {
     //compare network layer src/dst
     val dstmasklen = getNetworkDestinationMaskLen
     val srcmasklen = getNetworkSourceMaskLen
-    if (dstmasklen >= 32 && networkDestination != toCompare.getNetworkDestination)
+    if (dstmasklen > 32 && networkDestination != toCompare.getNetworkDestination) {
       return false
-    if (srcmasklen >= 32 && networkSource != toCompare.getNetworkSource)
+    }
+    if (srcmasklen > 32 && networkSource != toCompare.getNetworkSource)
       return false
     val dstmask = ~((1 << (32 - dstmasklen)) - 1)
     val srcmask = ~((1 << (32 - srcmasklen)) - 1)
-    if (dstmasklen < 32 &&
+    if (dstmasklen <= 32 &&
       (networkDestination & dstmask) != (toCompare.getNetworkDestination & dstmask))
       return false
-    if (srcmasklen < 32 &&
+    if (srcmasklen <= 32 &&
       (networkSource & srcmask) != (toCompare.getNetworkSource & srcmask))
       return false
     //layer - 4

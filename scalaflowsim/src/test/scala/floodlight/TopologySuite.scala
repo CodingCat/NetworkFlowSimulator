@@ -4,11 +4,12 @@ import scalasim.network.component.builder.{LanBuilder, AddressInstaller}
 import org.scalatest.FunSuite
 import scalasim.network.component._
 import scalasim.SimulationRunner
+import network.device.GlobalDeviceManager
 
 class TopologySuite extends FunSuite {
 
   test("AddressInstaller can assign IPs to a host/router") {
-     val host : Host = new Host(HostType)
+     val host : Host = new Host(HostType, GlobalDeviceManager.globaldevicecounter)
      SimulationRunner.reset
      AddressInstaller.assignIPAddress(host, "10.0.0.1")
      assert(host.ip_addr.length == 1 && host.ip_addr(0) == "10.0.0.1")
@@ -19,7 +20,7 @@ class TopologySuite extends FunSuite {
   test("AddressInstaller can assign IPs to host/router container") {
     SimulationRunner.reset
     val hostContainer : HostContainer = new HostContainer()
-    val router : Router = new Router(ToRRouterType)
+    val router : Router = new Router(ToRRouterType, GlobalDeviceManager.globaldevicecounter)
     AddressInstaller.assignIPAddress(router, "10.0.0.1")
     hostContainer.create(10)
     AddressInstaller.assignIPAddress(router.ip_addr(router.ip_addr.length - 1), 2, hostContainer, 0, 9)
@@ -30,7 +31,7 @@ class TopologySuite extends FunSuite {
 
   test("LanBuilder cannot build the lan for router-hosts before all involved elements are assigned with IP addresses") {
     SimulationRunner.reset
-    val router : Router = new Router(ToRRouterType)
+    val router : Router = new Router(ToRRouterType, GlobalDeviceManager.globaldevicecounter)
     val hostContainer = new  HostContainer()
     hostContainer.create(10)
     var exception = intercept[RuntimeException] {
@@ -45,7 +46,7 @@ class TopologySuite extends FunSuite {
   test("LanBuilder cannot build the lan for router-routers before " +
     "all involved elements are assigned with IP addresses") {
     SimulationRunner.reset
-    val router : Router = new Router(AggregateRouterType)
+    val router : Router = new Router(AggregateRouterType, GlobalDeviceManager.globaldevicecounter)
     val routerContainer = new RouterContainer()
     routerContainer.create(10, ToRRouterType)
     var exception = intercept[RuntimeException] {
@@ -59,7 +60,7 @@ class TopologySuite extends FunSuite {
 
   test("LanBuilder should be able to create the local area network for router-hosts") {
     SimulationRunner.reset
-    val router : Router = new Router(ToRRouterType)
+    val router : Router = new Router(ToRRouterType, GlobalDeviceManager.globaldevicecounter)
     val hosts : HostContainer = new HostContainer()
     AddressInstaller.assignIPAddress(router, "10.0.0.1")
     hosts.create(10)
@@ -76,7 +77,7 @@ class TopologySuite extends FunSuite {
 
   test("LanBuilder should be able to create the local area network for router-routers") {
     SimulationRunner.reset
-    val aggRouter : Router = new Router(AggregateRouterType)
+    val aggRouter : Router = new Router(AggregateRouterType, GlobalDeviceManager.globaldevicecounter)
     val routers : RouterContainer = new RouterContainer()
     AddressInstaller.assignIPAddress(aggRouter, "10.0.0.1")
     routers.create(10, ToRRouterType)

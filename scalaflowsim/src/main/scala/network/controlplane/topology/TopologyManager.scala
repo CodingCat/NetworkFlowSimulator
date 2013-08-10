@@ -6,6 +6,7 @@ import scalasim.network.controlplane.openflow.flowtable.counters.OFPortCount
 import scalasim.XmlParser
 import org.openflow.protocol.OFPhysicalPort
 import org.openflow.util.HexString
+import network.device.GlobalDeviceManager
 
 class TopologyManager (private [controlplane] val  node : Node) {
 
@@ -62,18 +63,14 @@ class TopologyManager (private [controlplane] val  node : Node) {
 
   private def addOFPhysicalPort(l : Link, portID : Short) {
     val port = new OFPhysicalPort
+    GlobalDeviceManager.globaldevicecounter += 1
     //port number
     port.setPortNumber(portID)
     //port hardware address
-    val t = node.ip_addr(0).substring(node.ip_addr(0).indexOf('.') + 1, node.ip_addr(0).size)
-    val podid = HexString.toHexString(Integer.parseInt(t.substring(0, t.indexOf('.'))), 1)
-    val order = HexString.toHexString(node.asInstanceOf[Router].getrid, 4)
-    val portnumhex = HexString.toHexString(port.getPortNumber, 1)
-    port.setHardwareAddress(HexString.fromHexString(podid + ":" + order + ":" + portnumhex))
+    val hwaddrhexstr = HexString.toHexString(GlobalDeviceManager.globaldevicecounter, 6)
+    port.setHardwareAddress(HexString.fromHexString(hwaddrhexstr))
     //port name
-    //TODO:convert name into 16 bytes array
-    val portname = Link.otherEnd(l, node).toString
-    port.setName(portname)
+    port.setName(hwaddrhexstr.replaceAll(":", ""))
     //port features
     //TODO: limited support feature?
     var feature = 0

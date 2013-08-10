@@ -16,13 +16,16 @@ import org.openflow.protocol.action.{OFAction, OFActionOutput}
 import org.openflow.protocol.{OFMatch, OFFlowMod, OFType}
 import java.util
 import network.controlplane.openflow.flowtable.OFMatchField
+import scala.collection.mutable.ListBuffer
+import network.device.GlobalDeviceManager
 
 class OpenFlowSuite extends FunSuite {
-  /*test ("routers can be assigned with DPID address correctly") {
+
+  test ("routers can be assigned with DPID address correctly") {
     SimulationRunner.reset
     XmlParser.addProperties("scalasim.simengine.model", "openflow")
-    val aggrouter = new Router(AggregateRouterType)
-    val torrouter = new Router(ToRRouterType)
+    val aggrouter = new Router(AggregateRouterType, GlobalDeviceManager.globaldevicecounter)
+    val torrouter = new Router(ToRRouterType, GlobalDeviceManager.globaldevicecounter)
     AddressInstaller.assignIPAddress(aggrouter, "10.1.0.1")
     AddressInstaller.assignIPAddress(torrouter, "10.1.0.2")
     assert(aggrouter.getDPID === HexString.toLong("01:01:" + aggrouter.mac_addr(0)))
@@ -45,7 +48,7 @@ class OpenFlowSuite extends FunSuite {
 
   test ("when add flow table entry it can schedule entry expire event correctly") {
     SimulationRunner.reset
-    val node = new Router(AggregateRouterType)
+    val node = new Router(AggregateRouterType, GlobalDeviceManager.globaldevicecounter)
     val ofroutingmodule = new OpenFlowRouting(node)
     val offactory = new BasicFactory
     val table = new OFFlowTable(ofroutingmodule)
@@ -162,7 +165,7 @@ class OpenFlowSuite extends FunSuite {
     )
     matchfield.setDataLayerVirtualLan(0)
     assert(matchfield.hashCode === generatedmatchfield.hashCode)
-  }*/
+  }
 
 
 
@@ -170,6 +173,7 @@ class OpenFlowSuite extends FunSuite {
     SimulationRunner.reset
     XmlParser.addProperties("scalasim.simengine.model", "openflow")
     val pod = new Pod(0, 1, 1, 20)
+    Thread.sleep(1000 * 20)
     val flow1 = Flow(pod.getHost(0, 0).toString, pod.getHost(0, 1).toString,
       pod.getHost(0, 0).mac_addr(0), pod.getHost(0, 1).mac_addr(0), size = 1)
     val flow2 = Flow(pod.getHost(0, 1).toString, pod.getHost(0, 0).toString,
@@ -179,6 +183,110 @@ class OpenFlowSuite extends FunSuite {
     SimulationEngine.run
     assert(flow1.status === CompletedFlow)
     assert(flow2.status === CompletedFlow)
+    pod.shutDownOpenFlowNetwork()
+  }
+
+  test("flow can be routed across racks (openflow)") {
+    SimulationRunner.reset
+    XmlParser.addProperties("scalasim.simengine.model", "openflow")
+    val pod = new Pod(1, 2, 4, 20)
+    val flow1 = Flow(pod.getHost(0, 1).toString, pod.getHost(1, 1).toString,
+      pod.getHost(0, 1).mac_addr(0), pod.getHost(1, 1).mac_addr(0), size = 1)
+    Thread.sleep(1000 * 20)
+    val flow2 = Flow(pod.getHost(3, 1).toString, pod.getHost(2, 1).toString,
+      pod.getHost(3, 1).mac_addr(0), pod.getHost(2, 1).mac_addr(0), size = 1)
+    SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 1), 0))
+    SimulationEngine.addEvent(new StartNewFlowEvent(flow2, pod.getHost(3, 1), 0))
+    SimulationEngine.run
+    assert(flow1.status === CompletedFlow)
+    assert(flow2.status === CompletedFlow)
+    pod.shutDownOpenFlowNetwork()
+  }
+
+  test("flow can be allocated with correct bandwidth (within the same rack) (openflow)") {
+    SimulationRunner.reset
+    XmlParser.addProperties("scalasim.simengine.model", "openflow")
+    val pod = new Pod(1, 0, 1, 2)
+    Thread.sleep(1000 * 20)
+    val flow1 = Flow(pod.getHost(0, 0).toString, pod.getHost(0, 1).toString,
+      pod.getHost(0, 0).mac_addr(0), pod.getHost(0, 1).mac_addr(0), size = 1)
+    val flow2 = Flow(pod.getHost(0, 1).toString, pod.getHost(0, 0).toString,
+      pod.getHost(0, 1).mac_addr(0), pod.getHost(0, 0).mac_addr(0), size = 1)
+    SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 0), 0))
+    SimulationEngine.addEvent(new StartNewFlowEvent(flow2, pod.getHost(0, 1), 0))
+    SimulationEngine.run
+    assert(flow1.LastCheckPoint === 0.02)
+    assert(flow2.LastCheckPoint === 0.02)
+    pod.shutDownOpenFlowNetwork()
+  }
+
+  test("flow can be allocated with correct bandwidth (within the agg router) " +
+    "(case 1, one-one pattern)(openflow)") {
+    SimulationRunner.reset
+    XmlParser.addProperties("scalasim.simengine.model", "openflow")
+    val pod = new Pod(1, 1, 2, 4)
+    Thread.sleep(1000 * 20)
+    val flowlist = new ListBuffer[Flow]
+    for (i <- 0 until 2; j <- 0 until 4) {
+      val flow = Flow(pod.getHost(i, j).toString, pod.getHost({if (i == 0) 1 else 0}, j).toString,
+        pod.getHost(i, j).mac_addr(0), pod.getHost({if (i == 0) 1 else 0}, j).mac_addr(0), size = 1)
+      flowlist += flow
+      SimulationEngine.addEvent(new StartNewFlowEvent(flow, pod.getHost(i, j), 0))
+    }
+    SimulationEngine.run
+    flowlist.foreach(flow => assert(flow.LastCheckPoint === 0.02))
+    pod.shutDownOpenFlowNetwork()
+  }
+
+  test("flow can be allocated with correct bandwidth (within the agg router) (case 2)") {
+    SimulationRunner.reset
+    XmlParser.addProperties("scalasim.simengine.model", "openflow")
+    XmlParser.addProperties("scalasim.topology.locallinkrate", "75.0")
+    val pod = new Pod(1, 1, 2, 3)
+    Thread.sleep(1000 * 20)
+    val flowlist = new ListBuffer[Flow]
+    SimulationRunner.reset
+    for (i <- 0 until 3) {
+      val flow = Flow(pod.getHost(0, 0).toString, pod.getHost(1, i).toString,
+        pod.getHost(0, 0).mac_addr(0), pod.getHost(1, i).mac_addr(0), size = 1)
+      flowlist += flow
+      SimulationEngine.addEvent(new StartNewFlowEvent(flow, pod.getHost(0, 0), 0))
+    }
+    val flow1 = Flow(pod.getHost(0, 1).toString, pod.getHost(1, 1).toString,
+      pod.getHost(0, 1).mac_addr(0), pod.getHost(1, 1).mac_addr(0), size = 7.5)
+    flowlist += flow1
+    SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 1), 0))
+    SimulationEngine.run
+    for (i <- 0 until flowlist.size) {
+      if (i != flowlist.size - 1) assert(flowlist(i).LastCheckPoint === 0.04)
+      else {
+        println(flowlist(i))
+        assert(BigDecimal(flowlist(i).LastCheckPoint).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+          === 0.11)
+      }
+    }
+    pod.shutDownOpenFlowNetwork()
+  }
+
+  test("flow can be allocated with correct bandwidth (within the agg router, and agg link is congested)") {
+    SimulationRunner.reset
+    XmlParser.addProperties("scalasim.simengine.model", "openflow")
+    XmlParser.addProperties("scalasim.topology.locallinkrate", "100.0")
+    XmlParser.addProperties("scalasim.topology.crossrouterlinkrate", "100.0")
+    val pod = new Pod(1, 1, 2, 4)
+    Thread.sleep(1000 * 20)
+    val flowlist = new ListBuffer[Flow]
+    SimulationRunner.reset
+    for (i <- 0 until 2; j <- 0 until 4) {
+      val flow = Flow(pod.getHost(i, j).toString, pod.getHost({if (i == 1) 0 else 1}, j).toString,
+        pod.getHost(i, j).mac_addr(0), pod.getHost({if (i == 1) 0 else 1}, j).mac_addr(0), size = 1)
+      flowlist += flow
+      SimulationEngine.addEvent(new StartNewFlowEvent(flow, pod.getHost(i, j), 0))
+    }
+    SimulationEngine.run
+    for (i <- 0 until flowlist.size) {
+      assert(flowlist(i).LastCheckPoint === 0.08)
+    }
     pod.shutDownOpenFlowNetwork()
   }
 }

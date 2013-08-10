@@ -1,8 +1,13 @@
 package scalasim.network.component
 
 import scalasim.network.controlplane.openflow.OpenFlowModule
+import scala.collection.mutable.ArrayBuffer
+import scalasim.network.traffic.Flow
+import scala.collection.mutable
+import network.device.GlobalDeviceManager
 
-class Router (nodetype : NodeType) extends Node(nodetype) {
+class Router (nodetype : NodeType, globaldevid : Int)
+  extends Node(nodetype, globaldevid) {
 
   private var rid : Int = 0
 
@@ -29,7 +34,8 @@ class Router (nodetype : NodeType) extends Node(nodetype) {
 class RouterContainer () extends NodeContainer {
   def create(nodeN : Int, rtype : NodeType) {
     for (i <- 0 until nodeN) {
-      nodecontainer += new Router(rtype)
+      nodecontainer += new Router(rtype, GlobalDeviceManager.globaldevicecounter)
+      GlobalDeviceManager.globaldevicecounter += 1
       this(i).setrid(i)
     }
   }

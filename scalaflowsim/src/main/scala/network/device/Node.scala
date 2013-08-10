@@ -16,7 +16,8 @@ case object ToRRouterType extends  NodeType
 case object CoreRouterType extends NodeType
 case object HostType extends NodeType
 
-class Node (val nodetype : NodeType) {
+class Node (val nodetype : NodeType,
+  val globalDeviceId : Int) {
 
   val mac_addr : ListBuffer[String] = new ListBuffer[String]
   val ip_addr : ListBuffer[String] = new ListBuffer[String]

@@ -24,7 +24,7 @@ abstract private [controlplane] class RoutingProtocol (private val node : Node)
     ~OFMatch.OFPFW_NW_DST_MASK &
     ~OFMatch.OFPFW_NW_SRC_MASK
 
-  def selectNextLink(matchfield : OFMatchField, inPort : Link) : Link
+  def selectNextLink(flow : Flow, matchfield : OFMatchField, inPort : Link) : Link
 
   def getfloodLinks(inport: Link): List[Link] = {
     val returnList = new mutable.MutableList[Link]
@@ -55,17 +55,6 @@ abstract private [controlplane] class RoutingProtocol (private val node : Node)
     RIBOut(matchfield)
   }
 
-  def insertOutPath (flow : Flow, link : Link) {
-    logTrace(controlPlane + " insert outRIB entry " +
-      flow.srcIP + "->" + flow.dstIP + " with the link " + link.toString)
-    //create the matchfield
-    val matchfield = OFFlowTable.createMatchField(flow = flow, wcard = wildcard)
-    RIBOut += (matchfield -> link)
-    if (IPAddressConvertor.DecimalStringToInt(controlPlane.IP) == matchfield.getNetworkSource) {
-      RoutingProtocol.globalFlowStarterMap += controlPlane.IP -> controlPlane.node.asInstanceOf[Host]
-    }
-  }
-
   def insertOutPath (ofmatch : OFMatch, link : Link)  {
     logTrace(controlPlane + " insert outRIB entry " +
       IPAddressConvertor.IntToDecimalString(ofmatch.getNetworkSource) + "->" +
@@ -78,8 +67,8 @@ abstract private [controlplane] class RoutingProtocol (private val node : Node)
     }
   }
 
-  def insertInPath (flow : Flow, link : Link) {
-    val matchfield = OFFlowTable.createMatchField(flow = flow, wcard = wildcard)
+  def insertInPath (ofmatch : OFMatch, link : Link) {
+    val matchfield = OFFlowTable.createMatchField(ofmatch = ofmatch, wcard = wildcard)
     logTrace(controlPlane + " insert inRIB entry " + matchfield + "(" + matchfield.hashCode
       + ") -> " + link)
     RIBIn += (matchfield -> link)
