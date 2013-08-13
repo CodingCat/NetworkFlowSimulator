@@ -1,4 +1,6 @@
-package scalasim.network.component
+package network.device
+
+import network.device.Node
 
 
 class Link (val end_from : Node,

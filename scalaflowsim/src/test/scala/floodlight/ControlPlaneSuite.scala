@@ -7,10 +7,11 @@ import scalasim.simengine.SimulationEngine
 import scalasim.network.traffic._
 import scala.collection.mutable.ListBuffer
 import scalasim.network.component.ToRRouterType
-import scalasim.{XmlParser, SimulationRunner}
+import scalasim.{SimulationRunner}
 import scalasim.simengine.utils.Logging
 import scalasim.network.events.StartNewFlowEvent
 import network.device.GlobalDeviceManager
+import simengine.utils.XmlParser
 
 class ControlPlaneSuite extends FunSuite with Logging {
 

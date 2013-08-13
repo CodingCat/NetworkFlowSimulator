@@ -1,10 +1,13 @@
-package scalasim.network.events
+package network.events
 
 import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
-import scalasim.network.controlplane.routing.RoutingProtocol
-import scalasim.simengine.{EventOfSingleEntity, SimulationEngine}
-import scalasim.network.traffic.Flow
 import org.openflow.protocol.OFMatch
+import network.traffic.Flow
+import scalasim.simengine.EventOfSingleEntity
+import simengine.SimulationEngine
+import network.forwarding.controlplane.RoutingProtocol
+import network.device.GlobalDeviceManager
+import simengine.utils.Logging
 
 /**
  *
@@ -12,7 +15,7 @@ import org.openflow.protocol.OFMatch
  * @param t timestamp of the event
  */
 final class CompleteFlowEvent (flow : Flow, t : Double)
-  extends EventOfSingleEntity[Flow] (flow, t) {
+  extends EventOfSingleEntity[Flow] (flow, t) with Logging {
 
   def process {
     logInfo("flow " + flow + " completed at " + SimulationEngine.currentTime)
@@ -20,7 +23,7 @@ final class CompleteFlowEvent (flow : Flow, t : Double)
     //ends at the flow destination
     val matchfield = OFFlowTable.createMatchField(flow = flow, wcard =
       (OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_DST_MASK & ~OFMatch.OFPFW_NW_SRC_MASK))
-    val destinationControlPlane = RoutingProtocol.getFlowStarter(flow.dstIP).controlPlane
+    val destinationControlPlane = GlobalDeviceManager.getHost(flow.dstIP).controlplane
     destinationControlPlane.finishFlow(flow, matchfield)
   }
 }

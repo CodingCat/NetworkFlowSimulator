@@ -1,4 +1,4 @@
-package scalasim.network.component
+package network.device
 
 import scalasim.network.controlplane.openflow.OpenFlowModule
 import scala.collection.mutable.ArrayBuffer

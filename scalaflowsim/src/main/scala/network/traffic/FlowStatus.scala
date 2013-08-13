@@ -1,4 +1,4 @@
-package scalasim.network.traffic
+package network.traffic
 
 
 abstract class FlowStatus

@@ -8,9 +8,9 @@ import scalasim.network.controlplane.routing.OpenFlowRouting
 import scalasim.network.events.StartNewFlowEvent
 import scalasim.network.traffic.{CompletedFlow, Flow}
 import scalasim.simengine.SimulationEngine
-import scalasim.{SimulationRunner, XmlParser}
+import scalasim.{SimulationRunner}
 import org.openflow.util.{U32, HexString}
-import simengine.utils.IPAddressConvertor
+import simengine.utils.{XmlParser}
 import org.openflow.protocol.factory.BasicFactory
 import org.openflow.protocol.action.{OFAction, OFActionOutput}
 import org.openflow.protocol.{OFMatch, OFFlowMod, OFType}
@@ -18,6 +18,7 @@ import java.util
 import network.controlplane.openflow.flowtable.OFMatchField
 import scala.collection.mutable.ListBuffer
 import network.device.GlobalDeviceManager
+import utils.IPAddressConvertor
 
 class OpenFlowSuite extends FunSuite {
 

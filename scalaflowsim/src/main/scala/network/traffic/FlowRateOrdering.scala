@@ -1,4 +1,4 @@
-package scalasim.network.traffic
+package network.traffic
 
 object FlowRateOrdering extends Ordering[Flow] {
   def compare(a : Flow, b : Flow) = {

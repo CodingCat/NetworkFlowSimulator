@@ -1,15 +1,16 @@
-package scalasim.network.controlplane.routing
+package network.controlplane.routing
 
-import scalasim.network.component.{HostType, Node, Host, Link}
 import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
 import scalasim.network.traffic.Flow
 import scala.collection.mutable.HashMap
 import scalasim.simengine.utils.Logging
 import scalasim.network.controlplane.ControlPlane
 import org.openflow.protocol.OFMatch
-import simengine.utils.IPAddressConvertor
 import scala.collection.mutable
 import network.controlplane.openflow.flowtable.OFMatchField
+import network.component.Node
+import utils.IPAddressConvertor
+import netsimulator.utils.IPAddressConvertor
 
 
 abstract private [controlplane] class RoutingProtocol (private val node : Node)
@@ -85,14 +86,4 @@ abstract private [controlplane] class RoutingProtocol (private val node : Node)
   }
 }
 
-private [network] object RoutingProtocol {
-  protected val globalFlowStarterMap = new HashMap[String, Host]
 
-  def getFlowStarter (ip : String) = globalFlowStarterMap(ip)
-
-  def apply (name : String, node : Node) : RoutingProtocol = name match {
-    case "SimpleSymmetric" => new SimpleSymmetricRouting(node)
-    case "OpenFlow" => new OpenFlowRouting(node)
-    case _ => throw new Exception("unrecognizable routing protocol type")
-  }
-}

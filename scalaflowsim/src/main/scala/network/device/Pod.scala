@@ -1,9 +1,9 @@
-package scalasim.network.component
+package network.device
 
 import scalasim.network.controlplane.openflow.OpenFlowModule
 import scalasim.simengine.utils.Logging
-import scalasim.XmlParser
 import scalasim.network.component.builder.{LanBuilder, AddressInstaller}
+import simengine.utils.XmlParser
 ;
 
 class Pod (private val cellID : Int,

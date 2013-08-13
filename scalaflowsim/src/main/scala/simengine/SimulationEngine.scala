@@ -1,10 +1,10 @@
-package scalasim.simengine
+package simengine
 
 import scala.collection.mutable.ArrayBuffer
 import scalasim.simengine.utils.Logging
 import scala.collection.mutable
-import scalasim.XmlParser
 import scala.concurrent.Lock
+import simengine.utils.{Logging, XmlParser}
 
 
 object SimulationEngine extends Logging {

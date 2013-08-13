@@ -9,10 +9,10 @@ import scalasim.network.traffic.{NewStartFlow, Flow}
 import scalasim.simengine.SimulationEngine
 import scalasim.simengine.utils.Logging
 import org.openflow.protocol.OFMatch
-import scalasim.XmlParser
 import network.controlplane.openflow.flowtable.OFMatchField
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable
+import simengine.utils.XmlParser
 
 abstract class ControlPlane (private [controlplane] val node : Node,
                              private [controlplane] val routingModule : RoutingProtocol,
@@ -60,18 +60,30 @@ abstract class ControlPlane (private [controlplane] val node : Node,
     logDebug("release lock at ControlPlane")
   }
 
-  private def allocateOnCurrentHop(flow : Flow, link : Link) {
+  /**
+   * allocate for the flows on the link
+   * @param changingflow the new flow
+   * @param link the involved link
+   */
+  private def allocateOnCurrentHop(changingflow : Flow, link : Link) {
     val nextnode = Link.otherEnd(link, node)
     val rpccontrolplane = {
       if (link.end_from == node) node.controlPlane
       else nextnode.controlPlane
     }
-    if (flow.status == NewStartFlow) {
-      rpccontrolplane.resourceModule.insertNewLinkFlowPair(link, flow)
+    //if it's a new flow, first insert it into the newlinkflowpair
+    if (changingflow.status == NewStartFlow) {
+      rpccontrolplane.resourceModule.insertNewLinkFlowPair(link, changingflow)
     }
+    //determine all flows' rate in the link
     rpccontrolplane.resourceModule.allocate(link)
   }
 
+  /**
+   * allocate bandwidth to the flow along the path
+   * @param flow the flow to be allocated
+   * @param referenceLink  the last hop or null (when the node is just the destination of the flow)
+   */
   def allocate (flow : Flow, referenceLink : Link = null) {
     if (node.ip_addr(0) == flow.srcIP) {
       startFlow(flow)
@@ -83,6 +95,7 @@ abstract class ControlPlane (private [controlplane] val node : Node,
       val nextnode = Link.otherEnd(laststep, node)
       logTrace("allocate for flow " + flow.toString() + " on " + laststep + " at node " + node)
       allocateOnCurrentHop(flow, laststep)
+      //continue the allocate process on the last hop
       nextnode.controlPlane.allocate(flow, laststep)
     }
   }
@@ -111,10 +124,9 @@ abstract class ControlPlane (private [controlplane] val node : Node,
   protected def passbyFlow(flow : Flow) : Boolean = {
     if (node.ip_addr(0) !=  flow.srcIP && node.ip_addr(0) != flow.dstIP && node.nodetype == HostType) {
       logTrace("Discard flow " + flow + " on node " + node.toString)
-      true
-    } else {
-      false
+      return true
     }
+    false
   }
 
   protected def inFlowRegistration(matchfield : OFMatchField, inlink : Link) {
@@ -135,7 +147,7 @@ abstract class ControlPlane (private [controlplane] val node : Node,
     if (inlink != null) inFlowRegistration(matchfield, inlink)
     if (node.ip_addr(0) == flow.dstIP) {
       //start resource allocation process
-      node.controlPlane.allocate(flow, inlink)
+      allocate(flow, inlink)
     } else {
       if (!flow.floodflag) {
         val nextlink = routingModule.selectNextLink(flow, matchfield, inlink)

@@ -1,15 +1,19 @@
-package scalasim.network.controlplane.resource
+package network.forwarding.dataplane
 
+import scala.collection.mutable.{ListBuffer, HashMap}
+import network.device._
+import network.traffic.{RunningFlow, ChangingRateFlow, FlowRateOrdering, Flow}
 import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
-import scalasim.network.traffic._
-import scalasim.network.controlplane.TCPControlPlane
-import scalasim.network.controlplane.routing.RoutingProtocol
-import scalasim.network.component.Link
-import scalasim.simengine.utils.Logging
+import simengine.utils.Logging
 import org.openflow.protocol.OFMatch
 
-private [controlplane] class MaxMinAllocator (controlPlane : TCPControlPlane)
-  extends ResourceAllocator (controlPlane) with Logging {
+
+/**
+ * the class representing the default functionalities to forward
+ * packets/flows as well as the congestion control, etc.
+ * that is that maxmin allocation
+ */
+class DefaultDataPlane extends ResourceAllocator with Logging {
 
   /**
    * perform max min allocation on the link
@@ -67,14 +71,15 @@ private [controlplane] class MaxMinAllocator (controlPlane : TCPControlPlane)
     while (demandingflows.size != 0 && remainingBandwidth != 0) {
       //the flow with the minimum rate
       val currentflow = demandingflows.head
-      val flowdest = RoutingProtocol.getFlowStarter(currentflow.dstIP)
+      val flowdest = GlobalDeviceManager.getHost(currentflow.dstIP)
       val matchfield = OFFlowTable.createMatchField(flow = currentflow,
         wcard = (OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_DST_MASK & ~OFMatch.OFPFW_NW_SRC_MASK))
       //try to acquire the max-min rate starting from the dest of this flow
-      flowdest.controlPlane.allocate(currentflow,
-        flowdest.controlPlane.routingModule.fetchInRoutingEntry(matchfield))
+      flowdest.dataplane.allocate(currentflow, flowdest.controlplane.fetchInRoutingEntry(matchfield))
       demandingflows.remove(0)
       if (demandingflows.size != 0) avrRate = remainingBandwidth / demandingflows.size
     }
   }
 }
+
+

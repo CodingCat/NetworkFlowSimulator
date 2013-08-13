@@ -1,6 +1,4 @@
-package scalasim.network.component
-
-import network.device.GlobalDeviceManager
+package network.device
 
 
 class Host (hosttype : NodeType, globaldevId : Int) extends Node (hosttype, globaldevId)

@@ -5,13 +5,13 @@ import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
 import scalasim.network.controlplane.openflow.OpenFlowModule
 import scalasim.network.traffic.Flow
 import packets._
-import scalasim.XmlParser
 import scala.collection.mutable
 import org.openflow.protocol._
 import network.controlplane.openflow.flowtable.OFMatchField
 import org.openflow.protocol.action.OFActionOutput
 import scala.collection.JavaConversions._
 import scala.concurrent.Lock
+import simengine.utils.XmlParser
 
 class OpenFlowRouting (node : Node) extends RoutingProtocol (node) {
 

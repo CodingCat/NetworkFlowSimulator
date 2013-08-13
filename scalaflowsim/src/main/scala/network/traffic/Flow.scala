@@ -1,10 +1,10 @@
-package scalasim.network.traffic
+package network.traffic
 
-import scalasim.network.component.Link
-import scalasim.simengine.SimulationEngine
-import scalasim.network.events.CompleteFlowEvent
-import scalasim.simengine.utils.Logging
+import network.device.Link
 import scala.collection.mutable
+import simengine.utils.Logging
+import network.events.CompleteFlowEvent
+import simengine.SimulationEngine
 
 /**
  *

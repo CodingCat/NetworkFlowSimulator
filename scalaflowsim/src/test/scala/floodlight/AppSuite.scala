@@ -3,8 +3,8 @@ package floodlight
 import scalasim.network.component.Pod
 import scalasim.application.ApplicationRunner
 import scalasim.simengine.SimulationEngine
-import scalasim.XmlParser
 import org.scalatest.FunSuite
+import simengine.utils.XmlParser
 
 class AppSuite extends FunSuite {
 

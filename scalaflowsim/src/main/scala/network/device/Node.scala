@@ -1,13 +1,11 @@
-package scalasim.network.component
+package network.device
 
 import scala.collection.mutable.ListBuffer
-import scalasim.network.controlplane.openflow.OpenFlowModule
-import scalasim.network.controlplane.resource.ResourceAllocator
-import scalasim.network.controlplane.routing.RoutingProtocol
-import scalasim.network.controlplane.{ControlPlane, TCPControlPlane}
-import scalasim.network.controlplane.topology.TopologyManager
-import scalasim.XmlParser
-
+import network.forwarding.controlplane.{RoutingProtocol, DefaultControlPlane}
+import simengine.utils.XmlParser
+import network.forwarding.dataplane.ResourceAllocator
+import network.device.interface.InterfacesManager
+import network.forwarding.interface.InterfacesManager
 
 abstract class NodeType
 
@@ -22,24 +20,11 @@ class Node (val nodetype : NodeType,
   val mac_addr : ListBuffer[String] = new ListBuffer[String]
   val ip_addr : ListBuffer[String] = new ListBuffer[String]
 
-  val controlPlane : ControlPlane = {
-    if (XmlParser.getString("scalasim.simengine.model", "tcp") == "tcp" || nodetype == HostType)
-      new TCPControlPlane(this,
-        RoutingProtocol("SimpleSymmetric", this),
-        ResourceAllocator("MaxMin", controlPlane),
-        new TopologyManager(this))
-    else {
-      if (XmlParser.getString("scalasim.simengine.model", "tcp") == "openflow" && nodetype != HostType) {
-        new OpenFlowModule(this.asInstanceOf[Router],
-          RoutingProtocol("OpenFlow", this),
-          ResourceAllocator("MaxMin", controlPlane),
-          new TopologyManager(this))
-      }
-      else {
-        null
-      }
-    }
-  }
+  val controlplane = RoutingProtocol(this)
+
+  val dataplane =  ResourceAllocator(this)
+
+  val interfacesManager = InterfacesManager(this)
 
   def assignIP(ip : String) {
     ip_addr += ip

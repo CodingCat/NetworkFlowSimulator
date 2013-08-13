@@ -2,6 +2,7 @@ package scalasim
 
 import _root_.network.device.GlobalDeviceManager
 import _root_.simengine.ofconnector.FloodlightConnector
+import _root_.simengine.utils.XmlParser
 import scalasim.application.ApplicationRunner
 import scalasim.network.events.StartNewFlowEvent
 import scalasim.network.traffic.Flow

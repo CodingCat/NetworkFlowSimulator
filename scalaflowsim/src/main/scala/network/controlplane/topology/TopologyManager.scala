@@ -3,10 +3,10 @@ package scalasim.network.controlplane.topology
 import scala.collection.mutable.HashMap
 import scalasim.network.component._
 import scalasim.network.controlplane.openflow.flowtable.counters.OFPortCount
-import scalasim.XmlParser
 import org.openflow.protocol.OFPhysicalPort
 import org.openflow.util.HexString
 import network.device.GlobalDeviceManager
+import simengine.utils.XmlParser
 
 class TopologyManager (private [controlplane] val  node : Node) {
 

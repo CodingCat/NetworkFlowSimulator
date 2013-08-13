@@ -15,10 +15,7 @@ abstract private [controlplane] class ResourceAllocator (controlPlane : ControlP
   def reallocate(link : Link)
 
   def insertNewLinkFlowPair(link : Link, flow : Flow) {
-    if (linkFlowMap.contains(link) == false) {
-      linkFlowMap += (link -> new ListBuffer[Flow])
-    }
-    linkFlowMap(link) += flow
+    linkFlowMap.getOrElseUpdate(link, new ListBuffer[Flow]) += flow
   }
 
   def getLinkAvailableBandwidth(l : Link) : Double = {
