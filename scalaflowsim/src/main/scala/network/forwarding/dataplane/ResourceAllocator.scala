@@ -1,6 +1,6 @@
 package network.forwarding.dataplane
 
-import network.device.{HostType, Node, Link}
+import network.device.{Node, Link}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import network.traffic._
@@ -34,6 +34,7 @@ trait ResourceAllocator extends Logging {
   def deleteFlow(flow : Flow) {
     linkFlowMap.find(linkflowpair => linkflowpair._2.contains(flow)) match {
       case Some(lfpair) => lfpair._2 -= flow
+      case None => {}
     }
   }
 

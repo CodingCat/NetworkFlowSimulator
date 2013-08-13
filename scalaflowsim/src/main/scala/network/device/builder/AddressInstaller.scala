@@ -1,7 +1,7 @@
 package scalasim.network.component.builder
 
-import scalasim.network.component._
 import org.openflow.util.HexString
+import network.device.{NodeContainer, Node}
 
 object AddressInstaller {
 

@@ -1,7 +1,6 @@
-package scalasim.application
+package application
 
-import scalasim.network.component.HostContainer
-import application.PermuMatrixApp
+import network.device.HostContainer
 
 abstract class ServerApp(protected val servers : HostContainer) {
   def run()

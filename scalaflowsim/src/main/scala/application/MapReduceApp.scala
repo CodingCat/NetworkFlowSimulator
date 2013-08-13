@@ -1,6 +1,6 @@
-package scalasim.application
+package application
 
-import scalasim.network.component.HostContainer
+import network.device.HostContainer
 
 
 class MapReduceApp (servers : HostContainer) extends ServerApp (servers) {

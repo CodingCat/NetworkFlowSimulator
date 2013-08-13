@@ -1,24 +1,22 @@
 package floodlight
 
 import org.scalatest.FunSuite
-import scalasim.network.component._
-import scalasim.network.component.builder.{LanBuilder, AddressInstaller}
-import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
-import scalasim.network.controlplane.routing.OpenFlowRouting
-import scalasim.network.events.StartNewFlowEvent
-import scalasim.network.traffic.{CompletedFlow, Flow}
-import scalasim.simengine.SimulationEngine
-import scalasim.{SimulationRunner}
+import root.SimulationRunner
+import network.device._
+import scalasim.network.component.builder.AddressInstaller
+import simengine.utils.XmlParser
 import org.openflow.util.{U32, HexString}
-import simengine.utils.{XmlParser}
-import org.openflow.protocol.factory.BasicFactory
-import org.openflow.protocol.action.{OFAction, OFActionOutput}
-import org.openflow.protocol.{OFMatch, OFFlowMod, OFType}
-import java.util
-import network.controlplane.openflow.flowtable.OFMatchField
-import scala.collection.mutable.ListBuffer
-import network.device.GlobalDeviceManager
 import utils.IPAddressConvertor
+import org.openflow.protocol.factory.BasicFactory
+import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
+import org.openflow.protocol.{OFFlowMod, OFType, OFMatch}
+import org.openflow.protocol.action.{OFAction, OFActionOutput}
+import network.forwarding.controlplane.openflow.{OFMatchField, OpenFlowControlPlane}
+import java.util
+import simengine.SimulationEngine
+import network.traffic.{CompletedFlow, Flow}
+import network.events.StartNewFlowEvent
+import scala.collection.mutable.ListBuffer
 
 class OpenFlowSuite extends FunSuite {
 
@@ -50,9 +48,9 @@ class OpenFlowSuite extends FunSuite {
   test ("when add flow table entry it can schedule entry expire event correctly") {
     SimulationRunner.reset
     val node = new Router(AggregateRouterType, GlobalDeviceManager.globaldevicecounter)
-    val ofroutingmodule = new OpenFlowRouting(node)
+    val ofroutingmodule = new OpenFlowControlPlane(node)
     val offactory = new BasicFactory
-    val table = new OFFlowTable(ofroutingmodule)
+    val table = new OFFlowTable(0, ofroutingmodule)
     val matchfield = new OFMatch
     val outaction  = new OFActionOutput
     val actionlist = new util.ArrayList[OFAction]

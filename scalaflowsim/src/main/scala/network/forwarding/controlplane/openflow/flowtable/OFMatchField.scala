@@ -1,13 +1,12 @@
-package network.controlplane.openflow.flowtable
+package network.forwarding.controlplane.openflow
 
 import org.openflow.protocol.OFMatch
 import java.util
 import java.util.Arrays
-import scalasim.simengine.utils.Logging
 import org.openflow.util.HexString
 import utils.IPAddressConvertor
 
-class OFMatchField extends OFMatch with Logging {
+class OFMatchField extends OFMatch {
 
   override def hashCode = {
     val prime: Int = 131

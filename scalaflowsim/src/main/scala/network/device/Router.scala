@@ -1,10 +1,6 @@
 package network.device
 
-import scalasim.network.controlplane.openflow.OpenFlowModule
-import scala.collection.mutable.ArrayBuffer
-import scalasim.network.traffic.Flow
-import scala.collection.mutable
-import network.device.GlobalDeviceManager
+import network.forwarding.controlplane.openflow.OpenFlowControlPlane
 
 class Router (nodetype : NodeType, globaldevid : Int)
   extends Node(nodetype, globaldevid) {
@@ -12,23 +8,20 @@ class Router (nodetype : NodeType, globaldevid : Int)
   private var rid : Int = 0
 
   def connectTOController() {
-    if (controlPlane.isInstanceOf[OpenFlowModule]) {
-      controlPlane.asInstanceOf[OpenFlowModule].connectToController()
+    if (controlplane.isInstanceOf[OpenFlowControlPlane]) {
+      controlplane.asInstanceOf[OpenFlowControlPlane].connectToController()
     }
   }
 
   def disconnectFromController() {
-    if (controlPlane.isInstanceOf[OpenFlowModule])
-      controlPlane.asInstanceOf[OpenFlowModule].disconnectFormController()
+    if (controlplane.isInstanceOf[OpenFlowControlPlane])
+      controlplane.asInstanceOf[OpenFlowControlPlane].disconnectFormController()
   }
 
   def setrid (r : Int) { rid = r }
   def getrid = rid
 
-  def getDPID : Long = {
-    if (! controlPlane.isInstanceOf[OpenFlowModule]) -1
-    else controlPlane.asInstanceOf[OpenFlowModule].getDPID
-  }
+  def getDPID = controlplane.asInstanceOf[OpenFlowControlPlane].DPID
 }
 
 class RouterContainer () extends NodeContainer {

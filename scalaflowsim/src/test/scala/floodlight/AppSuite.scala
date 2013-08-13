@@ -1,10 +1,10 @@
 package floodlight
 
-import scalasim.network.component.Pod
-import scalasim.application.ApplicationRunner
-import scalasim.simengine.SimulationEngine
 import org.scalatest.FunSuite
 import simengine.utils.XmlParser
+import simengine.SimulationEngine
+import network.device.Pod
+import application.ApplicationRunner
 
 class AppSuite extends FunSuite {
 

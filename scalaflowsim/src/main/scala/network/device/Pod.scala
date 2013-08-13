@@ -1,9 +1,7 @@
 package network.device
 
-import scalasim.network.controlplane.openflow.OpenFlowModule
-import scalasim.simengine.utils.Logging
 import scalasim.network.component.builder.{LanBuilder, AddressInstaller}
-import simengine.utils.XmlParser
+import simengine.utils.{Logging, XmlParser}
 ;
 
 class Pod (private val cellID : Int,
@@ -17,31 +15,6 @@ class Pod (private val cellID : Int,
   private val hostsContainer = new HostContainer
 
   private def buildNetwork() {
-    def initOFNetwork {
-      def topologypending : Boolean = {
-        //checking tor router
-        for (i <- 0 until rackNumber) {
-          if (!torContainer(i).controlPlane.
-            asInstanceOf[OpenFlowModule].topologyHasbeenRecognized())
-            return false
-        }
-        //checking agg router
-        for (i <- 0 until numAggRouters) {
-          if (!aggContainer(i).controlPlane.
-            asInstanceOf[OpenFlowModule].topologyHasbeenRecognized())
-            return false
-        }
-        true
-      }
-      if (XmlParser.getString("scalasim.simengine.model", "tcp") == "openflow") {
-        //aggeregate routers
-        for (i <- 0 until aggregateRouterNumber) aggContainer(i).connectTOController()
-        //ToR routers
-        for (i <- 0 until numRacks) torContainer(i).connectTOController()
-        //waiting for controller to process the topology
-        while (!topologypending) Thread.sleep(1000)
-      }
-    }
 
     def assignIPtoRacks() {
       for (i <- 0 until rackNumber) {
@@ -79,11 +52,10 @@ class Pod (private val cellID : Int,
     aggContainer.create(aggregateRouterNumber, AggregateRouterType)
 
     //main part of buildNetwork
-    assignIPtoRacks
-    assignIPtoAggLayer
-    buildLanOnAggregate
-    buildLanOnRack
-    initOFNetwork
+    assignIPtoRacks()
+    assignIPtoAggLayer()
+    buildLanOnAggregate()
+    buildLanOnRack()
   }
 
   def shutDownOpenFlowNetwork() {

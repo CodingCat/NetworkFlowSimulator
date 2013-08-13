@@ -1,13 +1,11 @@
-package scalasim
+package root
 
-import _root_.network.device.GlobalDeviceManager
-import _root_.simengine.ofconnector.FloodlightConnector
+import _root_.network.device.{Pod, GlobalDeviceManager}
+import _root_.network.traffic.Flow
+import _root_.simengine.SimulationEngine
 import _root_.simengine.utils.XmlParser
-import scalasim.application.ApplicationRunner
-import scalasim.network.events.StartNewFlowEvent
-import scalasim.network.traffic.Flow
-import scalasim.simengine.SimulationEngine
-import scalasim.network.component.Pod
+import application.ApplicationRunner
+import network.events.StartNewFlowEvent
 
 
 object SimulationRunner {
@@ -22,13 +20,6 @@ object SimulationRunner {
   def main(args:Array[String]) = {
     XmlParser.addProperties("scalasim.simengine.model", "openflow")
     val pod = new Pod(1, 2, 4, 15)
-    /*FloodlightConnector.readUrl(
-    "http://localhost:8080/wm/topology/switchclusters/json",
-    "{\"00:01:00:00:00:00:00:3c\":[\"00:01:00:00:00:00:00:3c\"," +
-    "\"00:01:00:00:00:00:00:3d\",\"00:01:00:00:00:00:00:3e\"," +
-    "\"01:01:00:00:00:00:00:40\",\"01:01:00:00:00:00:00:41\"," +
-    "\"00:01:00:00:00:00:00:3f\"]}"
-    ) */
     Thread.sleep(1000 * 20)
     val flow1 = Flow(pod.getHost(0, 1).toString, pod.getHost(1, 1).toString,
       pod.getHost(0, 1).mac_addr(0), pod.getHost(1, 1).mac_addr(0), size = 1)
@@ -37,9 +28,6 @@ object SimulationRunner {
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 1), 0))
     SimulationEngine.addEvent(new StartNewFlowEvent(flow2, pod.getHost(3, 1), 0))
     SimulationEngine.run
-    //assert(flow1.status === CompletedFlow)
-    //assert(flow2.status === CompletedFlow)
-    //pod.shutDownOpenFlowNetwork()
   }
 }
 

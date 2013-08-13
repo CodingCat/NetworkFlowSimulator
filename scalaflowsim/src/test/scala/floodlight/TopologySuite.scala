@@ -2,9 +2,8 @@ package floodlight
 
 import scalasim.network.component.builder.{LanBuilder, AddressInstaller}
 import org.scalatest.FunSuite
-import scalasim.network.component._
-import scalasim.SimulationRunner
-import network.device.GlobalDeviceManager
+import network.device._
+import root.SimulationRunner
 
 class TopologySuite extends FunSuite {
 
@@ -67,11 +66,11 @@ class TopologySuite extends FunSuite {
     AddressInstaller.assignIPAddress(router.ip_addr(0), 2, hosts, 0, 9)
     LanBuilder.buildLan(router, hosts, 0, 9)
     for (i <- 0 to 9) {
-      val hostOutLink = hosts(i).controlPlane.outlinks.get("10.0.0.1")
+      val hostOutLink = hosts(i).interfacesManager.getOutLinks("10.0.0.1")
       //check host outlink
       assert(router.ip_addr(0) === hostOutLink.get.end_to.ip_addr(0))
       //check router inlink
-      assert(router.controlPlane.inlinks.get(hosts(i).ip_addr(0)).get.end_from === hosts(i))
+      assert(router.interfacesManager.getInLinks(hosts(i).ip_addr(0)).get.end_from === hosts(i))
     }
   }
 
@@ -84,11 +83,11 @@ class TopologySuite extends FunSuite {
     AddressInstaller.assignIPAddress(aggRouter.ip_addr(0), 2, routers, 0, 9)
     LanBuilder.buildLan(aggRouter, routers, 0, 9)
     for (i <- 0 to 9) {
-      val routerOutlink = routers(i).controlPlane.outlinks.get("10.0.0.1")
+      val routerOutlink = routers(i).interfacesManager.getOutLinks("10.0.0.1")
       //check tor routers outlink
       assert(aggRouter.ip_addr(0) === routerOutlink.get.end_to.ip_addr(0))
       //check aggregate router inlink
-      assert(aggRouter.controlPlane.inlinks.get(routers(i).ip_addr(0)).get.end_from === routers(i))
+      assert(aggRouter.interfacesManager.getInLinks(routers(i).ip_addr(0)).get.end_from === routers(i))
     }
   }
 
@@ -98,22 +97,22 @@ class TopologySuite extends FunSuite {
     //check aggregate routers's inlinks
     for (i <- 0 until cellnet.numAggRouters; j <- 0 until cellnet.numRacks) {
       val aggrouter = cellnet.getAggregatRouter(i)
-      assert(aggrouter.controlPlane.inlinks.contains("10.1." + j + ".1") === true)
+      assert(aggrouter.interfacesManager.getInLinks("10.1." + j + ".1") != None)
     }
     //check tor router's inlinks and outlinks
     for (i <- 0 until cellnet.numRacks; j <- 0 until cellnet.numMachinesPerRack) {
       val torrouter = cellnet.getToRRouter(i)
       //check inlinks
-      assert(torrouter.controlPlane.inlinks.contains("10.1." + i + "." + (j + 2)) === true)
+      assert(torrouter.interfacesManager.getInLinks("10.1." + i + "." + (j + 2)) != None)
     }
     for (i <- 0 until cellnet.numRacks; j <- 0 until cellnet.numAggRouters) {
       val torrouter = cellnet.getToRRouter(i)
       //check outlink
-      assert(torrouter.controlPlane.outlinks.contains("10.1." + (cellnet.numRacks  + j).toString + ".1"))
+      assert(torrouter.interfacesManager.getOutLinks("10.1." + (cellnet.numRacks  + j).toString + ".1") != None)
     }
     //check hosts outlinks
     for (i <- 0 until cellnet.numRacks; j <- 0 until cellnet.numMachinesPerRack) {
-      assert(cellnet.getHost(i, j).controlPlane.outlinks.contains("10.1." + i + ".1") === true)
+      assert(cellnet.getHost(i, j).interfacesManager.getOutLinks("10.1." + i + ".1") != None)
     }
   }
 }

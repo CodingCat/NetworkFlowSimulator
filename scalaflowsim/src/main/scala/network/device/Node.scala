@@ -1,11 +1,9 @@
 package network.device
 
 import scala.collection.mutable.ListBuffer
-import network.forwarding.controlplane.{RoutingProtocol, DefaultControlPlane}
-import simengine.utils.XmlParser
 import network.forwarding.dataplane.ResourceAllocator
-import network.device.interface.InterfacesManager
 import network.forwarding.interface.InterfacesManager
+import network.forwarding.controlplane.RoutingProtocol
 
 abstract class NodeType
 

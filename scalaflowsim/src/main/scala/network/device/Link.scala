@@ -1,8 +1,5 @@
 package network.device
 
-import network.device.Node
-
-
 class Link (val end_from : Node,
              val end_to : Node,
             private[network] val bandwidth : Double) {

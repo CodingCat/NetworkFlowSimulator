@@ -1,18 +1,16 @@
 package application
 
-import scalasim.application.ServerApp
 import scala.collection.mutable.{HashSet, MultiMap, HashMap, Set}
 import scala.util.Random
-import scalasim.network.component.{Host, HostContainer}
-import scalasim.simengine.SimulationEngine
-import scalasim.network.events.StartNewFlowEvent
-import scalasim.network.traffic.Flow
-
+import network.device.{Host, HostContainer}
+import network.traffic.Flow
+import simengine.SimulationEngine
+import network.events.StartNewFlowEvent
 
 //build a permulate matrix between all machines,
 //each machine should be selected for only once
 //and do not allow to send to itself
-class PermuMatrixApp (servers : HostContainer) extends ServerApp (servers) {
+class PermuMatrixApp (servers : HostContainer) extends ServerApp(servers) {
   private val selectedPair = new HashMap[Host, Set[Host]] with MultiMap[Host, Host]//src ip -> dst ip
   private val ipHostMap = new HashMap[String, Host]//ip -> host
 

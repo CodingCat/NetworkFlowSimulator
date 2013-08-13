@@ -1,11 +1,11 @@
 package network.forwarding.controlplane
 
-import network.controlplane.openflow.flowtable.OFMatchField
 import org.openflow.protocol.OFMatch
 import network.device._
 import simengine.utils.Logging
-import netsimulator.utils.IPAddressConvertor
 import network.traffic.Flow
+import utils.IPAddressConvertor
+import network.forwarding.controlplane.openflow.OFMatchField
 
 /**
  * the class representing the default process to get/calculate the
@@ -26,8 +26,8 @@ class DefaultControlPlane (node : Node) extends RoutingProtocol with Logging {
   private def selectRandomOutlink(matchfield : OFMatch) : Link = {
     val dstip = IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination)
     val selectidx = Math.max(dstip.hashCode(), dstip.hashCode() * -1) %
-      node.interfacesManager.outlink.size
-    node.interfacesManager.outlink.values.toList(selectidx)
+      node.interfacesManager.outlinks.size
+    node.interfacesManager.outlinks.values.toList(selectidx)
   }
 
   private def getDstParameters(matchfield : OFMatch) {
@@ -79,8 +79,6 @@ class DefaultControlPlane (node : Node) extends RoutingProtocol with Logging {
     insertOutPath(matchfield, olink)
     olink
   }
-
-
 
   override def toString = node.ip_addr(0)
 }

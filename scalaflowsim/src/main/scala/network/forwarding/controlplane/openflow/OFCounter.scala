@@ -1,4 +1,4 @@
-package scalasim.network.controlplane.openflow.flowtable.counters
+package network.forwarding.controlplane.openflow
 
 class OFCounter (private [openflow] val name : String) {
 }
@@ -14,18 +14,18 @@ class OFTableCount extends OFCounter("table_counter") {
 
 //Per port counters
 class OFPortCount (private [openflow] val port_num : Int) extends OFCounter("port_counter") {
-  private [controlplane] var receivedpacket : Long = 0
-  private [controlplane] var transmittedpacket : Long = 0
-  private [controlplane] var receivedbytes : Long = 0
-  private [controlplane] var transmittedbytes : Long = 0
-  private [controlplane] var receivedrops : Long = 0
-  private [controlplane] var transmitdrops : Long = 0
-  private [controlplane] var receiveerror : Long = 0
-  private [controlplane] var transmiterror : Long = 0
-  private [controlplane] var receiveframe_align_error : Long = 0
-  private [controlplane] var receive_overrun_error : Long = 0
-  private [controlplane] var receive_crc_error : Long = 0
-  private [controlplane] var collisions : Long = 0
+  private [forwarding] var receivedpacket : Long = 0
+  private [forwarding] var transmittedpacket : Long = 0
+  private [forwarding] var receivedbytes : Long = 0
+  private [forwarding] var transmittedbytes : Long = 0
+  private [forwarding] var receivedrops : Long = 0
+  private [forwarding] var transmitdrops : Long = 0
+  private [forwarding] var receiveerror : Long = 0
+  private [forwarding] var transmiterror : Long = 0
+  private [forwarding] var receiveframe_align_error : Long = 0
+  private [forwarding] var receive_overrun_error : Long = 0
+  private [forwarding] var receive_crc_error : Long = 0
+  private [forwarding] var collisions : Long = 0
 }
 
 class OFFlowCount () extends OFCounter("flow_counter") {

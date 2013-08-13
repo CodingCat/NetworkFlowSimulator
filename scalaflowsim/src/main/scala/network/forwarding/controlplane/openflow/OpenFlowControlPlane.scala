@@ -1,7 +1,7 @@
 package network.forwarding.controlplane.openflow
 
 import network.device._
-import network.forwarding.controlplane.{DefaultControlPlane}
+import network.forwarding.controlplane.DefaultControlPlane
 import org.openflow.protocol._
 import simengine.utils.XmlParser
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory
@@ -13,13 +13,16 @@ import scala.collection.mutable
 import org.slf4j.LoggerFactory
 import org.openflow.protocol.factory.BasicFactory
 import org.openflow.protocol.action.{OFActionType, OFAction, OFActionOutput}
-import network.controlplane.openflow.flowtable.OFMatchField
 import network.traffic.Flow
 import network.forwarding.interface.OpenFlowPortManager
 import scala.concurrent.Lock
 import org.openflow.util.HexString
 import scala.collection.JavaConverters._
 import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
+import org.openflow.protocol.statistics._
+import scala.collection.mutable.ListBuffer
+import java.util
+import packets.{Data, TCP, IPv4, Ethernet}
 
 /**
  * this class implement the functions for routers to contact with
@@ -32,8 +35,8 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
 
   private [openflow] var toControllerChannel : Channel = null
 
-  private val ofinterfacemanager = node.interfacesManager.asInstanceOf[OpenFlowPortManager]
-  private lazy val ofmsgsender = new OpenFlowMsgSender(toControllerChannel)
+  private [openflow] val ofinterfacemanager = node.interfacesManager.asInstanceOf[OpenFlowPortManager]
+  private [forwarding] lazy val ofmsgsender = new OpenFlowMsgSender(toControllerChannel)
 
   private var config_flags : Short = 0
   private var miss_send_len : Short = 0
@@ -132,7 +135,7 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
     miss_send_len = miss_send_len
   }
 
-  private def getDPID = {
+  val DPID = {
     val impl_dependent = node.nodetype match {
       case ToRRouterType => "00"
       case AggregateRouterType => "01"
@@ -147,7 +150,7 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
     //TODO: specify the switch features
     //(dpid, buffer, n_tables, capabilities, physical port
     val featurereply = factory.getMessage(OFType.FEATURES_REPLY).asInstanceOf[OFFeaturesReply]
-    val featurelist = (getDPID, 1000, flowtables.length, 0xff, ofinterfacemanager.linkphysicalportsMap.values.toList)
+    val featurelist = (DPID, 1000, flowtables.length, 0xff, ofinterfacemanager.linkphysicalportsMap.values.toList)
     featurereply.setDatapathId(featurelist._1)
     featurereply.setBuffers(featurelist._2)
     featurereply.setTables(featurelist._3.toByte)
@@ -248,6 +251,98 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
     }
   }
 
+  private def generateDataplaneDesc(ofstatreq : OFStatisticsRequest) = {
+    val statdescreply = factory.getStatistics(OFType.STATS_REPLY,OFStatisticsType.DESC)
+      .asInstanceOf[OFDescriptionStatistics]
+    val statreply = factory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
+    //TODO: descriptions are not complete
+    val statlist = new ListBuffer[OFStatistics]
+    statdescreply.setDatapathDescription(getSwitchDescription)
+    statdescreply.setHardwareDescription(node.mac_addr(0))
+    statdescreply.setManufacturerDescription("simulated router")
+    statdescreply.setSoftwareDescription("simulated router software")
+    statdescreply.setSerialNumber("1")
+    statlist += statdescreply
+    statreply.setStatisticType(OFStatisticsType.DESC)
+    statreply.setStatistics(statlist.toList.asJava)
+    statreply.setStatisticsFactory(factory)
+    statreply.setLength((statdescreply.getLength+ statreply.getLength).toShort)
+    statreply.setXid(ofstatreq.getXid)
+    statreply
+  }
+
+  private def queryAllTablesByFlowStatRequest(flowstatreq : OFFlowStatisticsRequest) = {
+    val statreplylist = new ListBuffer[OFStatistics]
+    //query all tables
+    for (flowtable <- flowtables) {
+      flowtable.queryByFlowStatRequest(flowstatreq).foreach(
+        flowstatreply => statreplylist += flowstatreply)
+    }
+    statreplylist
+  }
+
+  private def processFlowStatisticsQuery (ofstatrequest: OFStatisticsRequest) = {
+    val ofstatreply = factory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
+    val offlowstatreq = ofstatrequest.getStatistics.asScala
+    val statreplylist = new ListBuffer[OFStatistics]
+    for (statreq <- offlowstatreq) {
+      val flowstatreq = statreq.asInstanceOf[OFFlowStatisticsRequest]
+      if (flowstatreq.getTableId == -1) {
+        queryAllTablesByFlowStatRequest(flowstatreq).foreach(flowstatreply => statreplylist += flowstatreply)
+      } else {
+        //query a single table
+        flowtables(flowstatreq.getTableId).queryByFlowStatRequest(flowstatreq).foreach(
+          flowstatreply => statreplylist += flowstatreply)
+      }
+    }
+    //resemble the ofstatreply
+    ofstatreply.setStatistics(statreplylist.toList.asJava)
+    ofstatreply.setStatisticType(OFStatisticsType.FLOW)
+    ofstatreply.setStatisticsFactory(factory)
+    //calculate the message length
+    var l = 0
+    statreplylist.foreach(statreply => l += statreply.getLength)
+    ofstatreply.setLength((l + ofstatreply.getLength).toShort)
+    ofstatreply.setXid(ofstatrequest.getXid)
+    ofmsgsender.pushInToBuffer(ofstatreply)
+  }
+
+  private def processAggregateStatisticsQuery (ofstatrequest: OFStatisticsRequest) = {
+    val ofstatreply = factory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
+    val offlowstatreq = ofstatrequest.getStatistics.asScala
+    val statreplylist = new ListBuffer[OFStatistics]
+    val stataggreply = factory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.AGGREGATE)
+      .asInstanceOf[OFAggregateStatisticsReply]
+    val statList = new util.ArrayList[OFStatistics]
+    for (statreq <- offlowstatreq) {
+      val flowstatreq = statreq.asInstanceOf[OFFlowStatisticsRequest]
+      if (flowstatreq.getTableId == -1) {
+        for (i <- 0 until flowtables.length) {
+          val referred_table = flowtables(i)
+          stataggreply.setFlowCount(stataggreply.getFlowCount + referred_table.counters.referencecount)
+          stataggreply.setPacketCount(stataggreply.getPacketCount + referred_table.counters.packetlookup +
+            referred_table.counters.packetmatches)
+          stataggreply.setByteCount(stataggreply.getByteCount + referred_table.counters.flowbytes)
+        }
+      } else {
+        val referred_table = flowtables(flowstatreq.getTableId)
+        stataggreply.setFlowCount(referred_table.counters.referencecount)
+        stataggreply.setPacketCount(referred_table.counters.packetlookup +
+          referred_table.counters.packetmatches)
+        stataggreply.setByteCount(referred_table.counters.flowbytes)
+      }
+    }
+    //resemble the ofstatreply
+    statreplylist += stataggreply
+    ofstatreply.setStatistics(statreplylist.toList.asJava)
+    ofstatreply.setStatisticType(OFStatisticsType.FLOW)
+    ofstatreply.setStatisticsFactory(factory)
+    //calculate the message length
+    ofstatreply.setLength((stataggreply.getLength + ofstatreply.getLength).toShort)
+    ofstatreply.setXid(ofstatrequest.getXid)
+    ofmsgsender.pushInToBuffer(ofstatreply)
+  }
+
   override def handleMessage(msg: OFMessage) {
     msg.getType match {
       case OFType.SET_CONFIG => {
@@ -264,6 +359,54 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
       case OFType.FLOW_MOD => processFlowMod(msg.asInstanceOf[OFFlowMod])
       case OFType.PACKET_OUT => processOFPacketOut(msg.asInstanceOf[OFPacketOut])
       case OFType.ECHO_REQUEST => ofmsgsender.pushInToBuffer(generateEchoReply(msg.asInstanceOf[OFEchoRequest]))
+      case OFType.STATS_REPLY => {
+        val ofstatrequest = msg.asInstanceOf[OFStatisticsRequest]
+        ofstatrequest.getStatisticType match {
+          case OFStatisticsType.DESC => ofmsgsender.pushInToBuffer(generateDataplaneDesc(ofstatrequest))
+          case OFStatisticsType.FLOW => processFlowStatisticsQuery(ofstatrequest)
+          case OFStatisticsType.AGGREGATE => processAggregateStatisticsQuery(ofstatrequest)
+          case _ => {}
+        }
+      }
+      case _ => {}
+    }
+  }
+
+  //abstract methods
+  override def selectNextHop(flow: Flow, matchfield: OFMatchField, inPort: Link): Link = {
+    if (!RIBOut.contains(matchfield)) {
+      //send packet_in to controller
+      logDebug("miss the matchfield:" + matchfield.toString)
+      val dummypayload = new Array[Byte](1)
+      dummypayload(0) = (0).toByte
+      val ethernetFrame = new Ethernet
+      ethernetFrame.setEtherType(Ethernet.TYPE_IPv4)
+        .setSourceMACAddress(matchfield.getDataLayerSource)
+        .setDestinationMACAddress(matchfield.getDataLayerDestination)
+        .setPriorityCode(0)
+        .setPad(true)
+        .setVlanID(0)
+        .setPayload(new IPv4()
+        .setSourceAddress(matchfield.getNetworkSource)
+        .setDestinationAddress(matchfield.getNetworkDestination)
+        .setVersion(4)
+        .setPayload(new TCP()
+        .setSourcePort(matchfield.getTransportSource)
+        .setDestinationPort(matchfield.getTransportDestination)
+        .setPayload(new Data(dummypayload))))
+      val serializedData = ethernetFrame.serialize
+      sendPacketInToController(flow , inPort, serializedData)
+      null
+    } else {
+      //openflow 1.0
+      logDebug("hit RIBOut with " + matchfield.toString)
+      //assume return only one result
+      for (entryattach <- flowtables(0).matchFlow(matchfield)) {
+        //TODO: support other actions
+        entryattach.actions.foreach(action =>
+          if (action.isInstanceOf[OFActionOutput]) return RIBOut(matchfield))
+      }
+      null
     }
   }
 }

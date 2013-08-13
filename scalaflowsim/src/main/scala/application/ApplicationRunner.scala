@@ -1,9 +1,8 @@
-package scalasim.application
+package application
 
-import scalasim.network.component.HostContainer
-import scalasim.XmlParser
 import scala.collection.mutable
-import application.PermuMatrixApp
+import simengine.utils.XmlParser
+import network.device.HostContainer
 
 object ApplicationRunner {
 

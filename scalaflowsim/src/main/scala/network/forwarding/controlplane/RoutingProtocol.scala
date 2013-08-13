@@ -1,15 +1,14 @@
 package network.forwarding.controlplane
 
 import scala.collection.mutable.{ArrayBuffer, HashMap}
-import network.controlplane.openflow.flowtable.OFMatchField
 import scala.collection.mutable
 import org.openflow.protocol.OFMatch
-import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
 import network.device._
 import network.traffic.Flow
 import simengine.utils.{XmlParser, Logging}
-import netsimulator.utils.IPAddressConvertor
-import network.forwarding.controlplane.openflow.OpenFlowControlPlane
+import network.forwarding.controlplane.openflow.{OFMatchField, OpenFlowControlPlane}
+import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
+import utils.IPAddressConvertor
 
 /**
  *  the trait representing the functionalities to calculate

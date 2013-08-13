@@ -2,18 +2,24 @@ package network.forwarding.interface
 
 import network.device.{HostType, GlobalDeviceManager, Link, Node}
 import scala.collection.mutable.HashMap
-import org.openflow.protocol.OFPhysicalPort
-import scalasim.network.controlplane.openflow.flowtable.counters.OFPortCount
+import org.openflow.protocol._
 import org.openflow.util.HexString
+import network.forwarding.controlplane.openflow.{OpenFlowControlPlane, OFPortCount, MessageListener}
+import scala.collection.JavaConversions._
+import scala.Some
+import org.openflow.protocol.statistics.{OFStatistics, OFPortStatisticsReply, OFPortStatisticsRequest, OFStatisticsType}
+import org.openflow.protocol.factory.BasicFactory
+import java.util
 
 
-class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node) {
+class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node) with MessageListener{
 
-  private [controlplane] val linkphysicalportsMap = new HashMap[Link, OFPhysicalPort]
-  private [controlplane] val physicalportsMap = new HashMap[Short, OFPhysicalPort]//port number -> port
+  private [forwarding] val linkphysicalportsMap = new HashMap[Link, OFPhysicalPort]
+  private [forwarding] val physicalportsMap = new HashMap[Short, OFPhysicalPort]//port number -> port
 
-  private [controlplane] val portcounters = new HashMap[Short, OFPortCount]
+  private [forwarding] val portcounters = new HashMap[Short, OFPortCount]//portnum -> counter
 
+  private val factory = new BasicFactory
 
   def getPhysicalPort(portNum : Short) = physicalportsMap.getOrElse(portNum, null)
 
@@ -66,7 +72,7 @@ class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node) {
 
   override def registerOutgoingLink(l : Link) {
     super.registerOutgoingLink(l)
-    addOFPhysicalPort(l, (outlink.size + inlinks.size).toShort)
+    addOFPhysicalPort(l, (outlinks.size + inlinks.size).toShort)
   }
 
   override def registerIncomeLink(l : Link) {
@@ -75,7 +81,69 @@ class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node) {
       inlinks += otherEnd.ip_addr(0) -> l
     } else {
       inlinks += otherEnd.ip_addr(0) -> l
-      addOFPhysicalPort(l, (outlink.size + inlinks.size).toShort)
+      addOFPhysicalPort(l, (outlinks.size + inlinks.size).toShort)
+    }
+  }
+
+  private def queryPortCounters(portnum : Short) : util.List[OFStatistics] = {
+    def generatestatportreply (portnum : Short, counter : OFPortCount) = {
+      val statportreply = factory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.PORT)
+        .asInstanceOf[OFPortStatisticsReply]
+      statportreply.setCollisions(counter.collisions)
+      statportreply.setPortNumber(portnum)
+      statportreply.setReceiveBytes(counter.receivedbytes)
+      statportreply.setreceivePackets(counter.receivedpacket)
+      statportreply.setReceiveDropped(counter.receivedrops)
+      statportreply.setreceiveErrors(counter.receiveerror)
+      statportreply.setReceiveFrameErrors(counter.receiveframe_align_error)
+      statportreply.setReceiveOverrunErrors(counter.receive_overrun_error)
+      statportreply.setReceiveCRCErrors(counter.receive_crc_error)
+      statportreply.setTransmitPackets(counter.transmittedpacket)
+      statportreply.setTransmitBytes(counter.transmittedbytes)
+      statportreply.setTransmitDropped(counter.transmitdrops)
+      statportreply.setTransmitErrors(counter.transmiterror)
+      statportreply
+    }
+    val statList = new util.ArrayList[OFStatistics]
+    if (portnum == -1) {
+      val counters = portcounters
+      for (counter_pair <- counters) {
+        statList += generatestatportreply(counter_pair._1, counter_pair._2)
+      }
+    } else {
+      statList += generatestatportreply(portnum, portcounters(portnum))
+    }
+    statList
+  }
+
+  def handleMessage(msg: OFMessage) {
+    msg.getType match {
+      case OFType.STATS_REPLY => {
+        val ofstatrequest = msg.asInstanceOf[OFStatisticsRequest]
+        val ofstatreply = factory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
+        ofstatrequest.getStatisticType match {
+          case OFStatisticsType.PORT => {
+            val statportreqmsg = ofstatrequest.asInstanceOf[OFStatisticsRequest]
+            val statportreqs = statportreqmsg.getStatistics
+            val statreply = factory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
+            val statList = new util.ArrayList[OFStatistics]
+            statportreqs.foreach(statreq => {
+              queryPortCounters(statreq.asInstanceOf[OFPortStatisticsRequest].getPortNumber)
+                .foreach(statportreply => statList += statportreply)
+            })
+            //resemble ofstatreply
+            ofstatreply.setStatistics(statList)
+            ofstatreply.setStatisticsFactory(factory)
+            ofstatreply.setStatisticType(OFStatisticsType.PORT)
+            ofstatreply.setXid(ofstatrequest.getXid)
+            //calculate the length
+            ofstatreply.setLength((12 + statList.length * statList(0).getLength).toShort)
+            node.controlplane.asInstanceOf[OpenFlowControlPlane].ofmsgsender.pushInToBuffer(ofstatreply)
+          }
+          case _ => {}
+        }
+      }
+      case _ => {}
     }
   }
 }

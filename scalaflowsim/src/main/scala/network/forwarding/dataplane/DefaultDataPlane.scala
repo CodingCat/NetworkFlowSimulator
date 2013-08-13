@@ -1,11 +1,10 @@
 package network.forwarding.dataplane
 
-import scala.collection.mutable.{ListBuffer, HashMap}
 import network.device._
-import network.traffic.{RunningFlow, ChangingRateFlow, FlowRateOrdering, Flow}
-import scalasim.network.controlplane.openflow.flowtable.OFFlowTable
+import network.traffic.{RunningFlow, ChangingRateFlow, FlowRateOrdering}
 import simengine.utils.Logging
 import org.openflow.protocol.OFMatch
+import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
 
 
 /**
@@ -75,7 +74,7 @@ class DefaultDataPlane extends ResourceAllocator with Logging {
       val matchfield = OFFlowTable.createMatchField(flow = currentflow,
         wcard = (OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_DST_MASK & ~OFMatch.OFPFW_NW_SRC_MASK))
       //try to acquire the max-min rate starting from the dest of this flow
-      flowdest.dataplane.allocate(currentflow, flowdest.controlplane.fetchInRoutingEntry(matchfield))
+      flowdest.dataplane.allocate(flowdest, currentflow, flowdest.controlplane.fetchInRoutingEntry(matchfield))
       demandingflows.remove(0)
       if (demandingflows.size != 0) avrRate = remainingBandwidth / demandingflows.size
     }

@@ -1,7 +1,7 @@
 package scalasim.network.component.builder
 
-import scalasim.network.component.{RouterContainer, Link, HostContainer, Router}
 import simengine.utils.XmlParser
+import network.device.{RouterContainer, Link, HostContainer, Router}
 
 
 object LanBuilder {
@@ -15,8 +15,8 @@ object LanBuilder {
           throw new RuntimeException("Hosts haven't got ipaddress, the idx is " + i)
         }
         val newlink = new Link(hosts(i), router, locallinkBandwidth)
-        hosts(i).controlPlane.registerOutgoingLink(newlink)
-        router.controlPlane.registerIncomeLink(newlink)
+        hosts(i).interfacesManager.registerOutgoingLink(newlink)
+        router.interfacesManager.registerIncomeLink(newlink)
       }
     }
     catch {
@@ -33,8 +33,8 @@ object LanBuilder {
           throw new RuntimeException("ToRRouters haven't got ipaddress, the idx is " + i)
         }
         val newlink = new Link(routers(i), aggRouter, crossrouterlinkBandwidth)
-        routers(i).controlPlane.registerOutgoingLink(newlink)
-        aggRouter.controlPlane.registerIncomeLink(newlink)
+        routers(i).interfacesManager.registerOutgoingLink(newlink)
+        aggRouter.interfacesManager.registerIncomeLink(newlink)
       }
     }
     catch {

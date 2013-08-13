@@ -1,10 +1,8 @@
 package network.forwarding.controlplane.openflow
 
 import scala.collection.mutable.ArrayBuffer
-import org.openflow.protocol.{OFType, OFMessage}
+import org.openflow.protocol.OFMessage
 import scala.collection.mutable
-import scala.concurrent.Lock
-import simengine.utils.XmlParser
 import org.jboss.netty.channel.Channel
 
 
@@ -27,5 +25,9 @@ class OpenFlowMsgSender (private val channel : Channel) {
       channel.write(msgPendingBuffer)
       msgPendingBuffer.clear()
     }
+  }
+
+  def flushBuffer() {
+    if (channel.isConnected) channel.write(ioBatchBuffer)
   }
 }

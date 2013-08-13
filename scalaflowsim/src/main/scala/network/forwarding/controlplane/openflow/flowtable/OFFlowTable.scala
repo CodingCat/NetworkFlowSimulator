@@ -1,22 +1,22 @@
 package network.forwarding.controlplane.openflow.flowtable
 
-import scalasim.network.controlplane.openflow.flowtable.counters._
 import scala.collection.mutable.{ListBuffer, HashMap}
-import org.openflow.protocol.{OFMessage, OFFlowMod, OFMatch}
+import org.openflow.protocol._
 import org.openflow.protocol.action.{OFActionOutput, OFAction}
-import scalasim.network.controlplane.routing.OpenFlowRouting
 import network.events.OFFlowTableEntryExpireEvent
 import scala.collection.JavaConversions._
 import org.openflow.util.U32
 import scala.collection.mutable
-import network.controlplane.openflow.flowtable.OFMatchField
 import simengine.utils.Logging
-import network.forwarding.controlplane.openflow.MessageListener
+import network.forwarding.controlplane.openflow._
 import simengine.SimulationEngine
 import network.traffic.Flow
-import netsimulator.utils.IPAddressConvertor
+import org.openflow.protocol.statistics.{OFFlowStatisticsReply, OFFlowStatisticsRequest, OFStatisticsType}
+import org.openflow.protocol.factory.BasicFactory
+import utils.IPAddressConvertor
 
-class OFFlowTable (ofroutingmodule : OpenFlowRouting) extends Logging with MessageListener {
+class OFFlowTable (tableid : Short, ofcontrolplane : OpenFlowControlPlane) extends Logging {
+
   class OFFlowTableEntryAttaches (table : OFFlowTable) {
     private [openflow] var ofmatch : OFMatch = null
     private [openflow] val counter : OFFlowCount = new OFFlowCount
@@ -52,7 +52,7 @@ class OFFlowTable (ofroutingmodule : OpenFlowRouting) extends Logging with Messa
         }
       }
       if (expireMoment != 0) {
-        expireEvent = new OFFlowTableEntryExpireEvent(ofroutingmodule,
+        expireEvent = new OFFlowTableEntryExpireEvent(table,
           OFFlowTable.createMatchField(ofmatch, ofmatch.getWildcards),
           expireMoment)
         SimulationEngine.addEvent(expireEvent)
@@ -64,6 +64,8 @@ class OFFlowTable (ofroutingmodule : OpenFlowRouting) extends Logging with Messa
     new HashMap[OFMatchField, OFFlowTableEntryAttaches] with
       mutable.SynchronizedMap[OFMatchField, OFFlowTableEntryAttaches]
   private [openflow] val counters : OFTableCount = new OFTableCount
+
+  private val messageFactory = new BasicFactory
 
   def clear() {
     entries.clear()
@@ -143,7 +145,33 @@ class OFFlowTable (ofroutingmodule : OpenFlowRouting) extends Logging with Messa
     entries
   }
 
-  def handleMessage(msg: OFMessage) {}
+  def queryByFlowStatRequest(offlowstatreq: OFFlowStatisticsRequest): List[OFFlowStatisticsReply] = {
+    val replylist = new ListBuffer[OFFlowStatisticsReply]
+    val qualifiedflows = queryTableByMatchAndOutport(offlowstatreq.getMatch,
+      offlowstatreq.getOutPort)
+    logTrace("qualified matchfield number: " + qualifiedflows.length)
+    qualifiedflows.foreach(flowentry => {
+      val offlowstatreply = messageFactory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.FLOW)
+        .asInstanceOf[OFFlowStatisticsReply]
+      var actionlistlength = 0
+      flowentry.actions.foreach(action => actionlistlength += action.getLength)
+      offlowstatreply.setMatch(offlowstatreq.getMatch)
+      offlowstatreply.setTableId(offlowstatreq.getTableId)
+      offlowstatreply.setDurationNanoseconds(flowentry.counter.durationNanoSeconds)
+      offlowstatreply.setDurationSeconds(flowentry.counter.durationSeconds)
+      offlowstatreply.setPriority(0)
+      offlowstatreply.setIdleTimeout((flowentry.flowIdleDuration -
+        (SimulationEngine.currentTime - flowentry.getLastAccessPoint)).toShort)
+      offlowstatreply.setHardTimeout((flowentry.flowHardExpireMoment - SimulationEngine.currentTime).toShort)
+      offlowstatreply.setCookie(0)
+      offlowstatreply.setPacketCount(flowentry.counter.receivedpacket)
+      offlowstatreply.setByteCount(flowentry.counter.receivedbytes)
+      offlowstatreply.setActions(flowentry.actions)
+      offlowstatreply.setLength((88 + actionlistlength).toShort)
+      replylist += offlowstatreply
+    })
+    replylist.toList
+  }
 }
 
 object OFFlowTable {

@@ -3,18 +3,20 @@ package network.forwarding.interface
 import network.device.{Link, HostType, Node}
 import simengine.utils.XmlParser
 import scala.collection.mutable.HashMap
-import scala.collection.mutable
 
 
 trait InterfacesManager {
-  private [controlplane] val outlink = new HashMap[String, Link] // key -> destination ip
+  private [forwarding] val outlinks = new HashMap[String, Link] // key -> destination ip
 
   //if the other end is a host, then the key is the ip of the host,
   //if the other end is a router, then the key is the IP range of that host
-  private [controlplane] val inlinks = new HashMap[String, Link]
+  private [forwarding] val inlinks = new HashMap[String, Link]
+
+  def getOutLinks (ip : String) = outlinks.get(ip)
+  def getInLinks (ip : String) = inlinks.get(ip)
 
   def registerOutgoingLink(l : Link) {
-    outlink += (l.end_to.ip_addr(0) -> l)
+    outlinks += (l.end_to.ip_addr(0) -> l)
   }
 
   def registerIncomeLink(l : Link) {
@@ -35,8 +37,8 @@ trait InterfacesManager {
   def getfloodLinks(localnode: Node, inport: Link): List[Link] = {
     val alllink = {
       if (localnode.nodetype != HostType)
-        inlinks.values.toList ::: outlink.values.toList
-      else outlink.values.toList
+        inlinks.values.toList ::: outlinks.values.toList
+      else outlinks.values.toList
     }
     alllink.filterNot(l => l == inport)
   }
