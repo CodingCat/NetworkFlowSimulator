@@ -21,11 +21,7 @@ trait InterfacesManager {
 
   def registerIncomeLink(l : Link) {
     val otherEnd = l.end_from
-    if (otherEnd.nodetype == HostType) {
-      inlinks += otherEnd.ip_addr(0) -> l
-    } else {
-      inlinks += otherEnd.ip_addr(0) -> l
-    }
+    inlinks += otherEnd.ip_addr(0) -> l
   }
 
   def getNeighbour(localnode : Node, l : Link) : Node = {

@@ -10,9 +10,11 @@ import scala.Some
 import org.openflow.protocol.statistics.{OFStatistics, OFPortStatisticsReply, OFPortStatisticsRequest, OFStatisticsType}
 import org.openflow.protocol.factory.BasicFactory
 import java.util
+import simengine.utils.Logging
 
 
-class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node) with MessageListener{
+class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node)
+  with MessageListener with Logging {
 
   private [forwarding] val linkphysicalportsMap = new HashMap[Link, OFPhysicalPort]
   private [forwarding] val physicalportsMap = new HashMap[Short, OFPhysicalPort]//port number -> port
@@ -34,7 +36,7 @@ class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node) wit
    * @return the link
    */
   def reverseSelection (portNum : Short) : Link = {
-    linkphysicalportsMap.find(link_port_pair => link_port_pair._2 == portNum) match {
+    linkphysicalportsMap.find(link_port_pair => link_port_pair._2.getPortNumber == portNum) match {
       case Some(lppair) => lppair._1
       case None => null
     }
@@ -76,11 +78,8 @@ class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node) wit
   }
 
   override def registerIncomeLink(l : Link) {
-    val otherEnd = l.end_from
-    if (otherEnd.nodetype == HostType) {
-      inlinks += otherEnd.ip_addr(0) -> l
-    } else {
-      inlinks += otherEnd.ip_addr(0) -> l
+    super.registerIncomeLink(l)
+    if (node.nodetype != HostType) {
       addOFPhysicalPort(l, (outlinks.size + inlinks.size).toShort)
     }
   }
@@ -118,14 +117,14 @@ class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node) wit
 
   def handleMessage(msg: OFMessage) {
     msg.getType match {
-      case OFType.STATS_REPLY => {
+      case OFType.STATS_REQUEST => {
         val ofstatrequest = msg.asInstanceOf[OFStatisticsRequest]
         val ofstatreply = factory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
         ofstatrequest.getStatisticType match {
           case OFStatisticsType.PORT => {
+            logTrace("received a port statistical request")
             val statportreqmsg = ofstatrequest.asInstanceOf[OFStatisticsRequest]
             val statportreqs = statportreqmsg.getStatistics
-            val statreply = factory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
             val statList = new util.ArrayList[OFStatistics]
             statportreqs.foreach(statreq => {
               queryPortCounters(statreq.asInstanceOf[OFPortStatisticsRequest].getPortNumber)

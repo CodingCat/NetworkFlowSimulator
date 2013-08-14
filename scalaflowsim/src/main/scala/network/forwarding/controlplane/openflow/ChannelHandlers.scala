@@ -33,17 +33,14 @@ class OpenFlowMsgDecoder extends FrameDecoder {
   }
 }
 
-class OpenFlowChannelHandler (private val ofcontrolplane : OpenFlowControlPlane)
+class OpenFlowMessageDispatcher (private val ofcontrolplane : OpenFlowControlPlane)
   extends SimpleChannelHandler {
 
-  private val factory =  new BasicFactory
-  private val logger = LoggerFactory.getLogger("OpenFlowHandler")
   private val msglistenerList = new ListBuffer[MessageListener]
-
+  private val logger = LoggerFactory.getLogger("dispatcherlogger")
   private def registerMessageListener {
     msglistenerList += ofcontrolplane
     msglistenerList += ofcontrolplane.ofinterfacemanager
-
   }
 
   override def channelConnected(ctx : ChannelHandlerContext, e : ChannelStateEvent) {
@@ -55,6 +52,7 @@ class OpenFlowChannelHandler (private val ofcontrolplane : OpenFlowControlPlane)
     if (!e.getMessage.isInstanceOf[java.util.ArrayList[_]]) return
     val msglist = e.getMessage.asInstanceOf[java.util.ArrayList[OFMessage]]
     for (ofm: OFMessage <- msglist) {
+      logger.debug("receive " + ofm.toString)
       msglistenerList.foreach(handler => handler.handleMessage(ofm))
     }
     //send out all messages

@@ -33,13 +33,15 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
   private val controllerIP = XmlParser.getString("scalasim.network.controlplane.openflow.controller.host", "127.0.0.1")
   private val controllerPort = XmlParser.getInt("scalasim.network.controlplane.openflow.controller.port", 6633)
 
+  private var lldpcnt = 0
+
   private [openflow] var toControllerChannel : Channel = null
 
-  private [openflow] val ofinterfacemanager = node.interfacesManager.asInstanceOf[OpenFlowPortManager]
+  private [openflow] lazy val ofinterfacemanager = node.interfacesManager.asInstanceOf[OpenFlowPortManager]
   private [forwarding] lazy val ofmsgsender = new OpenFlowMsgSender(toControllerChannel)
 
   private var config_flags : Short = 0
-  private var miss_send_len : Short = 0
+  private var miss_send_len : Short = 1000
 
   private [controlplane] val flowtables = new Array[OFFlowTable](
     XmlParser.getInt("scalasim.openflow.flowtablenum", 1))
@@ -55,6 +57,10 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
 
   def getSwitchDescription = node.ip_addr(0)
 
+  private def openflowInit() {
+    for (i <- 0 until flowtables.length) flowtables(i) = new OFFlowTable(i.toShort, this)
+  }
+
   private def generatePacketIn(bufferid : Int, inPortnum : Short, payload: Array[Byte],
                                reason: OFPacketIn.OFPacketInReason): OFPacketIn = {
 
@@ -69,6 +75,7 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
   }
 
   def sendPacketInToController(flow : Flow, inlink: Link, ethernetFramedata: Array[Byte]) {
+    assert(ofinterfacemanager.linkphysicalportsMap.contains(inlink))
     val port = ofinterfacemanager.linkphysicalportsMap(inlink)
     pendingFlowLock.acquire()
     val bufferid = pendingFlows.size
@@ -85,11 +92,10 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
   def sendLLDPtoController (l : Link, lldpData : Array[Byte]) {
     val port = ofinterfacemanager.linkphysicalportsMap(l)
     //send out packet_in
-    val packet_in_msg = factory.getMessage(OFType.PACKET_IN).asInstanceOf[OFPacketIn]
+    lldpcnt += 1
     ofmsgsender.sendMessageToController(
       generatePacketIn(-1, port.getPortNumber, lldpData, OFPacketIn.OFPacketInReason.ACTION))
   }
-
 
   private def replyLLDP (pktoutMsg : OFPacketOut) {
     //send out through all ports
@@ -100,6 +106,15 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
     //TODO: only support the situation that all routers are openflow-enabled
     if (neighbor.nodetype != HostType)
       neighbor.controlplane.asInstanceOf[OpenFlowControlPlane].sendLLDPtoController(outlink, lldpdata)
+  }
+
+  def topologyReady() : Boolean = {
+    val expectedNumber = {
+      val alllinks = ofinterfacemanager.outlinks.values.toList :::
+        ofinterfacemanager.inlinks.values.toList
+      alllinks.filter(l => Link.otherEnd(l, node).nodetype != HostType).length
+    }
+    lldpcnt >= expectedNumber
   }
 
   protected def inFlowRegistration(matchfield : OFMatchField, inlink : Link) {
@@ -132,10 +147,10 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
 
   private def setParameter(f : Short, m : Short) {
     config_flags = f
-    miss_send_len = miss_send_len
+    miss_send_len = m
   }
 
-  val DPID = {
+  lazy val DPID = {
     val impl_dependent = node.nodetype match {
       case ToRRouterType => "00"
       case AggregateRouterType => "01"
@@ -169,6 +184,7 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
     getconfigreply.setMissSendLength(miss_send_len)
     getconfigreply.setXid(xid)
     getconfigreply.setVersion(version)
+    getconfigreply.setLength(12)
     getconfigreply
   }
 
@@ -313,9 +329,8 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
     val statreplylist = new ListBuffer[OFStatistics]
     val stataggreply = factory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.AGGREGATE)
       .asInstanceOf[OFAggregateStatisticsReply]
-    val statList = new util.ArrayList[OFStatistics]
     for (statreq <- offlowstatreq) {
-      val flowstatreq = statreq.asInstanceOf[OFFlowStatisticsRequest]
+      val flowstatreq = statreq.asInstanceOf[OFAggregateStatisticsRequest]
       if (flowstatreq.getTableId == -1) {
         for (i <- 0 until flowtables.length) {
           val referred_table = flowtables(i)
@@ -335,7 +350,7 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
     //resemble the ofstatreply
     statreplylist += stataggreply
     ofstatreply.setStatistics(statreplylist.toList.asJava)
-    ofstatreply.setStatisticType(OFStatisticsType.FLOW)
+    ofstatreply.setStatisticType(OFStatisticsType.AGGREGATE)
     ofstatreply.setStatisticsFactory(factory)
     //calculate the message length
     ofstatreply.setLength((stataggreply.getLength + ofstatreply.getLength).toShort)
@@ -346,6 +361,7 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
   override def handleMessage(msg: OFMessage) {
     msg.getType match {
       case OFType.SET_CONFIG => {
+        logger.trace("received a set_config message")
         val setconfigmsg = msg.asInstanceOf[OFSetConfig]
         setParameter(setconfigmsg.getFlags, setconfigmsg.getMissSendLength)
       }
@@ -354,15 +370,20 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
         val featurereply = getSwitchFeature(msg.getXid.toShort)
         ofmsgsender.pushInToBuffer(featurereply)
       }
-      case OFType.GET_CONFIG_REQUEST => ofmsgsender.pushInToBuffer(
-        generateSwitchConfigReply(msg.getXid.toShort, msg.getVersion))
+      case OFType.GET_CONFIG_REQUEST => {
+        ofmsgsender.pushInToBuffer(
+          generateSwitchConfigReply(msg.getXid.toShort, msg.getVersion))
+      }
       case OFType.FLOW_MOD => processFlowMod(msg.asInstanceOf[OFFlowMod])
       case OFType.PACKET_OUT => processOFPacketOut(msg.asInstanceOf[OFPacketOut])
       case OFType.ECHO_REQUEST => ofmsgsender.pushInToBuffer(generateEchoReply(msg.asInstanceOf[OFEchoRequest]))
-      case OFType.STATS_REPLY => {
+      case OFType.STATS_REQUEST => {
         val ofstatrequest = msg.asInstanceOf[OFStatisticsRequest]
         ofstatrequest.getStatisticType match {
-          case OFStatisticsType.DESC => ofmsgsender.pushInToBuffer(generateDataplaneDesc(ofstatrequest))
+          case OFStatisticsType.DESC => {
+            logger.trace("received a desc stat request")
+            ofmsgsender.pushInToBuffer(generateDataplaneDesc(ofstatrequest))
+          }
           case OFStatisticsType.FLOW => processFlowStatisticsQuery(ofstatrequest)
           case OFStatisticsType.AGGREGATE => processAggregateStatisticsQuery(ofstatrequest)
           case _ => {}
@@ -409,4 +430,6 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
       null
     }
   }
+
+  openflowInit()
 }

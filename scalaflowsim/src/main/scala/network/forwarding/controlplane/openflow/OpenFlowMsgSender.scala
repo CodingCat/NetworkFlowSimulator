@@ -28,6 +28,9 @@ class OpenFlowMsgSender (private val channel : Channel) {
   }
 
   def flushBuffer() {
-    if (channel.isConnected) channel.write(ioBatchBuffer)
+    if (channel != null && channel.isConnected) {
+      channel.write(ioBatchBuffer)
+      ioBatchBuffer.clear()
+    }
   }
 }

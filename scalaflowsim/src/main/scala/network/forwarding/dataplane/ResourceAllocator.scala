@@ -96,7 +96,7 @@ trait ResourceAllocator extends Logging {
       if (flow.floodflag) flow.floodflag = false
     }
     flow.run()
-    SimulationEngine.atomicLock.release()
+    SimulationEngine.queueReadingLock.release()
     logDebug("release lock at ControlPlane")
   }
 
@@ -140,6 +140,7 @@ object ResourceAllocator {
   def apply(node : Node) : ResourceAllocator = {
     runningModel match {
       case "default" => new DefaultDataPlane
+      case "openflow" => new DefaultDataPlane
       case _ => null
     }
   }

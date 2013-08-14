@@ -8,7 +8,7 @@ import simengine.utils.Logging
 
 object SimulationEngine extends Logging {
 
-  val atomicLock = new Lock
+  val queueReadingLock = new Lock
   var currentTime : Double = 0.0
 
   //TODO:any more performant implementation?
@@ -17,10 +17,10 @@ object SimulationEngine extends Logging {
 
   def run {
     while (!eventqueue.isEmpty) {
-      atomicLock.acquire()
+      queueReadingLock.acquire()
       logDebug("acquire lock at SimulationEngine")
       val event = eventqueue.head
-      atomicLock.release()
+      queueReadingLock.release()
       logDebug("release lock at SimulationEngine")
       if (event.getTimeStamp < currentTime) {
         throw new Exception("cannot execute an event happened before, event timestamp: " +

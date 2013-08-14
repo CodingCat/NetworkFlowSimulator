@@ -18,8 +18,9 @@ import network.traffic.{CompletedFlow, Flow}
 import network.events.StartNewFlowEvent
 import scala.collection.mutable.ListBuffer
 
-class OpenFlowSuite extends FunSuite {
 
+class OpenFlowSuite extends FunSuite {
+  /*
   test ("routers can be assigned with DPID address correctly") {
     SimulationRunner.reset
     XmlParser.addProperties("scalasim.simengine.model", "openflow")
@@ -164,10 +165,10 @@ class OpenFlowSuite extends FunSuite {
     )
     matchfield.setDataLayerVirtualLan(0)
     assert(matchfield.hashCode === generatedmatchfield.hashCode)
-  }
+  }  */
 
 
-
+    /*
   test("flow can be routed within a rack (openflow)") {
     SimulationRunner.reset
     XmlParser.addProperties("scalasim.simengine.model", "openflow")
@@ -217,7 +218,7 @@ class OpenFlowSuite extends FunSuite {
     assert(flow1.LastCheckPoint === 0.02)
     assert(flow2.LastCheckPoint === 0.02)
     pod.shutDownOpenFlowNetwork()
-  }
+  }        */
 
   test("flow can be allocated with correct bandwidth (within the agg router) " +
     "(case 1, one-one pattern)(openflow)") {
@@ -259,7 +260,6 @@ class OpenFlowSuite extends FunSuite {
     for (i <- 0 until flowlist.size) {
       if (i != flowlist.size - 1) assert(flowlist(i).LastCheckPoint === 0.04)
       else {
-        println(flowlist(i))
         assert(BigDecimal(flowlist(i).LastCheckPoint).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
           === 0.11)
       }
