@@ -8,6 +8,7 @@ import network.traffic._
 import simengine.SimulationEngine
 import network.events.StartNewFlowEvent
 import root.SimulationRunner
+import scala.collection.mutable.ListBuffer
 
 class ControlPlaneSuite extends FunSuite with Logging {
 
@@ -29,12 +30,12 @@ class ControlPlaneSuite extends FunSuite with Logging {
     assert(flow1.status === CompletedFlow)
     assert(flow2.status === CompletedFlow)
   }
- /*
+
   test("flow (flood) can be routed within a rack") {
     SimulationRunner.reset
     val torrouter = new Router(ToRRouterType, GlobalDeviceManager.globaldevicecounter)
     val rackservers = new HostContainer
-    rackservers.create(3)
+    rackservers.create(2)
     AddressInstaller.assignIPAddress(torrouter, "10.0.0.1")
     AddressInstaller.assignIPAddress(torrouter.ip_addr(0), 2, rackservers, 0, rackservers.size - 1)
     LanBuilder.buildLan(torrouter, rackservers, 0, rackservers.size - 1)
@@ -258,5 +259,5 @@ class ControlPlaneSuite extends FunSuite with Logging {
     for (i <- 0 until flowlist.size) {
       assert(flowlist(i).LastCheckPoint === 0.08)
     }
-  }  */
+  }
 }

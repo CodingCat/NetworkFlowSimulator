@@ -195,7 +195,7 @@ object OFFlowTable {
   }
 
   /**
-   *
+   * generate the OFMatchField from a OFMatch
    * @param ofmatch
    * @param wcard
    * @return

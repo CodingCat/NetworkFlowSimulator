@@ -31,6 +31,9 @@ trait RoutingProtocol extends Logging {
 
   def fetchInRoutingEntry(ofmatch : OFMatch) : Link = {
     val matchfield = OFFlowTable.createMatchField(ofmatch, wildcard)
+    logDebug("quering matchfield: " + matchfield + "(" + matchfield.hashCode + ")" +
+      " node:" + this)
+    println("RIBIn Length:" + RIBIn.size)
     assert(RIBIn.contains(matchfield) == true)
     RIBIn(matchfield)
   }
@@ -48,18 +51,18 @@ trait RoutingProtocol extends Logging {
       " with the link " + link.toString)
     val matchfield = OFFlowTable.createMatchField(ofmatch = ofmatch, wcard = wildcard)
     RIBOut += (matchfield -> link)
-    if (link.end_from.ip_addr(0) == matchfield.getNetworkSource) {
-      GlobalDeviceManager.insertNewHost(link.end_from.ip_addr(0), link.end_from.asInstanceOf[Host])
+    if (link.end_from.ip_addr(0) == IPAddressConvertor.IntToDecimalString(matchfield.getNetworkSource)) {
+      GlobalDeviceManager.insertNewNode(link.end_from.ip_addr(0), link.end_from)
     }
   }
 
   def insertInPath (ofmatch : OFMatch, link : Link) {
     val matchfield = OFFlowTable.createMatchField(ofmatch = ofmatch, wcard = wildcard)
-    logTrace(this + " insert inRIB entry " + matchfield + "(" + matchfield.hashCode
-      + ") -> " + link)
     RIBIn += (matchfield -> link)
-    if (link.end_from.ip_addr(0) == matchfield.getNetworkDestination) {
-      GlobalDeviceManager.insertNewHost(link.end_from.ip_addr(0), link.end_from.asInstanceOf[Host])
+    logTrace(this + " insert inRIB entry " + matchfield + "(" + matchfield.hashCode
+      + ") -> " + link + " RIBIn Length:" + RIBIn.size)
+    if (link.end_from.ip_addr(0) == IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination)) {
+      GlobalDeviceManager.insertNewNode(link.end_from.ip_addr(0), link.end_from)
     }
   }
 
@@ -80,7 +83,7 @@ trait RoutingProtocol extends Logging {
     if (passbyFlow(localnode, flow)) return
     logTrace("arrive at " + localnode.ip_addr(0) + ", routing (flow : Flow, matchfield : OFMatch, inlink : Link)" +
       " flow:" + flow + ", inlink:" + inlink)
-    if (inlink != null) inFlowRegistration(matchfield, inlink)
+    if (inlink != null) localnode.controlplane.insertInPath(matchfield, inlink)
     if (localnode.ip_addr(0) == flow.dstIP) {
       //start resource allocation process
       localnode.dataplane.allocate(localnode, flow, inlink)
@@ -110,7 +113,7 @@ trait RoutingProtocol extends Logging {
       //TODO : openflow flood handling in which nextlinks can be null?
       nextlinks.foreach(l => {
         flow.addTrace(l, inlink)
-        Link.otherEnd(l, localnode).controlplane.routing(localnode, flow, matchfield, l)
+        Link.otherEnd(l, localnode).controlplane.routing(Link.otherEnd(l, localnode), flow, matchfield, l)
       })
       floodlist += flow
     }
@@ -121,10 +124,6 @@ trait RoutingProtocol extends Logging {
     logDebug("send through " + olink)
     flow.addTrace(olink, inlink)
     nextnode.controlplane.routing(nextnode, flow, matchfield, olink)
-  }
-
-  private def inFlowRegistration(matchfield : OFMatchField, inlink : Link) {
-    insertInPath(matchfield, inlink)
   }
 
   private def passbyFlow(localnode: Node, flow : Flow) : Boolean = {

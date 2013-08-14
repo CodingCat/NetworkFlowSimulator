@@ -1,6 +1,6 @@
 package network.forwarding.dataplane
 
-import network.device.{Node, Link}
+import network.device.{GlobalDeviceManager, Node, Link}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import network.traffic._
@@ -8,6 +8,7 @@ import simengine.utils.{Logging, XmlParser}
 import network.events.CompleteFlowEvent
 import simengine.SimulationEngine
 import org.openflow.protocol.OFMatch
+import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
 
 /**
  * class representing the functionalities on the bandwidth allocation among flows
@@ -70,16 +71,16 @@ trait ResourceAllocator extends Logging {
    */
   private def allocateOnCurrentHop(localnode: Node, changingflow : Flow, link : Link) {
     val otherEnd = Link.otherEnd(link, localnode)
-    val dataplane = {
+    val incalldataplane = {
       if (link.end_from == localnode) localnode.dataplane
       else otherEnd.dataplane
     }
     //if it's a new flow, first insert it into the newlinkflowpair
     if (changingflow.status == NewStartFlow) {
-      dataplane.insertNewLinkFlowPair(link, changingflow)
+      incalldataplane.insertNewLinkFlowPair(link, changingflow)
     }
     //decide all flows' rate in the link
-    dataplane.allocate(link)
+    incalldataplane.allocate(link)
   }
 
   private def startFlow (flow : Flow) {
@@ -103,26 +104,27 @@ trait ResourceAllocator extends Logging {
    * release the resources occupied by the flow from the destination to the source
    * @param localnode
    * @param flow
-   * @param matchfield
+   * @param ofmatch
    * @param startinglink can be null for the destination of the flow
    */
-  def finishFlow(localnode: Node, flow : Flow, matchfield : OFMatch, startinglink : Link = null) {
+  def finishFlow(localnode: Node, flow : Flow, ofmatch : OFMatch, startinglink : Link = null) {
     if (localnode.ip_addr(0) != flow.srcIP) {
       logTrace("flow ended at " + localnode.ip_addr(0))
       val nextlink = {
-        if (startinglink == null) localnode.controlplane.fetchInRoutingEntry(matchfield)
+        if (startinglink == null) localnode.controlplane.fetchInRoutingEntry(ofmatch)
         else flow.getLastHop(startinglink)
       }
+      val nextnode = Link.otherEnd(nextlink, localnode)
       val node = {
         if (nextlink.end_from == localnode) localnode
-        else Link.otherEnd(nextlink, localnode)
+        else nextnode
       }
-      deleteFlow(flow)
-      node.dataplane.finishFlow(localnode, flow, matchfield, nextlink)
+      node.dataplane.deleteFlow(flow)
+      nextnode.dataplane.finishFlow(nextnode, flow, ofmatch, nextlink)
       //reallocate resource to other flows
       logTrace("reallocate resource on " + localnode.toString)
       node.dataplane.reallocate(nextlink)
-      node.controlplane.deleteEntry(matchfield)
+      localnode.controlplane.deleteEntry(ofmatch)
     }
   }
 
