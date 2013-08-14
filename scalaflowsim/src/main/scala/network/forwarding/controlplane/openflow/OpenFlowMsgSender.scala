@@ -6,7 +6,7 @@ import scala.collection.mutable
 import org.jboss.netty.channel.Channel
 
 
-class OpenFlowMsgSender (private val channel : Channel) {
+class OpenFlowMsgSender () {
 
   //used to batch IO
   private [openflow] val ioBatchBuffer = new ArrayBuffer[OFMessage] with
@@ -19,7 +19,7 @@ class OpenFlowMsgSender (private val channel : Channel) {
     ioBatchBuffer += msg
   }
 
-  def sendMessageToController(message : OFMessage) {
+  def sendMessageToController(channel : Channel, message : OFMessage) {
     msgPendingBuffer += message
     if (channel != null && channel.isConnected) {
       channel.write(msgPendingBuffer)
@@ -27,7 +27,7 @@ class OpenFlowMsgSender (private val channel : Channel) {
     }
   }
 
-  def flushBuffer() {
+  def flushBuffer(channel : Channel) {
     if (channel != null && channel.isConnected) {
       channel.write(ioBatchBuffer)
       ioBatchBuffer.clear()

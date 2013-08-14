@@ -42,10 +42,9 @@ trait InterfacesManager {
 
 object InterfacesManager {
 
-  private val runningModel = XmlParser.getString("scalasim.simengine.model", "default")
 
   def apply(node : Node) = {
-    runningModel match {
+    XmlParser.getString("scalasim.simengine.model", "default") match {
       case "default" => new DefaultInterfacesManager(node)
       case "openflow" => node.nodetype match {
         case HostType => new DefaultInterfacesManager(node)

@@ -38,7 +38,7 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
   private [openflow] var toControllerChannel : Channel = null
 
   private [openflow] lazy val ofinterfacemanager = node.interfacesManager.asInstanceOf[OpenFlowPortManager]
-  private [forwarding] lazy val ofmsgsender = new OpenFlowMsgSender(toControllerChannel)
+  private [forwarding] val ofmsgsender = new OpenFlowMsgSender
 
   private var config_flags : Short = 0
   private var miss_send_len : Short = 1000
@@ -84,7 +84,7 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
       " at node " + node)
     pendingFlows += (bufferid -> flow)
     pendingFlowLock.release()
-    ofmsgsender.sendMessageToController(
+    ofmsgsender.sendMessageToController(toControllerChannel,
       generatePacketIn(bufferid, port.getPortNumber, ethernetFramedata,
         OFPacketIn.OFPacketInReason.NO_MATCH))
   }
@@ -93,7 +93,7 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
     val port = ofinterfacemanager.linkphysicalportsMap(l)
     //send out packet_in
     lldpcnt += 1
-    ofmsgsender.sendMessageToController(
+    ofmsgsender.sendMessageToController(toControllerChannel,
       generatePacketIn(-1, port.getPortNumber, lldpData, OFPacketIn.OFPacketInReason.ACTION))
   }
 
@@ -358,14 +358,26 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
     ofmsgsender.pushInToBuffer(ofstatreply)
   }
 
+  private def generateHelloMsg(hellomsg : OFHello) = {
+    val helloreply = factory.getMessage(OFType.HELLO).asInstanceOf[OFHello]
+    helloreply.setLength(8)
+    helloreply.setType(OFType.HELLO)
+    helloreply.setXid(hellomsg.getXid)
+    helloreply.setVersion(hellomsg.getVersion)
+    helloreply
+  }
+
   override def handleMessage(msg: OFMessage) {
     msg.getType match {
       case OFType.SET_CONFIG => {
-        logger.trace("received a set_config message")
+        logger.trace(node + " received a set_config message")
         val setconfigmsg = msg.asInstanceOf[OFSetConfig]
         setParameter(setconfigmsg.getFlags, setconfigmsg.getMissSendLength)
       }
-      case OFType.HELLO => ofmsgsender.pushInToBuffer(factory.getMessage(OFType.HELLO))
+      case OFType.HELLO => {
+        logger.trace(node + " received a hello message")
+        ofmsgsender.pushInToBuffer(generateHelloMsg(msg.asInstanceOf[OFHello]))
+      }
       case OFType.FEATURES_REQUEST => {
         val featurereply = getSwitchFeature(msg.getXid.toShort)
         ofmsgsender.pushInToBuffer(featurereply)
@@ -376,12 +388,13 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
       }
       case OFType.FLOW_MOD => processFlowMod(msg.asInstanceOf[OFFlowMod])
       case OFType.PACKET_OUT => processOFPacketOut(msg.asInstanceOf[OFPacketOut])
-      case OFType.ECHO_REQUEST => ofmsgsender.pushInToBuffer(generateEchoReply(msg.asInstanceOf[OFEchoRequest]))
+      case OFType.ECHO_REQUEST => ofmsgsender.pushInToBuffer(
+        generateEchoReply(msg.asInstanceOf[OFEchoRequest]))
       case OFType.STATS_REQUEST => {
         val ofstatrequest = msg.asInstanceOf[OFStatisticsRequest]
         ofstatrequest.getStatisticType match {
           case OFStatisticsType.DESC => {
-            logger.trace("received a desc stat request")
+            logger.trace(node +  " received a desc stat request")
             ofmsgsender.pushInToBuffer(generateDataplaneDesc(ofstatrequest))
           }
           case OFStatisticsType.FLOW => processFlowStatisticsQuery(ofstatrequest)

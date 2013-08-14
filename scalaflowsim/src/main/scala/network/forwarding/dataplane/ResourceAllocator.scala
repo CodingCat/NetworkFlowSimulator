@@ -135,10 +135,9 @@ trait ResourceAllocator extends Logging {
 
 
 object ResourceAllocator {
-  private val runningModel = XmlParser.getString("scalasim.simengine.model", "default")
 
   def apply(node : Node) : ResourceAllocator = {
-    runningModel match {
+    XmlParser.getString("scalasim.simengine.model", "default") match {
       case "default" => new DefaultDataPlane
       case "openflow" => new DefaultDataPlane
       case _ => null

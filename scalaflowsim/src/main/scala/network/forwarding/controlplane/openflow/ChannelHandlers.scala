@@ -52,12 +52,11 @@ class OpenFlowMessageDispatcher (private val ofcontrolplane : OpenFlowControlPla
     if (!e.getMessage.isInstanceOf[java.util.ArrayList[_]]) return
     val msglist = e.getMessage.asInstanceOf[java.util.ArrayList[OFMessage]]
     for (ofm: OFMessage <- msglist) {
-      logger.debug("receive " + ofm.toString)
       msglistenerList.foreach(handler => handler.handleMessage(ofm))
     }
     //send out all messages
     if (e.getChannel != null && e.getChannel.isConnected)
-      ofcontrolplane.ofmsgsender.flushBuffer()
+      ofcontrolplane.ofmsgsender.flushBuffer(e.getChannel)
   }
 
   override def exceptionCaught (ctx : ChannelHandlerContext, e : ExceptionEvent) {
