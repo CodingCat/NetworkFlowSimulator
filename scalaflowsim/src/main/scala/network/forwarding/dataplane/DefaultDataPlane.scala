@@ -30,7 +30,11 @@ class DefaultDataPlane extends ResourceAllocator with Logging {
     while (demandingflows.size != 0 && remainingBandwidth != 0) {
       val currentflow = demandingflows.head
       //initialize for the new flow
-      if (currentflow.getTempRate == Double.MaxValue) currentflow.setTempRate(link.bandwidth)
+      if (currentflow.getTempRate == Double.MaxValue)
+        currentflow.setTempRate(link.bandwidth)
+      //for paused flow, we keep the running Status but set its rate to 0
+      //because if we remove it from the flow list, we may need to recalculate the
+      //path for it
       var demand = {
         if (currentflow.status != RunningFlow) currentflow.getTempRate
         else currentflow.Rate
@@ -56,7 +60,7 @@ class DefaultDataPlane extends ResourceAllocator with Logging {
 
   /**
    * reallocate the flows' rate on the link, always called when a flow
-   * is finished
+   * is finished or off
    * @param link on the involved link
    */
   override def reallocate(link: Link) {
