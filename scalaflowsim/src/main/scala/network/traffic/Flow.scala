@@ -159,14 +159,14 @@ object Flow {
    * @param dPort
    * @param vlanID
    * @param prioritycode
-   * @param size
+   * @param demand
    * @param fflag
    * @return
    */
   def apply(srcIP : String, dstIP : String, srcMac : String, dstMac : String,
             sPort : Short = 1, dPort : Short = 1, vlanID : Short = 0,
-            prioritycode : Byte = 0, size : Double, fflag : Boolean = false) : Flow = {
+            prioritycode : Byte = 0, demand : Double, fflag : Boolean = false) : Flow = {
     new Flow(srcIP, dstIP, srcMac, dstMac, vlanID, prioritycode, srcPort = sPort, dstPort = dPort,
-      demand = size, floodflag = fflag)
+      demand = demand, floodflag = fflag)
   }
 }

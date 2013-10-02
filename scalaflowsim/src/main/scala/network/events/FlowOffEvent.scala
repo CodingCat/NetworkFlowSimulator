@@ -12,6 +12,7 @@ class FlowOffEvent (flow : Flow, timestamp : Double)
   extends EventOfSingleEntity[Flow] (flow, timestamp) {
 
   def process {
+    println(flow + " is off")
     flow.setRate(0)
     if (flow.Demand > 0) {
       //SCHEDULE next ON event
@@ -25,7 +26,11 @@ class FlowOffEvent (flow : Flow, timestamp : Double)
         OFFlowTable.createMatchField(flow = flow,
           wcard = (OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_DST_MASK & ~OFMatch.OFPFW_NW_SRC_MASK))) //matchfield
     } else {
-
+      GlobalDeviceManager.getHost(flow.srcIP).dataplane.finishFlow(
+        GlobalDeviceManager.getHost(flow.dstIP), //destination host
+        flow,//offflow
+        OFFlowTable.createMatchField(flow = flow,
+          wcard = (OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_DST_MASK & ~OFMatch.OFPFW_NW_SRC_MASK))) //matchfield
     }
   }
 }
