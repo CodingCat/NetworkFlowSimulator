@@ -63,8 +63,12 @@ class Flow private (
     logTrace("change " + this + "'s lastChangePoint to " + SimulationEngine.currentTime)
     lastChangePoint = SimulationEngine.currentTime
     rate = r
-    //TODO: may causing some duplicated rescheduling in successive links
-    if ((status == RunningFlow || status == ChangingRateFlow) && demand > 0) rescheduleBindedEvent
+    if (rate == 0) cancelBindedEvent()
+    else {
+      //TODO: may causing some duplicated rescheduling in successive links
+      if ((status == RunningFlow || status == ChangingRateFlow) && demand > 0)
+        rescheduleBindedEvent()
+    }
   }
 
   def setTempRate(tr : Double) {tempRate = tr}
@@ -75,6 +79,11 @@ class Flow private (
 
   def Rate = rate
 
+  /**
+   * add the link to the flow's trace
+   * @param newlink, the link to be added
+   * @param lastlink, we need to know this parameter to track the last link of newlink
+   */
   def addTrace(newlink : Link, lastlink : Link) {
     var lastlinkindex = -1
     if (lastlink != null) lastlinkindex = trace.indexOf(lastlink)
@@ -90,6 +99,14 @@ class Flow private (
     if (laststepindex < 0) return null
     val ret = trace(laststepindex)
     ret
+  }
+
+  private def cancelBindedEvent() {
+    if (bindedCompleteEvent != null) {
+      logTrace("cancel " + toString + " completeEvent " +
+        " current time:" + SimulationEngine.currentTime)
+      SimulationEngine.cancelEvent(bindedCompleteEvent)
+    }
   }
 
   //TODO: shall I move this method to the control plane or simulationEngine?
@@ -125,6 +142,10 @@ class Flow private (
   def Hop() = hop
 
   override def toString() : String = ("Flow-" + srcIP + "-" + dstIP)
+
+  def getEgressLink = trace(trace.size - 1)
+
+  def getIngressLink = trace(0)
 }
 
 object Flow {

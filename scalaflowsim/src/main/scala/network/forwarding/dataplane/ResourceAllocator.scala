@@ -120,11 +120,32 @@ trait ResourceAllocator extends Logging {
         else nextnode
       }
       node.dataplane.deleteFlow(flow)
+      //recursively to call the function
       nextnode.dataplane.finishFlow(nextnode, flow, ofmatch, nextlink)
       //reallocate resource to other flows
       logTrace("reallocate resource on " + localnode.toString)
       node.dataplane.reallocate(nextlink)
       localnode.controlplane.deleteEntry(ofmatch)
+    }
+  }
+
+  def reallocate(localnode : Node, flow: Flow, ofmatch : OFMatch, startinglink : Link = null) {
+    if (localnode.ip_addr(0) != flow.srcIP) {
+      logTrace("flow ended at " + localnode.ip_addr(0))
+      val nextlink = {
+        if (startinglink == null) localnode.controlplane.fetchInRoutingEntry(ofmatch)
+        else flow.getLastHop(startinglink)
+      }
+      val nextnode = Link.otherEnd(nextlink, localnode)
+      val node = {
+        if (nextlink.end_from == localnode) localnode
+        else nextnode
+      }
+      //recursively to call the function
+      nextnode.dataplane.reallocate(nextnode, flow, ofmatch, nextlink)
+      //reallocate resource to other flows
+      logTrace("reallocate resource on " + localnode.toString)
+      node.dataplane.reallocate(nextlink)
     }
   }
 

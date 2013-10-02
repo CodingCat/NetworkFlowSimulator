@@ -56,3 +56,8 @@ class OnOffApp (servers : HostContainer, onBound : Double, offBound : Double) ex
 
   init()
 }
+
+object OnOffApp {
+  val onLength = 10
+  val offLength = 5
+}

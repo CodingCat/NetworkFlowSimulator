@@ -45,7 +45,7 @@ object SimulationEngine extends Logging {
 
   def contains(e : Event) = eventqueue.contains(e)
 
-  private def cancelEvent(e : Event) {
+  def cancelEvent(e : Event) {
     if (eventqueue.contains(e)) {
       eventqueue -= e
     }
