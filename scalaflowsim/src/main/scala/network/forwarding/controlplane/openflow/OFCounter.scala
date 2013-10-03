@@ -10,6 +10,7 @@ class OFTableCount extends OFCounter("table_counter") {
   private [controlplane] var packetlookup : Long = 0
   private [controlplane] var packetmatches : Long = 0
   private [controlplane] var flowbytes : Int = 0
+
 }
 
 //Per port counters

@@ -336,17 +336,17 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
       if (flowstatreq.getTableId == -1) {
         for (i <- 0 until flowtables.length) {
           val referred_table = flowtables(i)
-          stataggreply.setFlowCount(stataggreply.getFlowCount + referred_table.counters.referencecount)
-          stataggreply.setPacketCount(stataggreply.getPacketCount + referred_table.counters.packetlookup +
-            referred_table.counters.packetmatches)
-          stataggreply.setByteCount(stataggreply.getByteCount + referred_table.counters.flowbytes)
+          stataggreply.setFlowCount(stataggreply.getFlowCount + referred_table.tableCounter.referencecount)
+          stataggreply.setPacketCount(stataggreply.getPacketCount + referred_table.tableCounter.packetlookup +
+            referred_table.tableCounter.packetmatches)
+          stataggreply.setByteCount(stataggreply.getByteCount + referred_table.tableCounter.flowbytes)
         }
       } else {
         val referred_table = flowtables(flowstatreq.getTableId)
-        stataggreply.setFlowCount(referred_table.counters.referencecount)
-        stataggreply.setPacketCount(referred_table.counters.packetlookup +
-          referred_table.counters.packetmatches)
-        stataggreply.setByteCount(referred_table.counters.flowbytes)
+        stataggreply.setFlowCount(referred_table.tableCounter.referencecount)
+        stataggreply.setPacketCount(referred_table.tableCounter.packetlookup +
+          referred_table.tableCounter.packetmatches)
+        stataggreply.setByteCount(referred_table.tableCounter.flowbytes)
       }
     }
     //resemble the ofstatreply

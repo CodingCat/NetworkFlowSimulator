@@ -65,7 +65,7 @@ class OFFlowTable (tableid : Short, ofcontrolplane : OpenFlowControlPlane) exten
   private [openflow] val entries : HashMap[OFMatchField, OFFlowTableEntryAttaches] =
     new HashMap[OFMatchField, OFFlowTableEntryAttaches] with
       mutable.SynchronizedMap[OFMatchField, OFFlowTableEntryAttaches]
-  private [openflow] val counters : OFTableCount = new OFTableCount
+  private [openflow] val tableCounter : OFTableCount = new OFTableCount
 
   private val messageFactory = new BasicFactory
 
