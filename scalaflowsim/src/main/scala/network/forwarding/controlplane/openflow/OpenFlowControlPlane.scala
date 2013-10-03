@@ -74,6 +74,8 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
     packet_in_msg
   }
 
+  def FlowTables = flowtables
+
   def sendPacketInToController(flow : Flow, inlink: Link, ethernetFramedata: Array[Byte]) {
     assert(ofinterfacemanager.linkphysicalportsMap.contains(inlink))
     val port = ofinterfacemanager.linkphysicalportsMap(inlink)

@@ -34,6 +34,8 @@ class OFFlowTable (tableid : Short, ofcontrolplane : OpenFlowControlPlane) exten
       determineEntryExpireMoment()
     }
 
+    def Counters = counter
+
     private def determineEntryExpireMoment () {
       var expireMoment = 0
       val idleDuration = flowIdleDuration
