@@ -33,7 +33,6 @@ trait RoutingProtocol extends Logging {
     val matchfield = OFFlowTable.createMatchField(ofmatch, wildcard)
     logDebug("quering matchfield: " + matchfield + "(" + matchfield.hashCode + ")" +
       " node:" + this)
-    println("RIBIn Length:" + RIBIn.size)
     assert(RIBIn.contains(matchfield) == true)
     RIBIn(matchfield)
   }

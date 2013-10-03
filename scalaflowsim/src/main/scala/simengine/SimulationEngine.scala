@@ -49,9 +49,12 @@ object SimulationEngine extends Logging {
     if (eventqueue.contains(e)) {
       eventqueue -= e
     }
+    //remove the following statements because the event may be
+    //canceled in advance when we use onOffAPp
+    /*
     else {
       throw new Exception("no such an event to cancel")
-    }
+    }  */
   }
 
   def reschedule(e : Event, time : Double) {

@@ -79,13 +79,13 @@ class ControlPlaneSuite extends FunSuite with Logging {
     var flowset = new ListBuffer[Flow]
     flowset += Flow("10.0.0.1", "10.0.0.2", "", "", demand = 1000)
     flowset(0).status = RunningFlow
-    flowset(0).setRate(10)
+    flowset(0).changeRate(10)
     flowset += Flow("10.0.0.2", "10.0.0.3", "", "", demand = 1000)
     flowset(1).status = NewStartFlow
     flowset(1).setTempRate(5)
     flowset += Flow("10.0.0.3", "10.0.0.4", "", "", demand = 1000)
     flowset(2).status = RunningFlow
-    flowset(2).setRate(20)
+    flowset(2).changeRate(20)
     flowset = flowset.sorted(FlowRateOrdering)
     assert(flowset(0).SrcIP === "10.0.0.2")
     assert(flowset(1).SrcIP === "10.0.0.1")

@@ -23,6 +23,7 @@ object SimulationRunner {
     ApplicationRunner.setResource(cellnet.getAllHostsInPod)
     ApplicationRunner.installApplication()
     ApplicationRunner.run()
+    SimulationEngine.run
   }
 }
 

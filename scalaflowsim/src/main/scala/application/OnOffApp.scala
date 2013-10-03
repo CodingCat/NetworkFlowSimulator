@@ -41,7 +41,8 @@ class OnOffApp (servers : HostContainer) extends ServerApp(servers) {
   def run() {
     if (selectedPair.size == 0) selectMachinePairs()
     for (srcdstPair <- selectedPair; dst <- srcdstPair._2) {
-      val flow = Flow(srcdstPair._1.ip_addr(0), dst.ip_addr(0), srcdstPair._1.mac_addr(0), dst.mac_addr(0), demand = 1)
+      val flow = Flow(srcdstPair._1.ip_addr(0), dst.ip_addr(0), srcdstPair._1.mac_addr(0), dst.mac_addr(0),
+        demand = 100)
       val newflowevent = new StartNewFlowEvent(
         flow,
         ipHostMap(srcdstPair._1.ip_addr(0)),

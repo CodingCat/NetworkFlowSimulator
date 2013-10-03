@@ -87,9 +87,9 @@ trait ResourceAllocator extends Logging {
     if (flow.status == NewStartFlow) {
       val completeEvent = new CompleteFlowEvent(
         flow,
-        SimulationEngine.currentTime + flow.Demand / flow.getTempRate)
+        SimulationEngine.currentTime + flow.AppDataSize / flow.getTempRate)
       logTrace("schedule complete event " + completeEvent + " for " + flow + " at " +
-        (SimulationEngine.currentTime + flow.Demand / flow.getTempRate))
+        (SimulationEngine.currentTime + flow.AppDataSize / flow.getTempRate))
       flow.bindEvent(completeEvent)
       SimulationEngine.addEvent(completeEvent)
       //has found the destination, change the property
@@ -131,7 +131,6 @@ trait ResourceAllocator extends Logging {
 
   def reallocate(localnode : Node, flow: Flow, ofmatch : OFMatch, startinglink : Link = null) {
     if (localnode.ip_addr(0) != flow.srcIP) {
-      logTrace("flow ended at " + localnode.ip_addr(0))
       val nextlink = {
         if (startinglink == null) localnode.controlplane.fetchInRoutingEntry(ofmatch)
         else flow.getLastHop(startinglink)

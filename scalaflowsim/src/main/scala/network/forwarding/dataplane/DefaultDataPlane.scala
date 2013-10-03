@@ -45,7 +45,7 @@ class DefaultDataPlane extends ResourceAllocator with Logging {
       } else {
         if (currentflow.status == RunningFlow) {
           //TODO: if avrRate < currentflow.rate trigger the change on its path
-          currentflow.setRate(avrRate)
+          currentflow.changeRate(avrRate)
           logDebug("change flow " + currentflow + " rate to " + currentflow.Rate)
         } else {
           currentflow.setTempRate(avrRate) //set to avrRate
