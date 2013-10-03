@@ -69,6 +69,8 @@ class OFFlowTable (tableid : Short, ofcontrolplane : OpenFlowControlPlane) exten
 
   private val messageFactory = new BasicFactory
 
+  def TableCounter = tableCounter
+
   def clear() {
     entries.clear()
   }

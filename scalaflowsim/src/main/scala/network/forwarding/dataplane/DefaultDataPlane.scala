@@ -10,7 +10,7 @@ import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
 /**
  * the class representing the default functionalities to forward
  * packets/flows as well as the congestion control, etc.
- * that is that maxmin allocation
+ * that is the maxmin allocation
  */
 class DefaultDataPlane extends ResourceAllocator with Logging {
 
