@@ -52,7 +52,7 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
     with mutable.SynchronizedMap[Int, Flow]
 
 
-  private val logger = LoggerFactory.getLogger("OpenFlowModule")
+  private val logger = LoggerFactory.getLogger("OpenFlowControlPlane")
   private val factory = new BasicFactory
 
   def getSwitchDescription = node.ip_addr(0)

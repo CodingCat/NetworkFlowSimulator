@@ -39,7 +39,8 @@ object SimulationEngine extends Logging {
       numPassedEvents += 1
       eventqueue -= event
     }
-    reporter.report()
+    if (reporter != null)
+      reporter.report()
   }
 
   def Events() = eventqueue

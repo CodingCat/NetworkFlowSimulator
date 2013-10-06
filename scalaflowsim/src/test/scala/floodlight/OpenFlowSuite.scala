@@ -168,7 +168,7 @@ class OpenFlowSuite extends FunSuite {
   }
 
 
-
+   /*
   test("flow can be routed within a rack (openflow)") {
     SimulationRunner.reset
     XmlParser.addProperties("scalasim.simengine.model", "openflow")
@@ -184,15 +184,15 @@ class OpenFlowSuite extends FunSuite {
     assert(flow1.status === CompletedFlow)
     assert(flow2.status === CompletedFlow)
     pod.shutDownOpenFlowNetwork()
-  }
+  }       */
 
-  test("flow can be routed across racks (openflow)") {
+  /*test("flow can be routed across racks (openflow, two aggregate routers)") {
     SimulationRunner.reset
     XmlParser.addProperties("scalasim.simengine.model", "openflow")
-    val pod = new Pod(1, 2, 4, 20)
+    val pod = new Pod(1, 2, 4, 2)
+    Thread.sleep(1000 * 40)
     val flow1 = Flow(pod.getHost(0, 1).toString, pod.getHost(1, 1).toString,
       pod.getHost(0, 1).mac_addr(0), pod.getHost(1, 1).mac_addr(0), demand = 1)
-    Thread.sleep(1000 * 20)
     val flow2 = Flow(pod.getHost(3, 1).toString, pod.getHost(2, 1).toString,
       pod.getHost(3, 1).mac_addr(0), pod.getHost(2, 1).mac_addr(0), demand = 1)
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 1), 0))
@@ -201,7 +201,7 @@ class OpenFlowSuite extends FunSuite {
     assert(flow1.status === CompletedFlow)
     assert(flow2.status === CompletedFlow)
     pod.shutDownOpenFlowNetwork()
-  }
+  } */
 
   test("flow can be allocated with correct bandwidth (within the same rack) (openflow)") {
     SimulationRunner.reset

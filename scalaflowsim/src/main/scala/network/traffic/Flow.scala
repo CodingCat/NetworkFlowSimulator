@@ -2,7 +2,7 @@ package network.traffic
 
 import network.device.{GlobalDeviceManager, HostType, Node, Link}
 import scala.collection.mutable
-import scalasim.XmlParser
+import simengine.utils.XmlParser
 import simengine.utils.Logging
 import network.events.CompleteFlowEvent
 import simengine.SimulationEngine
