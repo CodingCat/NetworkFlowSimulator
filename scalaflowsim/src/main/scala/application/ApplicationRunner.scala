@@ -9,9 +9,7 @@ object ApplicationRunner {
   private var resourcePool : HostContainer = null
   private val apps = new mutable.HashMap[String, ServerApp]
 
-  def setResource(r : HostContainer) {
-    resourcePool = r
-  }
+  def setResource(r : HostContainer) = resourcePool = r
 
   def installApplication() {
     if (resourcePool == null) throw new Exception("you haven't assign the resource to the application")
@@ -20,15 +18,12 @@ object ApplicationRunner {
     for (name <- namesStr) apps += name -> ServerApp(name, resourcePool)
   }
 
-  def run() {
-    for (app <- apps.valuesIterator) app.run()
-  }
+  def run() = for (app <- apps.valuesIterator) app.run()
 
   def run(appname : String) = apps(appname).run()
 
-  def apply(name : String) : ServerApp = name match {
+  def apply(name : String) = name match {
     case "PermuMatrixApp" => apps(name).asInstanceOf[PermuMatrixApp]
-    case "OnOffApp" => apps(name).asInstanceOf[OnOffApp]
   }
 
   def reset() {

@@ -34,8 +34,6 @@ class OFFlowTable (tableid : Short, ofcontrolplane : OpenFlowControlPlane) exten
       determineEntryExpireMoment()
     }
 
-    def Counters = counter
-
     private def determineEntryExpireMoment () {
       var expireMoment = 0
       val idleDuration = flowIdleDuration
@@ -65,11 +63,9 @@ class OFFlowTable (tableid : Short, ofcontrolplane : OpenFlowControlPlane) exten
   private [openflow] val entries : HashMap[OFMatchField, OFFlowTableEntryAttaches] =
     new HashMap[OFMatchField, OFFlowTableEntryAttaches] with
       mutable.SynchronizedMap[OFMatchField, OFFlowTableEntryAttaches]
-  private [openflow] val tableCounter : OFTableCount = new OFTableCount
+  private [openflow] val counters : OFTableCount = new OFTableCount
 
   private val messageFactory = new BasicFactory
-
-  def TableCounter = tableCounter
 
   def clear() {
     entries.clear()

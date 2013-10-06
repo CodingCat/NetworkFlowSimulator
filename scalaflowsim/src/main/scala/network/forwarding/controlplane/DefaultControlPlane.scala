@@ -43,6 +43,7 @@ class DefaultControlPlane (node : Node) extends RoutingProtocol with Logging {
     if (node.nodetype != HostType) {
       getDstParameters(matchfield)
       val dstIP = IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination)
+      val routerCP = node.asInstanceOf[Router].controlplane
       node.nodetype match {
         case ToRRouterType => {
           if (dstRange == localRange) {

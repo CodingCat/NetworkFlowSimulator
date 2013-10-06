@@ -3,12 +3,12 @@ package application
 import network.device.{Host, HostContainer}
 import scala.collection.mutable.{HashSet, MultiMap, Set, HashMap}
 import scala.util.Random
-import network.events.{FlowOffEvent, StartNewFlowEvent}
+import network.events.StartNewFlowEvent
 import network.traffic.Flow
 import simengine.SimulationEngine
 
 
-class OnOffApp (servers : HostContainer) extends ServerApp(servers) {
+class OnOffApp (servers : HostContainer, onBound : Double, offBound : Double) extends ServerApp(servers) {
   private val selectedPair = new HashMap[Host, Set[Host]] with MultiMap[Host, Host]//src ip -> dst ip
   private val ipHostMap = new HashMap[String, Host]//ip -> host
 
@@ -41,16 +41,11 @@ class OnOffApp (servers : HostContainer) extends ServerApp(servers) {
   def run() {
     if (selectedPair.size == 0) selectMachinePairs()
     for (srcdstPair <- selectedPair; dst <- srcdstPair._2) {
-      val flow = Flow(srcdstPair._1.ip_addr(0), dst.ip_addr(0), srcdstPair._1.mac_addr(0), dst.mac_addr(0),
-        demand = 100)
       val newflowevent = new StartNewFlowEvent(
-        flow,
+        Flow(srcdstPair._1.ip_addr(0), dst.ip_addr(0), srcdstPair._1.mac_addr(0), dst.mac_addr(0), size = 1),
         ipHostMap(srcdstPair._1.ip_addr(0)),
         SimulationEngine.currentTime)
       SimulationEngine.addEvent(newflowevent)
-      //start a off
-      SimulationEngine.addEvent(new FlowOffEvent(flow,
-        SimulationEngine.currentTime + Random.nextInt(OnOffApp.offLength)))
     }
   }
 
@@ -60,9 +55,4 @@ class OnOffApp (servers : HostContainer) extends ServerApp(servers) {
   }
 
   init()
-}
-
-object OnOffApp {
-  val onLength = 10
-  val offLength = 5
 }

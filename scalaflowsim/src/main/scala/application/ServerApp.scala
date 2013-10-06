@@ -8,10 +8,10 @@ abstract class ServerApp(protected val servers : HostContainer) {
 }
 
 object ServerApp {
-  def apply(appName : String, servers : HostContainer)  = {
+  def apply(appName : String, servers : HostContainer, args: AnyVal * = null)  = {
     appName match {
       case "PermuMatrixApp" => new PermuMatrixApp(servers)
-      case "OnOffApp" => new OnOffApp(servers)
+      case "OnOffApp" => new OnOffApp(servers, args(0).asInstanceOf[Double], args(1).asInstanceOf[Double])
     }
   }
 }

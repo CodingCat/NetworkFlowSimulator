@@ -4,7 +4,7 @@ import org.scalatest.FunSuite
 import simengine.utils.XmlParser
 import simengine.SimulationEngine
 import network.device.Pod
-import application.{PermuMatrixApp, ApplicationRunner}
+import application.ApplicationRunner
 
 class AppSuite extends FunSuite {
 
@@ -16,7 +16,7 @@ class AppSuite extends FunSuite {
     ApplicationRunner.setResource(cellnet.getAllHostsInPod)
     ApplicationRunner.installApplication()
     ApplicationRunner.run()
-    assert(ApplicationRunner("PermuMatrixApp").asInstanceOf[PermuMatrixApp].selectedPairSize ===
+    assert(ApplicationRunner("PermuMatrixApp").selectedPairSize ===
       cellnet.numMachinesPerRack * cellnet.numRacks)
   }
 }

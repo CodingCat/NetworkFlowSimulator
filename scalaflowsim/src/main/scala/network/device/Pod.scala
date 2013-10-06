@@ -39,6 +39,7 @@ class Pod (private val cellID : Int,
         //ToR routers
         for (i <- 0 until numRacks) torContainer(i).connectTOController()
         //waiting for controller to process the topology
+     //   while (topologypending) {}
       }
     }
 
@@ -99,7 +100,7 @@ class Pod (private val cellID : Int,
   def getAggregatRouter(idx : Int) : Router = aggContainer(idx)
   def getToRRouter(idx : Int) : Router = torContainer(idx)
   def getHost(rackID : Int, hostID : Int) : Host = hostsContainer(rackID * rackSize + hostID)
-  def getAllHostsInPod : HostContainer = hostsContainer
+  def getAllHostsInPod() : HostContainer = hostsContainer
 
   buildNetwork()
 }

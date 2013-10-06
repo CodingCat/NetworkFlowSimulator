@@ -52,7 +52,7 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
     with mutable.SynchronizedMap[Int, Flow]
 
 
-  private val logger = LoggerFactory.getLogger("OpenFlowControlPlane")
+  private val logger = LoggerFactory.getLogger("OpenFlowModule")
   private val factory = new BasicFactory
 
   def getSwitchDescription = node.ip_addr(0)
@@ -73,8 +73,6 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
       .setLength((payload.length + 18).toShort)
     packet_in_msg
   }
-
-  def FlowTables = flowtables
 
   def sendPacketInToController(flow : Flow, inlink: Link, ethernetFramedata: Array[Byte]) {
     assert(ofinterfacemanager.linkphysicalportsMap.contains(inlink))
@@ -167,8 +165,7 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
     //TODO: specify the switch features
     //(dpid, buffer, n_tables, capabilities, physical port
     val featurereply = factory.getMessage(OFType.FEATURES_REPLY).asInstanceOf[OFFeaturesReply]
-    val featurelist = (DPID, 1000, flowtables.length, 0xff,
-      ofinterfacemanager.linkphysicalportsMap.values.toList)
+    val featurelist = (DPID, 1000, flowtables.length, 0xff, ofinterfacemanager.linkphysicalportsMap.values.toList)
     featurereply.setDatapathId(featurelist._1)
     featurereply.setBuffers(featurelist._2)
     featurereply.setTables(featurelist._3.toByte)
@@ -337,17 +334,17 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
       if (flowstatreq.getTableId == -1) {
         for (i <- 0 until flowtables.length) {
           val referred_table = flowtables(i)
-          stataggreply.setFlowCount(stataggreply.getFlowCount + referred_table.tableCounter.referencecount)
-          stataggreply.setPacketCount(stataggreply.getPacketCount + referred_table.tableCounter.packetlookup +
-            referred_table.tableCounter.packetmatches)
-          stataggreply.setByteCount(stataggreply.getByteCount + referred_table.tableCounter.flowbytes)
+          stataggreply.setFlowCount(stataggreply.getFlowCount + referred_table.counters.referencecount)
+          stataggreply.setPacketCount(stataggreply.getPacketCount + referred_table.counters.packetlookup +
+            referred_table.counters.packetmatches)
+          stataggreply.setByteCount(stataggreply.getByteCount + referred_table.counters.flowbytes)
         }
       } else {
         val referred_table = flowtables(flowstatreq.getTableId)
-        stataggreply.setFlowCount(referred_table.tableCounter.referencecount)
-        stataggreply.setPacketCount(referred_table.tableCounter.packetlookup +
-          referred_table.tableCounter.packetmatches)
-        stataggreply.setByteCount(referred_table.tableCounter.flowbytes)
+        stataggreply.setFlowCount(referred_table.counters.referencecount)
+        stataggreply.setPacketCount(referred_table.counters.packetlookup +
+          referred_table.counters.packetmatches)
+        stataggreply.setByteCount(referred_table.counters.flowbytes)
       }
     }
     //resemble the ofstatreply

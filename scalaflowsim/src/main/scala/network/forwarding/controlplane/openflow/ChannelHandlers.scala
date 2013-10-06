@@ -37,6 +37,7 @@ class OpenFlowMessageDispatcher (private val ofcontrolplane : OpenFlowControlPla
   extends SimpleChannelHandler {
 
   private val msglistenerList = new ListBuffer[MessageListener]
+  private val logger = LoggerFactory.getLogger("dispatcherlogger")
   private def registerMessageListener {
     msglistenerList += ofcontrolplane
     msglistenerList += ofcontrolplane.ofinterfacemanager
