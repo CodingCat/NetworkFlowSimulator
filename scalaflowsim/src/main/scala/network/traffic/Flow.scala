@@ -1,10 +1,15 @@
 package network.traffic
 
-import network.device.Link
+import network.device.{HostType, Node, Link}
 import scala.collection.mutable
+import scalasim.XmlParser
 import simengine.utils.Logging
 import network.events.CompleteFlowEvent
 import simengine.SimulationEngine
+import scala.collection.mutable.ListBuffer
+import network.forwarding.controlplane.openflow.OpenFlowControlPlane
+import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
+import org.openflow.protocol.OFMatch
 
 /**
  *
@@ -57,9 +62,45 @@ class Flow private (
     bindedCompleteEvent = ce
   }
 
+  private def updateCounters(additionalPacket : Long, additionalBytes : Long,
+                                      additionalDuration : Int) {
+    def updateCounter(node : Node) {
+      if (node.nodetype != HostType) {
+        val oftables = node.controlplane.asInstanceOf[OpenFlowControlPlane].FlowTables
+        oftables.foreach(table => {
+          val entries = table.matchFlow(OFFlowTable.createMatchField(
+            this, wcard = (OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_DST_MASK & ~OFMatch.OFPFW_NW_SRC_MASK)))
+          entries.foreach(entry => {
+            entry.Counters.increaseReceivedBytes(additionalBytes)
+            entry.Counters.increaseReceivedPacket(additionalPacket)
+            entry.Counters.increaseDurationSeconds(additionalDuration)
+            entry.Counters.increaseDurationNanoSeconds(additionalDuration * 1000000000)
+          })
+        })
+      }
+    }
+    if (XmlParser.getString("scalasim.simengine.model", "tcp") == "openflow") {
+      //TODO:to be finished
+      val checkedNode = new ListBuffer[Node]
+      trace.foreach(link => {
+        if (!checkedNode.contains(link.end_from)) {
+          updateCounter(link.end_from)
+          checkedNode += link.end_from
+        }
+        if (!checkedNode.contains(link.end_to)) {
+          updateCounter(link.end_to)
+          checkedNode += link.end_to
+        }
+      })
+    }
+  }
+
   def changeRate(newRateValue : Double) {
     logDebug("old rate : " + rate + " new rate : " + newRateValue + ", lastChangePoint = " + lastChangePoint)
     remainingAppData -= rate * (SimulationEngine.currentTime - lastChangePoint)
+    updateCounters(0,
+      (rate * (SimulationEngine.currentTime - lastChangePoint)).asInstanceOf[Long],
+      (SimulationEngine.currentTime - lastChangePoint).asInstanceOf[Int])
     logTrace("change " + this + "'s lastChangePoint to " + SimulationEngine.currentTime)
     lastChangePoint = SimulationEngine.currentTime
     rate = newRateValue

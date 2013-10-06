@@ -10,6 +10,7 @@ class OFTableCount extends OFCounter("table_counter") {
   private [controlplane] var packetlookup : Long = 0
   private [controlplane] var packetmatches : Long = 0
   private [controlplane] var flowbytes : Int = 0
+
 }
 
 //Per port counters
@@ -33,5 +34,21 @@ class OFFlowCount () extends OFCounter("flow_counter") {
   private [controlplane] var receivedbytes : Long = 0
   private [controlplane] var durationSeconds : Int = 0
   private [controlplane] var durationNanoSeconds : Int = 0
+
+  def increaseReceivedPacket(rp : Long) {
+    receivedpacket += rp
+  }
+
+  def increaseReceivedBytes(rb : Long) {
+    receivedbytes += rb
+  }
+
+  def increaseDurationSeconds(ds : Int) {
+    durationSeconds += ds
+  }
+
+  def increaseDurationNanoSeconds(dns : Int) {
+    durationNanoSeconds += dns
+  }
 }
 
