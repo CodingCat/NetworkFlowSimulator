@@ -85,6 +85,7 @@ trait RoutingProtocol extends Logging {
     if (inlink != null) localnode.controlplane.insertInPath(matchfield, inlink)
     if (localnode.ip_addr(0) == flow.dstIP) {
       //start resource allocation process
+      flow.setEgressLink(inlink)
       localnode.dataplane.allocate(localnode, flow, inlink)
     } else {
       if (!flow.floodflag) {

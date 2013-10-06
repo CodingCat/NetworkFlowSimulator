@@ -42,6 +42,8 @@ class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node)
     }
   }
 
+  def getPortCounter(portnum : Short) = portcounters(portnum)
+
   private def addOFPhysicalPort(l : Link, portID : Short) {
     val port = new OFPhysicalPort
     GlobalDeviceManager.globaldevicecounter += 1
@@ -93,7 +95,7 @@ class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node)
       statportreply.setReceiveBytes(counter.receivedbytes)
       statportreply.setreceivePackets(counter.receivedpacket)
       statportreply.setReceiveDropped(counter.receivedrops)
-      statportreply.setreceiveErrors(counter.receiveerror)
+      statportreply.setreceiveErrors(counter.receivederror)
       statportreply.setReceiveFrameErrors(counter.receiveframe_align_error)
       statportreply.setReceiveOverrunErrors(counter.receive_overrun_error)
       statportreply.setReceiveCRCErrors(counter.receive_crc_error)
