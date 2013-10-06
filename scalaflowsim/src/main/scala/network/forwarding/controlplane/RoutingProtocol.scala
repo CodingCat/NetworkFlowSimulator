@@ -33,7 +33,6 @@ trait RoutingProtocol extends Logging {
     val matchfield = OFFlowTable.createMatchField(ofmatch, wildcard)
     logDebug("quering matchfield: " + matchfield + "(" + matchfield.hashCode + ")" +
       " node:" + this)
-    println("RIBIn Length:" + RIBIn.size)
     assert(RIBIn.contains(matchfield) == true)
     RIBIn(matchfield)
   }
@@ -80,7 +79,7 @@ trait RoutingProtocol extends Logging {
    */
   def routing (localnode : Node, flow : Flow, matchfield : OFMatchField, inlink : Link) {
     //discard the flood packets
-    if (passbyFlow(localnode, flow)) return
+    if (wrongDistination(localnode, flow)) return
     logTrace("arrive at " + localnode.ip_addr(0) + ", routing (flow : Flow, matchfield : OFMatch, inlink : Link)" +
       " flow:" + flow + ", inlink:" + inlink)
     if (inlink != null) localnode.controlplane.insertInPath(matchfield, inlink)
@@ -126,7 +125,8 @@ trait RoutingProtocol extends Logging {
     nextnode.controlplane.routing(nextnode, flow, matchfield, olink)
   }
 
-  private def passbyFlow(localnode: Node, flow : Flow) : Boolean = {
+
+  private def wrongDistination(localnode: Node, flow : Flow) : Boolean = {
     if (localnode.ip_addr(0) !=  flow.srcIP && localnode.ip_addr(0) != flow.dstIP && localnode.nodetype == HostType) {
       logTrace("Discard flow " + flow + " on node " + localnode.toString)
       return true

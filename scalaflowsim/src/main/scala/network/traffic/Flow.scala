@@ -14,7 +14,7 @@ import simengine.SimulationEngine
  * @param dstMac
  * @param vlanID
  * @param prioritycode
- * @param demand
+ * @param remainingAppData
  */
 class Flow private (
   private [network] val srcIP : String,
@@ -25,7 +25,7 @@ class Flow private (
   private [network] val prioritycode: Byte = 0,
   private [network] val srcPort : Short = 0,
   private [network] val dstPort : Short = 0,//set to 0 to wildcarding src/dst ports
-  private [network] var demand : Double,//in MB
+  private var remainingAppData : Double,//in MB
   private [network] var floodflag : Boolean = false
   //to indicate this flow may be routed to the non-destination host
   ) extends Logging {
@@ -57,24 +57,33 @@ class Flow private (
     bindedCompleteEvent = ce
   }
 
-  def setRate(r : Double) {
-    logDebug("old rate : " + rate + " new rate : " + r + ", lastChangePoint = " + lastChangePoint)
-    demand -= rate * (SimulationEngine.currentTime - lastChangePoint)
+  def changeRate(newRateValue : Double) {
+    logDebug("old rate : " + rate + " new rate : " + newRateValue + ", lastChangePoint = " + lastChangePoint)
+    remainingAppData -= rate * (SimulationEngine.currentTime - lastChangePoint)
     logTrace("change " + this + "'s lastChangePoint to " + SimulationEngine.currentTime)
     lastChangePoint = SimulationEngine.currentTime
-    rate = r
-    //TODO: may causing some duplicated rescheduling in successive links
-    if ((status == RunningFlow || status == ChangingRateFlow) && demand > 0) rescheduleBindedEvent
+    rate = newRateValue
+    if (rate == 0) cancelBindedEvent()
+    else {
+      //TODO: may causing some duplicated rescheduling in successive links
+      if ((status == RunningFlow || status == ChangingRateFlow) && remainingAppData > 0)
+        rescheduleBindedEvent()
+    }
   }
 
   def setTempRate(tr : Double) {tempRate = tr}
 
-  def Demand = demand
+  def AppDataSize = remainingAppData
 
   def getTempRate = tempRate
 
   def Rate = rate
 
+  /**
+   * add the link to the flow's trace
+   * @param newlink, the link to be added
+   * @param lastlink, we need to know this parameter to track the last link of newlink
+   */
   def addTrace(newlink : Link, lastlink : Link) {
     var lastlinkindex = -1
     if (lastlink != null) lastlinkindex = trace.indexOf(lastlink)
@@ -92,21 +101,32 @@ class Flow private (
     ret
   }
 
+  private def cancelBindedEvent() {
+    if (bindedCompleteEvent != null) {
+      logTrace("cancel " + toString + " completeEvent " +
+        " current time:" + SimulationEngine.currentTime)
+      SimulationEngine.cancelEvent(bindedCompleteEvent)
+    }
+  }
+
   //TODO: shall I move this method to the control plane or simulationEngine?
   private def rescheduleBindedEvent () {
     //TODO: in test ControlPlaneSuite "ordering" test, bindedCompleteEvent can be true
     //TODO: that test case need to be polished, but not that urgent
     if (bindedCompleteEvent != null) {
-      logTrace("reschedule " + toString + " completeEvent to " + (SimulationEngine.currentTime + demand / rate) +
-        " current time:" + SimulationEngine.currentTime)
+      logTrace("reschedule " + toString + " completeEvent to " + (SimulationEngine.currentTime + remainingAppData / rate) +
+        " current time:" + SimulationEngine.currentTime + " rate :" + rate + " demand:" + remainingAppData)
+      if (remainingAppData > 100) {
+        logError("demand > 100")
+      }
       SimulationEngine.reschedule(bindedCompleteEvent,
-        SimulationEngine.currentTime + demand / rate)
+        SimulationEngine.currentTime + remainingAppData / rate)
     }
   }
 
   def run () {
     logTrace("determine " + this + " rate to " + tempRate)
-    setRate(tempRate)
+    changeRate(tempRate)
     status = RunningFlow
   }
 
@@ -114,7 +134,7 @@ class Flow private (
     logTrace(this + " finishes at " + SimulationEngine.currentTime)
     lastChangePoint = SimulationEngine.currentTime
     status = CompletedFlow
-    setRate(0)
+    changeRate(0)
   }
 
   def LastCheckPoint : Double = lastChangePoint
@@ -125,6 +145,10 @@ class Flow private (
   def Hop() = hop
 
   override def toString() : String = ("Flow-" + srcIP + "-" + dstIP)
+
+  def getEgressLink = trace(trace.size - 1)
+
+  def getIngressLink = trace(0)
 }
 
 object Flow {
@@ -138,14 +162,14 @@ object Flow {
    * @param dPort
    * @param vlanID
    * @param prioritycode
-   * @param size
+   * @param demand
    * @param fflag
    * @return
    */
   def apply(srcIP : String, dstIP : String, srcMac : String, dstMac : String,
             sPort : Short = 1, dPort : Short = 1, vlanID : Short = 0,
-            prioritycode : Byte = 0, size : Double, fflag : Boolean = false) : Flow = {
+            prioritycode : Byte = 0, demand : Double, fflag : Boolean = false) : Flow = {
     new Flow(srcIP, dstIP, srcMac, dstMac, vlanID, prioritycode, srcPort = sPort, dstPort = dPort,
-      demand = size, floodflag = fflag)
+      remainingAppData = demand, floodflag = fflag)
   }
 }

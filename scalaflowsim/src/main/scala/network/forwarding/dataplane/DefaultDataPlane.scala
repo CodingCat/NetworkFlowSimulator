@@ -16,7 +16,7 @@ class DefaultDataPlane extends ResourceAllocator with Logging {
 
   /**
    * perform max min allocation on the link
-   * for now, if the flow's rate is down, it does not trigger the allocation
+   * for now, if the flow's rate is reduced, it does not trigger the allocation
    * in the path of other flows
    * @param link the input link
    */
@@ -45,7 +45,7 @@ class DefaultDataPlane extends ResourceAllocator with Logging {
       } else {
         if (currentflow.status == RunningFlow) {
           //TODO: if avrRate < currentflow.rate trigger the change on its path
-          currentflow.setRate(avrRate)
+          currentflow.changeRate(avrRate)
           logDebug("change flow " + currentflow + " rate to " + currentflow.Rate)
         } else {
           currentflow.setTempRate(avrRate) //set to avrRate
