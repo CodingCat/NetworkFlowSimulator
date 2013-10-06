@@ -1,6 +1,6 @@
 package network.traffic
 
-import network.device.{HostType, Node, Link}
+import network.device.{GlobalDeviceManager, HostType, Node, Link}
 import scala.collection.mutable
 import scalasim.XmlParser
 import simengine.utils.Logging
@@ -10,6 +10,7 @@ import scala.collection.mutable.ListBuffer
 import network.forwarding.controlplane.openflow.OpenFlowControlPlane
 import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
 import org.openflow.protocol.OFMatch
+import network.forwarding.interface.OpenFlowPortManager
 
 /**
  *
@@ -39,6 +40,7 @@ class Flow private (
   private var hop : Int = 0
   private var bindedCompleteEvent : CompleteFlowEvent = null
   private var lastChangePoint  = 0.0
+  private var egressLink : Link = null
 
   //this value is dynamic,
   //mainly used by the openflow protocol to match flowtable
@@ -64,34 +66,71 @@ class Flow private (
 
   private def updateCounters(additionalPacket : Long, additionalBytes : Long,
                                       additionalDuration : Int) {
-    def updateCounter(node : Node) {
+
+    def updateFlowCounter(node : Node) {
       if (node.nodetype != HostType) {
         val oftables = node.controlplane.asInstanceOf[OpenFlowControlPlane].FlowTables
         oftables.foreach(table => {
           val entries = table.matchFlow(OFFlowTable.createMatchField(
             this, wcard = (OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_DST_MASK & ~OFMatch.OFPFW_NW_SRC_MASK)))
-          entries.foreach(entry => {
-            entry.Counters.increaseReceivedBytes(additionalBytes)
-            entry.Counters.increaseReceivedPacket(additionalPacket)
-            entry.Counters.increaseDurationSeconds(additionalDuration)
-            entry.Counters.increaseDurationNanoSeconds(additionalDuration * 1000000000)
-          })
+          if (entries != null) {
+            //increase table counter
+            // for flow simulation, we only set 0 to packet counters
+            table.TableCounter.increaseTableCounters(0, 0)
+            //increase the flow counter
+            entries.foreach(entry => entry.Counters.increaseFlowCounters(additionalBytes,
+              additionalPacket,
+              additionalDuration,
+              additionalDuration * 1000000000))
+          }
         })
       }
     }
+
+    def updatePortCounters(link : Link, linkIdx : Int) {
+      //linkIdx > hop / 2 because we traverse all links in reverse order
+      if (linkIdx > hop / 2) {
+        if (link.end_from.nodetype != HostType) {
+          val portManager = link.end_from.interfacesManager.asInstanceOf[OpenFlowPortManager]
+          val portnumber = portManager.getPortByLink(link).getPortNumber
+          val portcounter = portManager.getPortCounter(portnumber)
+          portcounter.increasePortCounters(0, 0, 0, additionalBytes,
+            0, 0, 0, 0, 0 ,0, 0, 0, 0)
+        }
+      } else {
+        val portManager = link.end_to.interfacesManager.asInstanceOf[OpenFlowPortManager]
+        val portnumber = portManager.getPortByLink(link).getPortNumber
+        val portcounter = portManager.getPortCounter(portnumber)
+        portcounter.increasePortCounters(0, 0, additionalBytes, 0,
+          0, 0, 0, 0, 0 ,0, 0, 0, 0)
+      }
+    }
+
     if (XmlParser.getString("scalasim.simengine.model", "tcp") == "openflow") {
       //TODO:to be finished
       val checkedNode = new ListBuffer[Node]
-      trace.foreach(link => {
+      var link = egressLink
+      var i = 0
+
+      while (link != null) {
         if (!checkedNode.contains(link.end_from)) {
-          updateCounter(link.end_from)
+          updateFlowCounter(link.end_from)
           checkedNode += link.end_from
         }
         if (!checkedNode.contains(link.end_to)) {
-          updateCounter(link.end_to)
+          updateFlowCounter(link.end_to)
           checkedNode += link.end_to
         }
-      })
+        updatePortCounters(link, i)
+        //the following statement is correct, because trace_laststeptrack and trace
+        // are always operated at the same time
+        val lastindex = trace_laststeptrack(trace.indexOf(link))._2
+        if (lastindex != -1)
+          link = trace(lastindex)
+        else
+          link = null
+        i += 1
+      }
     }
   }
 
@@ -178,12 +217,16 @@ class Flow private (
     changeRate(0)
   }
 
-  def LastCheckPoint : Double = lastChangePoint
-
-  def increaseHop() {
-    hop += 1
+  def setEgressLink (eLink : Link) {
+    egressLink = eLink
+    var link = egressLink
+    while (link.end_from != GlobalDeviceManager.getHost(srcIP)) {
+      hop += 1
+      link = trace(trace_laststeptrack(trace.indexOf(egressLink))._2)
+    }
   }
-  def Hop() = hop
+
+  def LastCheckPoint : Double = lastChangePoint
 
   override def toString() : String = ("Flow-" + srcIP + "-" + dstIP)
 

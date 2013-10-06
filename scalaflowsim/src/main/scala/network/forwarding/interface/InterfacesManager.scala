@@ -20,8 +20,7 @@ trait InterfacesManager {
   }
 
   def registerIncomeLink(l : Link) {
-    val otherEnd = l.end_from
-    inlinks += otherEnd.ip_addr(0) -> l
+    inlinks += l.end_from.ip_addr(0) -> l
   }
 
   def getNeighbour(localnode : Node, l : Link) : Node = {
@@ -38,6 +37,7 @@ trait InterfacesManager {
     }
     alllink.filterNot(l => l == inport)
   }
+
 }
 
 object InterfacesManager {
