@@ -11,7 +11,7 @@ class OFTableCount extends OFCounter("table_counter") {
   private [forwarding] var referencecount : Int = 0
   private [forwarding] var flowbytes : Int = 0
 
-  def increaseTableCounters(pl : Int, pm : Int) {
+  def increaseTableCounters(pl : Long, pm : Long) {
     packetlookup += pl
     packetmatches += pm
   }

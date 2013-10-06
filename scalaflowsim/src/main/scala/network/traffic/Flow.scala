@@ -219,10 +219,15 @@ class Flow private (
 
   def setEgressLink (eLink : Link) {
     egressLink = eLink
+    logTrace("set flow " + this + "'s egresslink as " + egressLink)
     var link = egressLink
-    while (link.end_from != GlobalDeviceManager.getHost(srcIP)) {
+    while (link != null) {
       hop += 1
-      link = trace(trace_laststeptrack(trace.indexOf(egressLink))._2)
+      val lastlinkidx = trace_laststeptrack(trace.indexOf(link))._2
+      link = {
+        if (lastlinkidx != -1) trace(lastlinkidx)
+        else null
+      }
     }
   }
 
