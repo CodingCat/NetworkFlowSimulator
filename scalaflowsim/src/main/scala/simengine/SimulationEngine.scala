@@ -3,7 +3,7 @@ package simengine
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable
 import scala.concurrent.Lock
-import simengine.utils.Logging
+import simengine.utils.{XmlParser, Logging}
 
 
 object SimulationEngine extends Logging {
@@ -15,11 +15,18 @@ object SimulationEngine extends Logging {
   private var eventqueue : ArrayBuffer[Event] = new ArrayBuffer[Event] with mutable.SynchronizedBuffer[Event]
   private var numPassedEvents = 0
 
+  private val startTime = XmlParser.getInt("scalasim.simengine.starttime", 0)
+  private val endTime = XmlParser.getInt("scalasim.simengine.endtime", 1000)
+  val reporter: Report = null
+
   def run {
+    //run insert the periodical Events
+    PeriodicalEventManager.run(startTime, endTime)
     while (!eventqueue.isEmpty) {
       queueReadingLock.acquire()
       logDebug("acquire lock at SimulationEngine")
       val event = eventqueue.head
+      if (event.getTimeStamp() > endTime) return
       queueReadingLock.release()
       logDebug("release lock at SimulationEngine")
       if (event.getTimeStamp < currentTime) {
@@ -32,6 +39,7 @@ object SimulationEngine extends Logging {
       numPassedEvents += 1
       eventqueue -= event
     }
+    reporter.report()
   }
 
   def Events() = eventqueue

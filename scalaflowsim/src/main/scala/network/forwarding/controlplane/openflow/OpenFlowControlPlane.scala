@@ -167,7 +167,8 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
     //TODO: specify the switch features
     //(dpid, buffer, n_tables, capabilities, physical port
     val featurereply = factory.getMessage(OFType.FEATURES_REPLY).asInstanceOf[OFFeaturesReply]
-    val featurelist = (DPID, 1000, flowtables.length, 0xff, ofinterfacemanager.linkphysicalportsMap.values.toList)
+    val featurelist = (DPID, 1000, flowtables.length, 0xff,
+      ofinterfacemanager.linkphysicalportsMap.values.toList)
     featurereply.setDatapathId(featurelist._1)
     featurereply.setBuffers(featurelist._2)
     featurereply.setTables(featurelist._3.toByte)

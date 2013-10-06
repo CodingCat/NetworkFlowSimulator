@@ -1,11 +1,9 @@
 package root
 
 import _root_.network.device.{Pod, GlobalDeviceManager}
-import _root_.network.traffic.Flow
 import _root_.simengine.SimulationEngine
 import _root_.simengine.utils.XmlParser
 import application.ApplicationRunner
-import network.events.StartNewFlowEvent
 
 
 object SimulationRunner {

@@ -22,7 +22,7 @@ import network.forwarding.interface.OpenFlowPortManager
  * @param prioritycode
  * @param remainingAppData
  */
-class Flow private (
+class Flow (
   private [network] val srcIP : String,
   private [network] val dstIP : String,
   private [network] val srcMac : String,
