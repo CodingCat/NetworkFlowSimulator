@@ -110,6 +110,7 @@ trait RoutingProtocol extends Logging {
   def floodoutFlow(localnode: Node, flow : Flow, matchfield : OFMatchField, inlink : Link) {
     if (!floodlist.contains(flow)) {
       val nextlinks = localnode.interfacesManager.getfloodLinks(localnode, inlink)
+      if (nextlinks != null) System.out.println("fuck");
       //TODO : openflow flood handling in which nextlinks can be null?
       nextlinks.foreach(l => {
         flow.addTrace(l, inlink)

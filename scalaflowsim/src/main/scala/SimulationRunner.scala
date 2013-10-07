@@ -19,14 +19,24 @@ object SimulationRunner {
 
   def main(args:Array[String]) = {
     XmlParser.loadConf(args(0))
-    val cellnet = new Pod(1)
+    /*val cellnet = new Pod(1)
     println("Warming up...")
     Thread.sleep(20 * 1000)
     ApplicationRunner.setResource(cellnet.getAllHostsInPod)
     ApplicationRunner.installApplication()
     ApplicationRunner.run()
     SimulationEngine.run
-    SimulationEngine.summary()
+    SimulationEngine.summary()*/
+    val pod = new Pod(0, 1, 1, 20)
+    Thread.sleep(1000 * 20)
+    val flow1 = Flow(pod.getHost(0, 0).toString, pod.getHost(0, 1).toString,
+      pod.getHost(0, 0).mac_addr(0), pod.getHost(0, 1).mac_addr(0), demand = 1)
+    val flow2 = Flow(pod.getHost(0, 1).toString, pod.getHost(0, 0).toString,
+      pod.getHost(0, 1).mac_addr(0), pod.getHost(0, 0).mac_addr(0), demand = 1)
+    SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 0), 0))
+    SimulationEngine.addEvent(new StartNewFlowEvent(flow2, pod.getHost(0, 1), 0))
+    SimulationEngine.run
+    //pod.shutDownOpenFlowNetwork()
   }
 }
 
