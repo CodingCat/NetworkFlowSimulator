@@ -20,6 +20,8 @@ object SimulationRunner {
   def main(args:Array[String]) = {
     XmlParser.loadConf(args(0))
     val cellnet = new Pod(1)
+    println("Warming up...")
+    Thread.sleep(20 * 1000)
     ApplicationRunner.setResource(cellnet.getAllHostsInPod)
     ApplicationRunner.installApplication()
     ApplicationRunner.run()

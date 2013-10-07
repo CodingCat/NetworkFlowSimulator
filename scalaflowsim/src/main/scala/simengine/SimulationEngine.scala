@@ -41,7 +41,8 @@ object SimulationEngine extends Logging {
   }
 
   def summary() {
-    reporter.report(startTime, endTime)
+    if (reporter != null)
+      reporter.report(startTime, endTime)
   }
 
   def Events() = eventqueue
@@ -49,8 +50,10 @@ object SimulationEngine extends Logging {
   def numFinishedEvents = numPassedEvents
 
   def addEvent(e : Event) {
-    eventqueue += e
-    eventqueue = eventqueue.sortWith(_.getTimeStamp < _.getTimeStamp)
+    this.synchronized {
+      eventqueue += e
+      eventqueue = eventqueue.sortWith(_.getTimeStamp < _.getTimeStamp)
+    }
   }
 
   def contains(e : Event) = eventqueue.contains(e)

@@ -143,7 +143,7 @@ class OFFlowTable (tableid : Short, ofcontrolplane : OpenFlowControlPlane) exten
     //schedule matchfield entry clean event
     entryAttach.flowHardExpireMoment = (SimulationEngine.currentTime + flow_mod.getHardTimeout).toInt
     entryAttach.flowIdleDuration = flow_mod.getIdleTimeout
-    entryAttach.refreshlastAccessPoint
+    entryAttach.refreshlastAccessPoint()
     entries += (OFFlowTable.createMatchField(entryAttach.ofmatch, entryAttach.ofmatch.getWildcards)
       -> entryAttach)
     entries
