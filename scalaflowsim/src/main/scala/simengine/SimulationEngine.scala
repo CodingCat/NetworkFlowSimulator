@@ -42,7 +42,7 @@ object SimulationEngine extends Logging {
 
   def summary() {
     if (reporter != null)
-      reporter.report(startTime, endTime)
+      reporter.report()
   }
 
   def Events() = eventqueue

@@ -6,6 +6,7 @@ import _root_.simengine.SimulationEngine
 import _root_.simengine.utils.XmlParser
 import application.ApplicationRunner
 import network.events.StartNewFlowEvent
+import network.utils.FlowReporter
 
 
 object SimulationRunner {
@@ -27,6 +28,7 @@ object SimulationRunner {
     ApplicationRunner.run()
     SimulationEngine.startTime = 0.0
     SimulationEngine.endTime = 1000.0
+    SimulationEngine.reporter = FlowReporter
     SimulationEngine.run
     SimulationEngine.summary()
     /*val pod = new Pod(0, 1, 1, 20)

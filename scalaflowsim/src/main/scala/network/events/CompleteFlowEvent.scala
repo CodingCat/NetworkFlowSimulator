@@ -6,6 +6,7 @@ import simengine.{EventOfSingleEntity, SimulationEngine}
 import network.device.GlobalDeviceManager
 import simengine.utils.Logging
 import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
+import network.utils.FlowReporter
 
 /**
  *
@@ -18,6 +19,7 @@ final class CompleteFlowEvent (flow : Flow, t : Double)
   def process {
     logInfo("flow " + flow + " completed at " + SimulationEngine.currentTime)
     flow.close()
+    FlowReporter.registerFlowEnd(flow)
     //ends at the flow destination
     val matchfield = OFFlowTable.createMatchField(flow = flow, wcard =
       (OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_DST_MASK & ~OFMatch.OFPFW_NW_SRC_MASK))
