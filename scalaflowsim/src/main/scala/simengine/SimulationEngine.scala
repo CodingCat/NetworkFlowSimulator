@@ -16,8 +16,8 @@ object SimulationEngine extends Logging {
   private var eventqueue : ArrayBuffer[Event] = new ArrayBuffer[Event] with mutable.SynchronizedBuffer[Event]
   private var numPassedEvents = 0
 
-  val startTime : Double = 0.0
-  val endTime : Double = 0.0
+  var startTime: Double = 0.0
+  var endTime: Double = 1000.0
 
   def run {
     PeriodicalEventManager.run(startTime, endTime)

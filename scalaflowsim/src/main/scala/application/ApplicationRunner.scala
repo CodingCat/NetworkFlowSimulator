@@ -20,9 +20,7 @@ object ApplicationRunner {
     for (name <- namesStr) apps += name -> ServerApp(name, resourcePool)
   }
 
-  def run() {
-    for (app <- apps.valuesIterator) app.run()
-  }
+  def run() { for (app <- apps.valuesIterator) app.run() }
 
   def run(appname : String) = apps(appname).run()
 
