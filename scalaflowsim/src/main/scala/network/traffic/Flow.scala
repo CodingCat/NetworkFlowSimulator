@@ -2,8 +2,7 @@ package network.traffic
 
 import network.device.{GlobalDeviceManager, HostType, Node, Link}
 import scala.collection.mutable
-import scalasim.XmlParser
-import simengine.utils.Logging
+import simengine.utils.{XmlParser, Logging}
 import network.events.CompleteFlowEvent
 import simengine.SimulationEngine
 import scala.collection.mutable.ListBuffer
@@ -22,7 +21,7 @@ import network.forwarding.interface.OpenFlowPortManager
  * @param prioritycode
  * @param remainingAppData
  */
-class Flow private (
+class Flow (
   private [network] val srcIP : String,
   private [network] val dstIP : String,
   private [network] val srcMac : String,

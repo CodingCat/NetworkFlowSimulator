@@ -10,17 +10,23 @@ object SimulationEngine extends Logging {
 
   val queueReadingLock = new Lock
   var currentTime : Double = 0.0
+  var reporter : Reporter = null
 
   //TODO:any more performant implementation?
   private var eventqueue : ArrayBuffer[Event] = new ArrayBuffer[Event] with mutable.SynchronizedBuffer[Event]
   private var numPassedEvents = 0
 
+  val startTime : Double = 0.0
+  val endTime : Double = 0.0
+
   def run {
+    PeriodicalEventManager.run(startTime, endTime)
     while (!eventqueue.isEmpty) {
       queueReadingLock.acquire()
       logDebug("acquire lock at SimulationEngine")
       val event = eventqueue.head
       queueReadingLock.release()
+      if (event.getTimeStamp() > endTime) return
       logDebug("release lock at SimulationEngine")
       if (event.getTimeStamp < currentTime) {
         throw new Exception("cannot execute an event happened before, event timestamp: " +
@@ -32,6 +38,10 @@ object SimulationEngine extends Logging {
       numPassedEvents += 1
       eventqueue -= event
     }
+  }
+
+  def summary() {
+    reporter.report(startTime, endTime)
   }
 
   def Events() = eventqueue

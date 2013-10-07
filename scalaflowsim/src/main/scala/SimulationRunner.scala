@@ -24,6 +24,7 @@ object SimulationRunner {
     ApplicationRunner.installApplication()
     ApplicationRunner.run()
     SimulationEngine.run
+    SimulationEngine.summary()
   }
 }
 
