@@ -155,10 +155,6 @@ class OFFlowTable (tableid : Short, ofcontrolplane : OpenFlowControlPlane) exten
       offlowstatreq.getOutPort)
     logTrace("qualified matchfield number: " + qualifiedflows.length)
 
-    val localdataplane = ofcontrolplane.node.dataplane
-    //get flow
-    localdataplane.
-
     qualifiedflows.foreach(flowentry => {
       val offlowstatreply = messageFactory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.FLOW)
         .asInstanceOf[OFFlowStatisticsReply]
