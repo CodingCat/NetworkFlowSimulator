@@ -21,14 +21,14 @@ import scala.collection.JavaConverters._
 import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
 import org.openflow.protocol.statistics._
 import scala.collection.mutable.ListBuffer
-import java.util
 import packets.{Data, TCP, IPv4, Ethernet}
 
 /**
  * this class implement the functions for routers to contact with
  * controller
  */
-class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with MessageListener {
+class OpenFlowControlPlane (private [openflow] val node : Node)
+  extends DefaultControlPlane(node) with MessageListener {
 
   private val controllerIP = XmlParser.getString("scalasim.network.controlplane.openflow.controller.host", "127.0.0.1")
   private val controllerPort = XmlParser.getInt("scalasim.network.controlplane.openflow.controller.port", 6633)
@@ -116,17 +116,9 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
     val expectedNumber = {
       val alllinks = ofinterfacemanager.outlinks.values.toList :::
         ofinterfacemanager.inlinks.values.toList
-      alllinks.filter(l => Link.otherEnd(l, node).nodetype != HostType).length
+      alllinks.count(l => Link.otherEnd(l, node).nodetype != HostType)
     }
     lldpcnt >= expectedNumber
-  }
-
-  protected def inFlowRegistration(matchfield : OFMatchField, inlink : Link) {
-    insertInPath(matchfield, inlink)
-    //only valid in openflow model
-    if (node.nodetype != HostType) {
-      matchfield.setInputPort(ofinterfacemanager.getPortByLink(inlink).getPortNumber)
-    }
   }
 
   //build channel to the controller
@@ -140,7 +132,7 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
       clientbootstrap.connect(new InetSocketAddress(controllerIP, controllerPort))
     }
     catch {
-      case e : Exception => e.printStackTrace
+      case e : Exception => e.printStackTrace()
     }
   }
 
@@ -295,28 +287,29 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
     statreply
   }
 
-  private def queryAllTablesByFlowStatRequest(flowstatreq : OFFlowStatisticsRequest) = {
-    val statreplylist = new ListBuffer[OFStatistics]
-    //query all tables
-    for (flowtable <- flowtables) {
-      flowtable.queryByFlowStatRequest(flowstatreq).foreach(
-        flowstatreply => statreplylist += flowstatreply)
-    }
-    statreplylist
-  }
-
   private def processFlowStatisticsQuery (ofstatrequest: OFStatisticsRequest) = {
+
+    def queryAllTablesByFlowStatRequest(flowstatreq : OFFlowStatisticsRequest) :
+      List[OFStatistics] = {
+      val statreplylist = new ListBuffer[OFStatistics]
+      //query all tables
+      for (flowtable <- flowtables) {
+        flowtable.queryByFlowStatRequest(flowstatreq).foreach(
+          flowstatreply => statreplylist += flowstatreply)
+      }
+      statreplylist.toList
+    }
+
     val ofstatreply = factory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
     val offlowstatreq = ofstatrequest.getStatistics.asScala
-    val statreplylist = new ListBuffer[OFStatistics]
+    var statreplylist : List[OFStatistics] = null
     for (statreq <- offlowstatreq) {
       val flowstatreq = statreq.asInstanceOf[OFFlowStatisticsRequest]
       if (flowstatreq.getTableId == -1) {
-        queryAllTablesByFlowStatRequest(flowstatreq).foreach(flowstatreply => statreplylist += flowstatreply)
+        statreplylist = queryAllTablesByFlowStatRequest(flowstatreq)
       } else {
         //query a single table
-        flowtables(flowstatreq.getTableId).queryByFlowStatRequest(flowstatreq).foreach(
-          flowstatreply => statreplylist += flowstatreply)
+        statreplylist = flowtables(flowstatreq.getTableId).queryByFlowStatRequest(flowstatreq)
       }
     }
     //resemble the ofstatreply

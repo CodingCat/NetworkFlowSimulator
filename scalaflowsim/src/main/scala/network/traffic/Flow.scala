@@ -1,6 +1,6 @@
 package network.traffic
 
-import network.device.{GlobalDeviceManager, HostType, Node, Link}
+import network.device.{HostType, Node, Link}
 import scala.collection.mutable
 import simengine.utils.{XmlParser, Logging}
 import network.events.CompleteFlowEvent
@@ -133,14 +133,28 @@ class Flow (
     }
   }
 
+  /**
+   * does not change the rate, just update
+   * counters and remianingAppData
+   */
+  def updateTransferredData() {
+    if (remainingAppData > 0) {
+      remainingAppData -= rate * (SimulationEngine.currentTime - lastChangePoint)
+      updateCounters(0,
+        (rate * (SimulationEngine.currentTime - lastChangePoint)).asInstanceOf[Long],
+        (SimulationEngine.currentTime - lastChangePoint).asInstanceOf[Int])
+      lastChangePoint = SimulationEngine.currentTime
+    }
+  }
+
+  /**
+   * change the rate and update the counters, remaininingAppData
+   * @param newRateValue new rate value
+   */
   def changeRate(newRateValue : Double) {
     logDebug("old rate : " + rate + " new rate : " + newRateValue + ", lastChangePoint = " + lastChangePoint)
-    remainingAppData -= rate * (SimulationEngine.currentTime - lastChangePoint)
-    updateCounters(0,
-      (rate * (SimulationEngine.currentTime - lastChangePoint)).asInstanceOf[Long],
-      (SimulationEngine.currentTime - lastChangePoint).asInstanceOf[Int])
+    updateTransferredData()
     logTrace("change " + this + "'s lastChangePoint to " + SimulationEngine.currentTime)
-    lastChangePoint = SimulationEngine.currentTime
     rate = newRateValue
     if (rate == 0) cancelBindedEvent()
     else {

@@ -154,10 +154,16 @@ class OFFlowTable (tableid : Short, ofcontrolplane : OpenFlowControlPlane) exten
     val qualifiedflows = queryTableByMatchAndOutport(offlowstatreq.getMatch,
       offlowstatreq.getOutPort)
     logTrace("qualified matchfield number: " + qualifiedflows.length)
+
+    val localdataplane = ofcontrolplane.node.dataplane
+    //get flow
+    localdataplane.
+
     qualifiedflows.foreach(flowentry => {
       val offlowstatreply = messageFactory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.FLOW)
         .asInstanceOf[OFFlowStatisticsReply]
       var actionlistlength = 0
+
       flowentry.actions.foreach(action => actionlistlength += action.getLength)
       offlowstatreply.setMatch(offlowstatreq.getMatch)
       offlowstatreply.setTableId(offlowstatreq.getTableId)
@@ -187,7 +193,7 @@ object OFFlowTable {
    * @return
    */
   def createMatchField(flow : Flow, wcard : Int) : OFMatchField = {
-    val matchfield = new OFMatchField
+    val matchfield = new OFMatchField()
     matchfield.setWildcards(wcard)
     matchfield.setInputPort(flow.inport)
     matchfield.setDataLayerDestination(flow.dstMac)

@@ -22,8 +22,10 @@ trait RoutingProtocol extends Logging {
   private val floodlist = new ArrayBuffer[Flow] with mutable.SynchronizedBuffer[Flow]
 
 
-  protected val RIBIn = new HashMap[OFMatchField, Link] with mutable.SynchronizedMap[OFMatchField, Link]
-  protected val RIBOut = new HashMap[OFMatchField, Link] with mutable.SynchronizedMap[OFMatchField, Link]
+  protected val RIBIn = new mutable.HashMap[OFMatchField, Link]
+    with mutable.SynchronizedMap[OFMatchField, Link]
+  protected val RIBOut = new mutable.HashMap[OFMatchField, Link]
+    with mutable.SynchronizedMap[OFMatchField, Link]
 
   protected var wildcard = OFMatch.OFPFW_ALL &
     ~OFMatch.OFPFW_NW_DST_MASK &
@@ -33,13 +35,13 @@ trait RoutingProtocol extends Logging {
     val matchfield = OFFlowTable.createMatchField(ofmatch, wildcard)
     logDebug("quering matchfield: " + matchfield + "(" + matchfield.hashCode + ")" +
       " node:" + this)
-    assert(RIBIn.contains(matchfield) == true)
+    assert(RIBIn.contains(matchfield))
     RIBIn(matchfield)
   }
 
   def fetchOutRoutingEntry(ofmatch : OFMatch) : Link = {
     val matchfield = OFFlowTable.createMatchField(ofmatch, wildcard)
-    assert(RIBOut.contains(matchfield) == true)
+    assert(RIBOut.contains(matchfield))
     RIBOut(matchfield)
   }
 
@@ -50,7 +52,9 @@ trait RoutingProtocol extends Logging {
       " with the link " + link.toString)
     val matchfield = OFFlowTable.createMatchField(ofmatch = ofmatch, wcard = wildcard)
     RIBOut += (matchfield -> link)
-    if (link.end_from.ip_addr(0) == IPAddressConvertor.IntToDecimalString(matchfield.getNetworkSource)) {
+    //add source host to global device
+    if (link.end_from.ip_addr(0) ==
+      IPAddressConvertor.IntToDecimalString(matchfield.getNetworkSource)) {
       GlobalDeviceManager.insertNewNode(link.end_from.ip_addr(0), link.end_from)
     }
   }
@@ -60,7 +64,9 @@ trait RoutingProtocol extends Logging {
     RIBIn += (matchfield -> link)
     logTrace(this + " insert inRIB entry " + matchfield + "(" + matchfield.hashCode
       + ") -> " + link + " RIBIn Length:" + RIBIn.size)
-    if (link.end_from.ip_addr(0) == IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination)) {
+    //add destination host to global device
+    if (link.end_from.ip_addr(0) ==
+      IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination)) {
       GlobalDeviceManager.insertNewNode(link.end_from.ip_addr(0), link.end_from)
     }
   }
@@ -80,9 +86,10 @@ trait RoutingProtocol extends Logging {
   def routing (localnode : Node, flow : Flow, matchfield : OFMatchField, inlink : Link) {
     //discard the flood packets
     if (wrongDistination(localnode, flow)) return
-    logTrace("arrive at " + localnode.ip_addr(0) + ", routing (flow : Flow, matchfield : OFMatch, inlink : Link)" +
+    logTrace("arrive at " + localnode.ip_addr(0) +
+      ", routing (flow : Flow, matchfield : OFMatch, inlink : Link)" +
       " flow:" + flow + ", inlink:" + inlink)
-    if (inlink != null) localnode.controlplane.insertInPath(matchfield, inlink)
+    if (inlink != null) insertInPath(matchfield, inlink)
     if (localnode.ip_addr(0) == flow.dstIP) {
       //start resource allocation process
       flow.setEgressLink(inlink)

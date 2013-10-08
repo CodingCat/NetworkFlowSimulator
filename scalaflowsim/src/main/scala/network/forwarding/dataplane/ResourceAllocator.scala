@@ -1,6 +1,6 @@
 package network.forwarding.dataplane
 
-import network.device.{GlobalDeviceManager, Node, Link}
+import network.device.{Node, Link}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import network.traffic._
@@ -8,7 +8,7 @@ import simengine.utils.{Logging, XmlParser}
 import network.events.CompleteFlowEvent
 import simengine.SimulationEngine
 import org.openflow.protocol.OFMatch
-import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
+import network.forwarding.controlplane.openflow.OFMatchField
 
 /**
  * class representing the functionalities on the bandwidth allocation among flows

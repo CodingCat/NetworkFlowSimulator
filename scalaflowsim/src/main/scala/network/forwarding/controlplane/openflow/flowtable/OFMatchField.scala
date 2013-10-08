@@ -5,8 +5,9 @@ import java.util
 import java.util.Arrays
 import org.openflow.util.HexString
 import utils.IPAddressConvertor
+import network.traffic.Flow
 
-class OFMatchField extends OFMatch {
+class OFMatchField() extends OFMatch {
 
   override def hashCode = {
     val prime: Int = 131

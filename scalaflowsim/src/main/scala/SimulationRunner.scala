@@ -1,21 +1,20 @@
 package root
 
 import _root_.network.device.{Pod, GlobalDeviceManager}
-import _root_.network.traffic.Flow
-import _root_.simengine.SimulationEngine
+import simengine.{PeriodicalEventManager, SimulationEngine}
 import _root_.simengine.utils.XmlParser
 import application.ApplicationRunner
-import network.events.StartNewFlowEvent
 import network.utils.FlowReporter
+import network.events.UpdateFlowPropertyEvent
 
 
 object SimulationRunner {
 
-  def reset {
+  def reset() {
     GlobalDeviceManager.globaldevicecounter = 0
-    SimulationEngine.reset
-    ApplicationRunner.reset
-    XmlParser.reset
+    SimulationEngine.reset()
+    ApplicationRunner.reset()
+    XmlParser.reset()
   }
 
   def main(args:Array[String]) = {
@@ -26,10 +25,11 @@ object SimulationRunner {
     ApplicationRunner.setResource(cellnet.getAllHostsInPod)
     ApplicationRunner.installApplication()
     ApplicationRunner.run()
+    PeriodicalEventManager.event = new UpdateFlowPropertyEvent(0)
     SimulationEngine.startTime = 0.0
     SimulationEngine.endTime = 10000.0
     SimulationEngine.reporter = FlowReporter
-    SimulationEngine.run
+    SimulationEngine.run()
     SimulationEngine.summary()
    /* val pod = new Pod(0, 1, 1, 20)
     Thread.sleep(1000 * 20)

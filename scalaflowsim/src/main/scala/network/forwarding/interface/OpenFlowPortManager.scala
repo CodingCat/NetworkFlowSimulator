@@ -58,10 +58,10 @@ class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node)
     //TODO: limited support feature?
     var feature = 0
     if (l.bandwidth == 100) {
-      feature = (1 << 3)
+      feature = 1 << 3
     }
     else {
-      if (l.bandwidth == 1000) feature = (1 << 5)
+      if (l.bandwidth == 1000) feature = 1 << 5
     }
     port.setAdvertisedFeatures(feature)
     port.setCurrentFeatures(feature)

@@ -7,7 +7,6 @@ import org.openflow.protocol._
 import scala.collection.JavaConversions._
 import org.jboss.netty.handler.codec.oneone.OneToOneEncoder
 import org.openflow.protocol.factory.BasicFactory
-import org.slf4j.LoggerFactory
 import scala.collection.mutable.{ListBuffer, ArrayBuffer}
 
 class OpenFlowMsgEncoder extends OneToOneEncoder {

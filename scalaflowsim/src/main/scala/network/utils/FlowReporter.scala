@@ -1,7 +1,6 @@
 package network.utils
 
 import simengine.{SimulationEngine, Reporter}
-import scala.collection.mutable.ListBuffer
 import network.traffic.Flow
 import scala.collection.mutable
 

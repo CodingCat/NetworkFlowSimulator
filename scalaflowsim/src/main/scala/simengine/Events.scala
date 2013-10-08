@@ -4,11 +4,14 @@ import simengine.utils.Logging
 
 
 abstract class Event (protected var timestamp : Double) extends Logging {
+
   def setTimeStamp(t : Double) {
     timestamp = t
   }
+
   def getTimeStamp() = timestamp
-  def process
+  def process()
+  def repeatInFuture(step : Double) : Event = null//empty
 }
 
 abstract class EventOfSingleEntity[EntityType] (val entity : EntityType, ts : Double) extends Event(ts)

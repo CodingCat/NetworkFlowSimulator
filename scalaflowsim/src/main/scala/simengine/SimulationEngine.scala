@@ -19,8 +19,9 @@ object SimulationEngine extends Logging {
   var startTime: Double = 0.0
   var endTime: Double = 1000.0
 
-  def run {
-    PeriodicalEventManager.run(startTime, endTime)
+  def run () {
+    //setup periodical events
+    PeriodicalEventManager.run(startTime, endTime, 10)
     while (!eventqueue.isEmpty) {
       queueReadingLock.acquire()
       logDebug("acquire lock at SimulationEngine")
