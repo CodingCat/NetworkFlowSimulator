@@ -71,6 +71,7 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
       .setReason(OFPacketIn.OFPacketInReason.NO_MATCH)
       .setTotalLength(payload.length.toShort)
       .setLength((payload.length + 18).toShort)
+      .setVersion(0)
     packet_in_msg
   }
 

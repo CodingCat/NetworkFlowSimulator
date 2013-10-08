@@ -18,8 +18,8 @@ class OpenFlowMsgEncoder extends OneToOneEncoder {
     var size: Int = 0
     msglist.foreach(ofm => size += ofm.getLength)
     val buf = ChannelBuffers.buffer(size)
-    msglist.foreach(ofmessage => ofmessage.writeTo(buf))
-    msglist.clear()
+    msglist.foreach(ofm =>
+      if (ofm != null) ofm.writeTo(buf))
     buf
   }
 }
