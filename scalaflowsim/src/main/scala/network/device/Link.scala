@@ -9,6 +9,7 @@ class Link (val end_from : Node,
 
 object Link {
   def otherEnd (link : Link, node : Node) : Node = {
+    assert(link != null)
     if (link.end_to == node) link.end_from
     else link.end_to
   }

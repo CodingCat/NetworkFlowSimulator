@@ -80,7 +80,7 @@ class OFFlowTable (tableid : Short, ofcontrolplane : OpenFlowControlPlane) exten
     val ret = new ListBuffer[OFFlowTableEntryAttaches]
     val matchfield = OFFlowTable.createMatchField(flowmatch, flowmatch.getWildcards)
     entries.foreach(entry => {
-      logDebug(entry._1.toCompleteString() + "\t" + matchfield.toCompleteString())
+    //  logDebug(entry._1.toCompleteString() + "\t" + matchfield.toCompleteString())
       if (entry._1.matching(matchfield)) ret += entry._2
     })
     ret.toList.sortWith(_.priority > _.priority).slice(0, topk)

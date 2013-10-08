@@ -78,17 +78,18 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
 
   def sendPacketInToController(flow : Flow, inlink: Link, ethernetFramedata: Array[Byte]) {
     assert(ofinterfacemanager.linkphysicalportsMap.contains(inlink))
-    val port = ofinterfacemanager.linkphysicalportsMap(inlink)
+    val inport = ofinterfacemanager.linkphysicalportsMap(inlink)
     pendingFlowLock.acquire()
     val bufferid = pendingFlows.size
-    logger.trace("send PACKET_IN to controller for table missing at node " + node)
+    val packetin_msg = generatePacketIn(bufferid,
+      inport.getPortNumber, ethernetFramedata,
+      OFPacketIn.OFPacketInReason.NO_MATCH)
+    logger.trace("send PACKET_IN " + packetin_msg.toString + "to controller for table missing at node " + node)
     logger.debug("buffering flow " + flow + " at buffer " + bufferid +
       " at node " + node)
     pendingFlows += (bufferid -> flow)
     pendingFlowLock.release()
-    ofmsgsender.sendMessageToController(toControllerChannel,
-      generatePacketIn(bufferid, port.getPortNumber, ethernetFramedata,
-        OFPacketIn.OFPacketInReason.NO_MATCH))
+    ofmsgsender.sendMessageToController(toControllerChannel, packetin_msg)
   }
 
   def sendLLDPtoController (l : Link, lldpData : Array[Byte]) {
@@ -233,6 +234,10 @@ class OpenFlowControlPlane (node : Node) extends DefaultControlPlane(node) with 
     else {
       //TODO: is there any difference if we are on packet-level simulation?
       log.trace("receive a packet_out to certain buffer:" + pktoutmsg.toString + " at " + node)
+      if (!pendingFlows.contains(pktoutmsg.getBufferId)) {
+        //in case of duplicate packet out message
+        return
+      }
       val pendingflow = pendingFlows(pktoutmsg.getBufferId)
       for (action : OFAction <- pktoutmsg.getActions.asScala) {
         action.getType match {
