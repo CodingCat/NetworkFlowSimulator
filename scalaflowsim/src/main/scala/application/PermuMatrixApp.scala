@@ -31,7 +31,8 @@ class PermuMatrixApp (servers : HostContainer) extends ServerApp(servers) {
     for (i <- 0 until servers.size) {
       var proposedIdx = Random.nextInt(servers.size)
       //currently, we allow a node to be selected for multiple times
-      while (proposedIdx == i) {
+      while (proposedIdx == i ||
+        selectedPair(servers(i)).contains(servers(proposedIdx))) {
         proposedIdx = Random.nextInt(servers.size)
       }
       insertTrafficPair(servers(i), servers(proposedIdx))

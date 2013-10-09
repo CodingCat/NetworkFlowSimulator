@@ -17,8 +17,16 @@
         <name>scalasim.simengine.model</name>
         <value>openflow</value>
     </property>
-  <!--  <property>
+    <property>
         <name>scalasim.application.names</name>
         <value>OnOffApp</value>
-    </property>-->
+    </property>
+    <property>
+        <name>scalasim.topology.locallinkrate</name>
+        <value>1</value>
+    </property>
+    <property>
+        <name>scalasim.topology.crossrouterlinkrate</name>
+        <value>10</value>
+    </property>
 </configuration>

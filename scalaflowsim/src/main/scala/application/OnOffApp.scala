@@ -18,7 +18,7 @@ class OnOffApp (servers : HostContainer) extends ServerApp(servers) {
     }
   }
 
-  def insertTrafficPair(src : Host, dst : Host) {
+  private def insertTrafficPair(src : Host, dst : Host) {
     if (!selectedPair.contains(src)) {
       selectedPair += (src -> new HashSet[Host])
     }
@@ -27,10 +27,11 @@ class OnOffApp (servers : HostContainer) extends ServerApp(servers) {
 
   private def selectMachinePairs() {
     for (i <- 0 until servers.size) {
-      var proposedIdx = Random.nextInt(servers.size)
+      var proposedIdx = Random.nextInt(servers.size())
       //currently, we allow a node to be selected for multiple times
-      while (proposedIdx == i) {
-        proposedIdx = Random.nextInt(servers.size)
+      while (proposedIdx == i ||
+        selectedPair(servers(i)).contains(servers(proposedIdx))) {
+        proposedIdx = Random.nextInt(servers.size())
       }
       insertTrafficPair(servers(i), servers(proposedIdx))
     }

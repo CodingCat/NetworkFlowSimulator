@@ -115,7 +115,9 @@ trait RoutingProtocol extends Logging {
         Link.otherEnd(l, localnode).controlplane.routing(Link.otherEnd(l, localnode), flow, matchfield, l)
       })
       if (inlink != null) insertInPath(matchfield, inlink)
-    }
+    } /*else {
+      logDebug("flow " + flow + " once appeared in " + localnode)
+    }   */
   }
 
   def forward (localnode: Node, olink : Link, inlink : Link, flow : Flow, matchfield : OFMatchField) {

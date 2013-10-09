@@ -9,5 +9,5 @@ scalaflowsim/.DS_Store
 *.iml
 scalaflowsim/.idea_modules/scalaflowsim.iml
 .idea*
-
+*.swp
 *.log
