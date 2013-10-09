@@ -99,7 +99,7 @@ class OpenFlowSuite extends FunSuite {
   test ("flow table can match flow entry correctly") {
     SimulationRunner.reset
     val matchfield = new OFMatchField
-    val flow = Flow("10.0.0.1", "10.0.0.2", "00:00:00:00:00:11", "00:00:00:00:00:22", demand = 1)
+    val flow = Flow("10.0.0.1", "10.0.0.2", "00:00:00:00:00:11", "00:00:00:00:00:22", appDataSize = 1)
     val generatedmatchfield = OFFlowTable.createMatchField(flow, 0)
     //set matchfield
     matchfield.setInputPort(2)
@@ -120,7 +120,7 @@ class OpenFlowSuite extends FunSuite {
   test ("flow table can match flow entry correctly (with ip mask)") {
     SimulationRunner.reset
     val matchfield = new OFMatchField
-    val flow = Flow("10.0.0.1", "10.0.0.2", "00:00:00:00:00:11", "00:00:00:00:00:22", demand = 1)
+    val flow = Flow("10.0.0.1", "10.0.0.2", "00:00:00:00:00:11", "00:00:00:00:00:22", appDataSize = 1)
     val generatedmatchfield = OFFlowTable.createMatchField(flow, 0)
     //set matchfield
     matchfield.setInputPort(2)
@@ -142,7 +142,7 @@ class OpenFlowSuite extends FunSuite {
   test ("OFMatchField hashCode testing") {
     SimulationRunner.reset
     val matchfield = new OFMatchField
-    val flow = Flow("10.0.0.1", "10.0.0.2", "00:00:00:00:00:11", "00:00:00:00:00:22", demand = 1)
+    val flow = Flow("10.0.0.1", "10.0.0.2", "00:00:00:00:00:11", "00:00:00:00:00:22", appDataSize = 1)
     val generatedmatchfield = OFFlowTable.createMatchField(flow, 0)
     generatedmatchfield.setWildcards(OFMatch.OFPFW_ALL
       & ~OFMatch.OFPFW_DL_VLAN
@@ -175,9 +175,9 @@ class OpenFlowSuite extends FunSuite {
     val pod = new Pod(0, 1, 1, 20)
     Thread.sleep(1000 * 20)
     val flow1 = Flow(pod.getHost(0, 0).toString, pod.getHost(0, 1).toString,
-      pod.getHost(0, 0).mac_addr(0), pod.getHost(0, 1).mac_addr(0), demand = 1)
+      pod.getHost(0, 0).mac_addr(0), pod.getHost(0, 1).mac_addr(0), appDataSize = 1)
     val flow2 = Flow(pod.getHost(0, 1).toString, pod.getHost(0, 0).toString,
-      pod.getHost(0, 1).mac_addr(0), pod.getHost(0, 0).mac_addr(0), demand = 1)
+      pod.getHost(0, 1).mac_addr(0), pod.getHost(0, 0).mac_addr(0), appDataSize = 1)
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 0), 0))
     SimulationEngine.addEvent(new StartNewFlowEvent(flow2, pod.getHost(0, 1), 0))
     SimulationEngine.run
@@ -191,10 +191,10 @@ class OpenFlowSuite extends FunSuite {
     XmlParser.addProperties("scalasim.simengine.model", "openflow")
     val pod = new Pod(1, 2, 4, 20)
     val flow1 = Flow(pod.getHost(0, 1).toString, pod.getHost(1, 1).toString,
-      pod.getHost(0, 1).mac_addr(0), pod.getHost(1, 1).mac_addr(0), demand = 1)
+      pod.getHost(0, 1).mac_addr(0), pod.getHost(1, 1).mac_addr(0), appDataSize = 1)
     Thread.sleep(1000 * 20)
     val flow2 = Flow(pod.getHost(3, 1).toString, pod.getHost(2, 1).toString,
-      pod.getHost(3, 1).mac_addr(0), pod.getHost(2, 1).mac_addr(0), demand = 1)
+      pod.getHost(3, 1).mac_addr(0), pod.getHost(2, 1).mac_addr(0), appDataSize = 1)
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 1), 0))
     SimulationEngine.addEvent(new StartNewFlowEvent(flow2, pod.getHost(3, 1), 0))
     SimulationEngine.run
@@ -209,9 +209,9 @@ class OpenFlowSuite extends FunSuite {
     val pod = new Pod(1, 0, 1, 2)
     Thread.sleep(1000 * 20)
     val flow1 = Flow(pod.getHost(0, 0).toString, pod.getHost(0, 1).toString,
-      pod.getHost(0, 0).mac_addr(0), pod.getHost(0, 1).mac_addr(0), demand = 1)
+      pod.getHost(0, 0).mac_addr(0), pod.getHost(0, 1).mac_addr(0), appDataSize = 1)
     val flow2 = Flow(pod.getHost(0, 1).toString, pod.getHost(0, 0).toString,
-      pod.getHost(0, 1).mac_addr(0), pod.getHost(0, 0).mac_addr(0), demand = 1)
+      pod.getHost(0, 1).mac_addr(0), pod.getHost(0, 0).mac_addr(0), appDataSize = 1)
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 0), 0))
     SimulationEngine.addEvent(new StartNewFlowEvent(flow2, pod.getHost(0, 1), 0))
     SimulationEngine.run
@@ -229,7 +229,7 @@ class OpenFlowSuite extends FunSuite {
     val flowlist = new ListBuffer[Flow]
     for (i <- 0 until 2; j <- 0 until 4) {
       val flow = Flow(pod.getHost(i, j).toString, pod.getHost({if (i == 0) 1 else 0}, j).toString,
-        pod.getHost(i, j).mac_addr(0), pod.getHost({if (i == 0) 1 else 0}, j).mac_addr(0), demand = 1)
+        pod.getHost(i, j).mac_addr(0), pod.getHost({if (i == 0) 1 else 0}, j).mac_addr(0), appDataSize = 1)
       flowlist += flow
       SimulationEngine.addEvent(new StartNewFlowEvent(flow, pod.getHost(i, j), 0))
     }
@@ -248,12 +248,12 @@ class OpenFlowSuite extends FunSuite {
     SimulationRunner.reset
     for (i <- 0 until 3) {
       val flow = Flow(pod.getHost(0, 0).toString, pod.getHost(1, i).toString,
-        pod.getHost(0, 0).mac_addr(0), pod.getHost(1, i).mac_addr(0), demand = 1)
+        pod.getHost(0, 0).mac_addr(0), pod.getHost(1, i).mac_addr(0), appDataSize = 1)
       flowlist += flow
       SimulationEngine.addEvent(new StartNewFlowEvent(flow, pod.getHost(0, 0), 0))
     }
     val flow1 = Flow(pod.getHost(0, 1).toString, pod.getHost(1, 1).toString,
-      pod.getHost(0, 1).mac_addr(0), pod.getHost(1, 1).mac_addr(0), demand = 7.5)
+      pod.getHost(0, 1).mac_addr(0), pod.getHost(1, 1).mac_addr(0), appDataSize = 7.5)
     flowlist += flow1
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, pod.getHost(0, 1), 0))
     SimulationEngine.run
@@ -278,7 +278,7 @@ class OpenFlowSuite extends FunSuite {
     SimulationRunner.reset
     for (i <- 0 until 2; j <- 0 until 4) {
       val flow = Flow(pod.getHost(i, j).toString, pod.getHost({if (i == 1) 0 else 1}, j).toString,
-        pod.getHost(i, j).mac_addr(0), pod.getHost({if (i == 1) 0 else 1}, j).mac_addr(0), demand = 1)
+        pod.getHost(i, j).mac_addr(0), pod.getHost({if (i == 1) 0 else 1}, j).mac_addr(0), appDataSize = 1)
       flowlist += flow
       SimulationEngine.addEvent(new StartNewFlowEvent(flow, pod.getHost(i, j), 0))
     }

@@ -1,8 +1,9 @@
 package application
 
 import network.device.HostContainer
+import simengine.utils.Logging
 
-abstract class ServerApp(protected val servers : HostContainer) {
+abstract class ServerApp(protected val servers : HostContainer) extends Logging {
   def run()
   def reset()
 }

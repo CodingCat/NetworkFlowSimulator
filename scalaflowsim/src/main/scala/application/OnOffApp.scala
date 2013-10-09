@@ -42,7 +42,8 @@ class OnOffApp (servers : HostContainer) extends ServerApp(servers) {
     if (selectedPair.size == 0) selectMachinePairs()
     for (srcdstPair <- selectedPair; dst <- srcdstPair._2) {
       val flow = Flow(srcdstPair._1.ip_addr(0), dst.ip_addr(0), srcdstPair._1.mac_addr(0), dst.mac_addr(0),
-        demand = 100)
+        appDataSize = 100)
+      logTrace("create a new flow with appDataSize :" + flow.AppDataSize)
       val newflowevent = new StartNewFlowEvent(
         flow,
         ipHostMap(srcdstPair._1.ip_addr(0)),

@@ -152,11 +152,13 @@ class Flow (
    * @param newRateValue new rate value
    */
   def changeRate(newRateValue : Double) {
-    logDebug("old rate : " + rate + " new rate : " + newRateValue + ", lastChangePoint = " + lastChangePoint)
+    logDebug("old rate : " + rate + " new rate : " + newRateValue + ", lastChangePoint = " + lastChangePoint +
+      " remainingAppData: " + remainingAppData)
     updateTransferredData()
-    logTrace("change " + this + "'s lastChangePoint to " + SimulationEngine.currentTime)
+    logTrace("change " + this + "'s lastChangePoint to " + SimulationEngine.currentTime +
+      " remainingAppData: " + remainingAppData)
     rate = newRateValue
-    if (rate == 0) cancelBindedEvent()
+    if (rate == 0 && remainingAppData != 0) cancelBindedEvent()
     else {
       //TODO: may causing some duplicated rescheduling in successive links
       if ((status == RunningFlow || status == ChangingRateFlow) && remainingAppData > 0)
@@ -207,11 +209,9 @@ class Flow (
     //TODO: in test ControlPlaneSuite "ordering" test, bindedCompleteEvent can be true
     //TODO: that test case need to be polished, but not that urgent
     if (bindedCompleteEvent != null) {
-      logTrace("reschedule " + toString + " completeEvent to " + (SimulationEngine.currentTime + remainingAppData / rate) +
-        " current time:" + SimulationEngine.currentTime + " rate :" + rate + " demand:" + remainingAppData)
-      if (remainingAppData > 100) {
-        logError("demand > 100")
-      }
+      logTrace("reschedule " + toString + " completeEvent to " +
+        (SimulationEngine.currentTime + remainingAppData / rate) +
+        " current time:" + SimulationEngine.currentTime + " rate :" + rate + " appDataSize:" + remainingAppData)
       SimulationEngine.reschedule(bindedCompleteEvent,
         SimulationEngine.currentTime + remainingAppData / rate)
     }
@@ -264,14 +264,14 @@ object Flow {
    * @param dPort
    * @param vlanID
    * @param prioritycode
-   * @param demand
+   * @param appDataSize
    * @param fflag
    * @return
    */
   def apply(srcIP : String, dstIP : String, srcMac : String, dstMac : String,
             sPort : Short = 1, dPort : Short = 1, vlanID : Short = 0,
-            prioritycode : Byte = 0, demand : Double, fflag : Boolean = false) : Flow = {
+            prioritycode : Byte = 0, appDataSize : Double, fflag : Boolean = false) : Flow = {
     new Flow(srcIP, dstIP, srcMac, dstMac, vlanID, prioritycode, srcPort = sPort, dstPort = dPort,
-      remainingAppData = demand, floodflag = fflag)
+      remainingAppData = appDataSize, floodflag = fflag)
   }
 }

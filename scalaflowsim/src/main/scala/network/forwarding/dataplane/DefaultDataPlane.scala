@@ -39,7 +39,7 @@ class DefaultDataPlane extends ResourceAllocator with Logging {
         if (currentflow.status != RunningFlow) currentflow.getTempRate
         else currentflow.Rate
       }
-      logDebug("demand of flow " + currentflow + " is " + demand)
+      logDebug("rate demand of flow " + currentflow + " is " + demand)
       if (demand <= avrRate) {
         remainingBandwidth -= demand
       } else {

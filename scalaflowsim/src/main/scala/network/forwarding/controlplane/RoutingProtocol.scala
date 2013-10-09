@@ -126,6 +126,8 @@ trait RoutingProtocol extends Logging {
       flow.addTrace(olink, inlink)
       nextnode.controlplane.routing(nextnode, flow, matchfield, olink)
       if (inlink != null) insertInPath(matchfield, inlink)
+    } else {
+      logDebug("duplicate flow: " + flow)
     }
   }
 
