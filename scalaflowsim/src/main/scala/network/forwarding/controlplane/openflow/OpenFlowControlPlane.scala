@@ -52,7 +52,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     with mutable.SynchronizedMap[Int, Flow]
 
 
-  private val logger = LoggerFactory.getLogger("OpenFlowModule")
+  private val logger = LoggerFactory.getLogger("OpenFlowControlPlane")
   private val factory = new BasicFactory
 
   def getSwitchDescription = node.ip_addr(0)
@@ -78,10 +78,18 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
   def FlowTables = flowtables
 
   def sendPacketInToController(flow : Flow, inlink: Link, ethernetFramedata: Array[Byte]) {
+
+    def getFreeBufferID : Int = {
+      val bufferIDs = pendingFlows.keys
+      if (bufferIDs.size == 0) 1
+      else {
+        bufferIDs.foldLeft(-1)((b, a) => Math.max(b, a))
+      }
+    }
     assert(ofinterfacemanager.linkphysicalportsMap.contains(inlink))
     val inport = ofinterfacemanager.linkphysicalportsMap(inlink)
     pendingFlowLock.acquire()
-    val bufferid = pendingFlows.size
+    val bufferid = getFreeBufferID + 1
     val packetin_msg = generatePacketIn(bufferid,
       inport.getPortNumber, ethernetFramedata,
       OFPacketIn.OFPacketInReason.NO_MATCH)
