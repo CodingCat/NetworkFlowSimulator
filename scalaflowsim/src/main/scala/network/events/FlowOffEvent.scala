@@ -22,8 +22,8 @@ class FlowOffEvent (flow : Flow, timestamp : Double)
         SimulationEngine.addEvent(new FlowOnEvent(flow,
           SimulationEngine.currentTime + nextOnMoment))
         //reallocate resources
-        GlobalDeviceManager.getHost(flow.srcIP).dataplane.reallocate(
-          GlobalDeviceManager.getHost(flow.dstIP), //destination host
+        GlobalDeviceManager.getNode(flow.srcIP).dataplane.reallocate(
+          GlobalDeviceManager.getNode(flow.dstIP), //destination host
           flow, //offflow
           OFFlowTable.createMatchField(flow = flow,
             wcard = (OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_DST_MASK & ~OFMatch.OFPFW_NW_SRC_MASK))) //matchfield

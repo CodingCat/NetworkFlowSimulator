@@ -74,7 +74,7 @@ class DefaultDataPlane extends ResourceAllocator with Logging {
     while (demandingflows.size != 0 && remainingBandwidth != 0) {
       //the flow with the minimum rate
       val currentflow = demandingflows.head
-      val flowdest = GlobalDeviceManager.getHost(currentflow.dstIP)
+      val flowdest = GlobalDeviceManager.getNode(currentflow.dstIP)
       val matchfield = OFFlowTable.createMatchField(flow = currentflow,
         wcard = (OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_DST_MASK & ~OFMatch.OFPFW_NW_SRC_MASK))
       //try to acquire the max-min rate starting from the dest of this flow

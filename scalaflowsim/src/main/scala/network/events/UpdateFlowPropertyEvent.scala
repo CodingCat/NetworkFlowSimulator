@@ -8,5 +8,7 @@ class UpdateFlowPropertyEvent (timestamp : Double) extends Event(timestamp) {
   override def repeatInFuture(future : Double) : Event =
     new UpdateFlowPropertyEvent(timestamp + future)
 
-  def process() {GlobalFlowStore.getFlows.foreach(f => f.updateTransferredData())}
+  def process() {
+    GlobalFlowStore.getFlows.foreach(f => f.updateTransferredData())
+  }
 }

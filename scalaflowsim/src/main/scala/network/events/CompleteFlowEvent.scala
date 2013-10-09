@@ -23,8 +23,8 @@ final class CompleteFlowEvent (flow : Flow, t : Double)
     //ends at the flow destination
     val matchfield = OFFlowTable.createMatchField(flow = flow,
       wcard = OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_DST_MASK & ~OFMatch.OFPFW_NW_SRC_MASK)
-    GlobalDeviceManager.getHost(flow.dstIP).dataplane.finishFlow(
-      GlobalDeviceManager.getHost(flow.dstIP), flow, matchfield)
+    GlobalDeviceManager.getNode(flow.dstIP).dataplane.finishFlow(
+      GlobalDeviceManager.getNode(flow.dstIP), flow, matchfield)
     GlobalFlowStore.removeFlow(flow)
   }
 }

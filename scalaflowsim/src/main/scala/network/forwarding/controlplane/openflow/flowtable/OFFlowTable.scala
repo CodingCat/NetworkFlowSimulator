@@ -15,9 +15,9 @@ import org.openflow.protocol.statistics.{OFFlowStatisticsReply, OFFlowStatistics
 import org.openflow.protocol.factory.BasicFactory
 import utils.IPAddressConvertor
 
-class OFFlowTable (tableid : Short, ofcontrolplane : OpenFlowControlPlane) extends Logging {
+class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : OpenFlowControlPlane) extends Logging {
 
-  class OFFlowTableEntryAttaches (table : OFFlowTable) {
+  class OFFlowTableEntryAttaches (private [openflow] val table : OFFlowTable) {
     private [openflow] var ofmatch : OFMatch = null
     private [openflow] val counter : OFFlowCount = new OFFlowCount
     private [controlplane] val actions : ListBuffer[OFAction] = new ListBuffer[OFAction]
@@ -149,20 +149,15 @@ class OFFlowTable (tableid : Short, ofcontrolplane : OpenFlowControlPlane) exten
     entries
   }
 
-  def queryByFlowStatRequest(offlowstatreq: OFFlowStatisticsRequest): List[OFFlowStatisticsReply] = {
+  private def generateFlowStatisticalReplyFromFlowEntryList (flowlist : List[OFFlowTableEntryAttaches]) = {
     val replylist = new ListBuffer[OFFlowStatisticsReply]
-    val qualifiedflows = queryTableByMatchAndOutport(offlowstatreq.getMatch,
-      offlowstatreq.getOutPort)
-    logTrace("qualified matchfield number: " + qualifiedflows.length)
-
-    qualifiedflows.foreach(flowentry => {
+    flowlist.foreach(flowentry => {
       val offlowstatreply = messageFactory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.FLOW)
         .asInstanceOf[OFFlowStatisticsReply]
       var actionlistlength = 0
-
       flowentry.actions.foreach(action => actionlistlength += action.getLength)
-      offlowstatreply.setMatch(offlowstatreq.getMatch)
-      offlowstatreply.setTableId(offlowstatreq.getTableId)
+      offlowstatreply.setMatch(flowentry.ofmatch)
+      offlowstatreply.setTableId(flowentry.table.tableid.toByte)
       offlowstatreply.setDurationNanoseconds(flowentry.counter.durationNanoSeconds)
       offlowstatreply.setDurationSeconds(flowentry.counter.durationSeconds)
       offlowstatreply.setPriority(0)
@@ -177,6 +172,17 @@ class OFFlowTable (tableid : Short, ofcontrolplane : OpenFlowControlPlane) exten
       replylist += offlowstatreply
     })
     replylist.toList
+  }
+
+  def getAllFlowStat : List[OFFlowStatisticsReply] =
+    generateFlowStatisticalReplyFromFlowEntryList(queryTableByMatch(new OFMatch))
+
+
+  def queryByFlowStatRequest(offlowstatreq: OFFlowStatisticsRequest): List[OFFlowStatisticsReply] = {
+    val qualifiedflows = queryTableByMatchAndOutport(offlowstatreq.getMatch,
+      offlowstatreq.getOutPort)
+    logTrace("qualified matchfield number: " + qualifiedflows.length)
+    generateFlowStatisticalReplyFromFlowEntryList(qualifiedflows)
   }
 }
 

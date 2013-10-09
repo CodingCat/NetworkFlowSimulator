@@ -55,7 +55,6 @@ trait RoutingProtocol extends Logging {
     //add source host to global device
     if (link.end_from.ip_addr(0) ==
       IPAddressConvertor.IntToDecimalString(matchfield.getNetworkSource)) {
-      GlobalDeviceManager.insertNewNode(link.end_from.ip_addr(0), link.end_from)
     }
   }
 
@@ -67,7 +66,6 @@ trait RoutingProtocol extends Logging {
     //add destination host to global device
     if (link.end_from.ip_addr(0) ==
       IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination)) {
-      GlobalDeviceManager.insertNewNode(link.end_from.ip_addr(0), link.end_from)
     }
   }
 

@@ -1,11 +1,18 @@
 package scalasim.network.component.builder
 
 import simengine.utils.XmlParser
-import network.device.{RouterContainer, Link, HostContainer, Router}
+import network.device._
 
 
 object LanBuilder {
 
+  /**
+   * build a small lan within a rack one router and multiples hosts
+   * @param router the tor router
+   * @param hosts the servers set
+   * @param startIdx the index of the first server to be connected
+   * @param endIdx the index of the last server to be connected
+   */
   def buildLan(router: Router, hosts : HostContainer, startIdx : Int, endIdx : Int) {
     try {
       var locallinkBandwidth = XmlParser.getDouble("scalasim.topology.locallinkrate", 100.0)
@@ -17,7 +24,9 @@ object LanBuilder {
         val newlink = new Link(hosts(i), router, locallinkBandwidth)
         hosts(i).interfacesManager.registerOutgoingLink(newlink)
         router.interfacesManager.registerIncomeLink(newlink)
+        GlobalDeviceManager.addNewNode(hosts(i).ip_addr(0), hosts(i))
       }
+      GlobalDeviceManager.addNewNode(router.ip_addr(0), router)
     }
     catch {
       case ex : RuntimeException => throw ex
@@ -35,7 +44,9 @@ object LanBuilder {
         val newlink = new Link(routers(i), aggRouter, crossrouterlinkBandwidth)
         routers(i).interfacesManager.registerOutgoingLink(newlink)
         aggRouter.interfacesManager.registerIncomeLink(newlink)
+        GlobalDeviceManager.addNewNode(routers(i).ip_addr(0), routers(i))
       }
+      GlobalDeviceManager.addNewNode(aggRouter.ip_addr(0), aggRouter)
     }
     catch {
       case ex : RuntimeException => throw ex
