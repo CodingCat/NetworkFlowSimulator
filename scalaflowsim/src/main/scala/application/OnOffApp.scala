@@ -30,7 +30,8 @@ class OnOffApp (servers : HostContainer) extends ServerApp(servers) {
       var proposedIdx = Random.nextInt(servers.size())
       //currently, we allow a node to be selected for multiple times
       while (proposedIdx == i ||
-        selectedPair(servers(i)).contains(servers(proposedIdx))) {
+        (selectedPair.contains(servers(i)) &&
+          selectedPair(servers(i)).contains(servers(proposedIdx)))) {
         proposedIdx = Random.nextInt(servers.size())
       }
       insertTrafficPair(servers(i), servers(proposedIdx))
