@@ -3,8 +3,6 @@ package network.forwarding.dataplane
 import network.device._
 import network.traffic.{RunningFlow, ChangingRateFlow, FlowRateOrdering}
 import simengine.utils.Logging
-import org.openflow.protocol.OFMatch
-import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
 
 
 /**
@@ -39,7 +37,8 @@ class DefaultDataPlane extends ResourceAllocator with Logging {
         if (currentflow.status != RunningFlow) currentflow.getTempRate
         else currentflow.Rate
       }
-      logDebug("rate demand of flow " + currentflow + " is " + demand)
+      logDebug("rate demand of flow " + currentflow + " is " + demand + ", status:" +
+        currentflow.status)
       if (demand <= avrRate) {
         remainingBandwidth -= demand
       } else {
@@ -65,9 +64,11 @@ class DefaultDataPlane extends ResourceAllocator with Logging {
    */
   override def reallocate(link: Link) {
     if (linkFlowMap(link).size == 0) return
-    var demandingflows = linkFlowMap(link).clone()
     var remainingBandwidth = link.bandwidth
-    var avrRate = link.bandwidth / linkFlowMap(link).size
+    //TODO: fix ChangingRateFlow bug
+    val sensingflows = linkFlowMap(link).filter(f => f.Rate != 0)
+    var demandingflows = sensingflows.clone()
+    var avrRate = link.bandwidth / sensingflows.size
     logDebug("avrRate on " + link + " is " + avrRate)
     demandingflows.map(f => {f.status = ChangingRateFlow; f.setTempRate(avrRate)})
     demandingflows = demandingflows.sorted(FlowRateOrdering)
@@ -75,7 +76,8 @@ class DefaultDataPlane extends ResourceAllocator with Logging {
       //the flow with the minimum rate
       val currentflow = demandingflows.head
       val flowdest = GlobalDeviceManager.getNode(currentflow.dstIP)
-      //try to acquire the max-min rate starting from the dest of this flow
+      //try to acquire the max-min rate starting from the dest of this flow, the following function
+      //recursively calls itself
       flowdest.dataplane.allocate(flowdest, currentflow, currentflow.getEgressLink)
       demandingflows.remove(0)
       if (demandingflows.size != 0) avrRate = remainingBandwidth / demandingflows.size

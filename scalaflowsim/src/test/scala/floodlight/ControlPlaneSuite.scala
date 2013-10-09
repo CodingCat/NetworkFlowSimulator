@@ -81,15 +81,15 @@ class ControlPlaneSuite extends FunSuite with Logging {
     flowset(0).status = RunningFlow
     flowset(0).changeRate(10)
     flowset += Flow("10.0.0.2", "10.0.0.3", "", "", appDataSize = 1000)
-    flowset(1).status = NewStartFlow
-    flowset(1).setTempRate(5)
+    flowset(1).status = RunningFlow
+    flowset(1).changeRate(100)
     flowset += Flow("10.0.0.3", "10.0.0.4", "", "", appDataSize = 1000)
     flowset(2).status = RunningFlow
     flowset(2).changeRate(20)
     flowset = flowset.sorted(FlowRateOrdering)
-    assert(flowset(0).SrcIP === "10.0.0.2")
-    assert(flowset(1).SrcIP === "10.0.0.1")
-    assert(flowset(2).SrcIP === "10.0.0.3")
+    assert(flowset(0).SrcIP === "10.0.0.1")
+    assert(flowset(1).SrcIP === "10.0.0.3")
+    assert(flowset(2).SrcIP === "10.0.0.2")
   }
 
 
