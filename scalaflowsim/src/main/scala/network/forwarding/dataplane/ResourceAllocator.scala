@@ -56,7 +56,8 @@ trait ResourceAllocator extends Logging {
         else flow.getLastHop(startinglink)
       }
       val nextnode = Link.otherEnd(laststep, localnode)
-      logTrace("allocate for flow " + flow.toString() + " on " + laststep + " at node " + localnode)
+      logTrace("allocate for flow " + flow.toString() +
+        " on " + laststep + " at node " + localnode)
       allocateOnCurrentHop(localnode, flow, laststep)
       //continue the allocate process on the last hop
       nextnode.dataplane.allocate(nextnode, flow, laststep)
@@ -102,18 +103,19 @@ trait ResourceAllocator extends Logging {
 
   /**
    * release the resources occupied by the flow from the destination to the source
-   * @param localnode
-   * @param flow
-   * @param ofmatch
+   * @param localnode the current hop of the flow
+   * @param flow the ending flow
+   * @param ofmatch matchfield of flow
    * @param startinglink can be null for the destination of the flow
    */
   def finishFlow(localnode: Node, flow : Flow, ofmatch : OFMatch, startinglink : Link = null) {
     if (localnode.ip_addr(0) != flow.srcIP) {
       logTrace("flow ended at " + localnode.ip_addr(0))
       val nextlink = {
-        if (startinglink == null) localnode.controlplane.fetchInRoutingEntry(ofmatch)
+        if (startinglink == null) flow.getEgressLink
         else flow.getLastHop(startinglink)
       }
+      logTrace("get flow " + flow + "'s trace as " + nextlink)
       val nextnode = Link.otherEnd(nextlink, localnode)
       val node = {
         if (nextlink.end_from == localnode) localnode
@@ -132,7 +134,7 @@ trait ResourceAllocator extends Logging {
   def reallocate(localnode : Node, flow: Flow, ofmatch : OFMatch, startinglink : Link = null) {
     if (localnode.ip_addr(0) != flow.srcIP) {
       val nextlink = {
-        if (startinglink == null) localnode.controlplane.fetchInRoutingEntry(ofmatch)
+        if (startinglink == null) flow.getEgressLink
         else flow.getLastHop(startinglink)
       }
       val nextnode = Link.otherEnd(nextlink, localnode)

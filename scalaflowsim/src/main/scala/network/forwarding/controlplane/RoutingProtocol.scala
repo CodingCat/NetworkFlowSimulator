@@ -16,12 +16,6 @@ import utils.IPAddressConvertor
  */
 trait RoutingProtocol extends Logging {
 
-
-  //to avoid flood the same flow for multiple times
-  //TODO: lacking a broadcast tree
-  private val floodlist = new ArrayBuffer[Flow] with mutable.SynchronizedBuffer[Flow]
-
-
   protected val RIBIn = new mutable.HashMap[OFMatchField, Link]
     with mutable.SynchronizedMap[OFMatchField, Link]
   protected val RIBOut = new mutable.HashMap[OFMatchField, Link]
@@ -87,7 +81,6 @@ trait RoutingProtocol extends Logging {
     logTrace("arrive at " + localnode.ip_addr(0) +
       ", routing (flow : Flow, matchfield : OFMatch, inlink : Link)" +
       " flow:" + flow + ", inlink:" + inlink)
-    if (inlink != null) insertInPath(matchfield, inlink)
     if (localnode.ip_addr(0) == flow.dstIP) {
       //start resource allocation process
       flow.setEgressLink(inlink)
@@ -99,8 +92,6 @@ trait RoutingProtocol extends Logging {
           forward(localnode, nextlink, inlink, flow, matchfield)
         }
       } else {
-        //it's a flood flow
-        logTrace("flow " + flow + " is flooded out at " + localnode)
         floodoutFlow(localnode, flow, matchfield, inlink)
       }
     }
@@ -113,23 +104,29 @@ trait RoutingProtocol extends Logging {
    * @param inlink
    */
   def floodoutFlow(localnode: Node, flow : Flow, matchfield : OFMatchField, inlink : Link) {
-    if (!floodlist.contains(flow)) {
+    //remove duplicate flow (when flooding)
+    if (!RIBIn.contains(matchfield)) {
+      //it's a flood flow
+      logTrace("flow " + flow + " is flooded out at " + localnode)
       val nextlinks = localnode.interfacesManager.getfloodLinks(localnode, inlink)
-      if (nextlinks != null) System.out.println("fuck");
       //TODO : openflow flood handling in which nextlinks can be null?
       nextlinks.foreach(l => {
         flow.addTrace(l, inlink)
         Link.otherEnd(l, localnode).controlplane.routing(Link.otherEnd(l, localnode), flow, matchfield, l)
       })
-      floodlist += flow
+      if (inlink != null) insertInPath(matchfield, inlink)
     }
   }
 
   def forward (localnode: Node, olink : Link, inlink : Link, flow : Flow, matchfield : OFMatchField) {
-    val nextnode = Link.otherEnd(olink, localnode)
-    logDebug("send through " + olink)
-    flow.addTrace(olink, inlink)
-    nextnode.controlplane.routing(nextnode, flow, matchfield, olink)
+    //remove duplicate flow (when forwarding)
+    if (!RIBIn.contains(matchfield)) {
+      val nextnode = Link.otherEnd(olink, localnode)
+      logDebug("send through " + olink)
+      flow.addTrace(olink, inlink)
+      nextnode.controlplane.routing(nextnode, flow, matchfield, olink)
+      if (inlink != null) insertInPath(matchfield, inlink)
+    }
   }
 
 

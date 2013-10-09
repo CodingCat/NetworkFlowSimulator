@@ -33,9 +33,9 @@ object SimulationEngine extends Logging {
         throw new Exception("cannot execute an event happened before, event timestamp: " +
           event.getTimeStamp + ", currentTime:" + currentTime)
       }
-      currentTime = event.getTimeStamp
+      currentTime = event.getTimeStamp()
       //every event should be atomic
-      event.process
+      event.process()
       numPassedEvents += 1
       eventqueue -= event
     }

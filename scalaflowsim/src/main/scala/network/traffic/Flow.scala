@@ -248,7 +248,7 @@ class Flow (
 
   override def toString() : String = ("Flow-" + srcIP + "-" + dstIP)
 
-  def getEgressLink = trace(trace.size - 1)
+  def getEgressLink = egressLink
 
   def getIngressLink = trace(0)
 }

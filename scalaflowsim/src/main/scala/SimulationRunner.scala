@@ -31,6 +31,7 @@ object SimulationRunner {
     SimulationEngine.reporter = FlowReporter
     SimulationEngine.run()
     SimulationEngine.summary()
+    cellnet.shutDownOpenFlowNetwork()
    /* val pod = new Pod(0, 1, 1, 20)
     Thread.sleep(1000 * 20)
     val flow1 = Flow(pod.getHost(0, 0).toString, pod.getHost(0, 1).toString,

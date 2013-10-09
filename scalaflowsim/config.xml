@@ -13,5 +13,12 @@
         <name>scalasim.topology.cell.racksize</name>
         <value>2</value>
     </property>
-
+    <property>
+        <name>scalasim.simengine.model</name>
+        <value>openflow</value>
+    </property>
+  <!--  <property>
+        <name>scalasim.application.names</name>
+        <value>OnOffApp</value>
+    </property>-->
 </configuration>
