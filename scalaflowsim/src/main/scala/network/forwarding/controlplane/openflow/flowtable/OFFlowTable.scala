@@ -11,11 +11,12 @@ import simengine.utils.Logging
 import network.forwarding.controlplane.openflow._
 import simengine.SimulationEngine
 import network.traffic.Flow
-import org.openflow.protocol.statistics.{OFFlowStatisticsReply, OFFlowStatisticsRequest, OFStatisticsType}
+import org.openflow.protocol.statistics.{OFStatistics, OFFlowStatisticsReply, OFFlowStatisticsRequest, OFStatisticsType}
 import org.openflow.protocol.factory.BasicFactory
 import utils.IPAddressConvertor
 
-class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : OpenFlowControlPlane) extends Logging {
+class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : OpenFlowControlPlane)
+  extends Logging {
 
   class OFFlowTableEntryAttaches (private [openflow] val table : OFFlowTable) {
     private [openflow] var ofmatch : OFMatch = null
@@ -150,7 +151,7 @@ class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : Open
   }
 
   private def generateFlowStatisticalReplyFromFlowEntryList (flowlist : List[OFFlowTableEntryAttaches]) = {
-    val replylist = new ListBuffer[OFFlowStatisticsReply]
+    val replylist = new ListBuffer[OFStatistics]
     flowlist.foreach(flowentry => {
       val offlowstatreply = messageFactory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.FLOW)
         .asInstanceOf[OFFlowStatisticsReply]
@@ -174,11 +175,11 @@ class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : Open
     replylist.toList
   }
 
-  def getAllFlowStat : List[OFFlowStatisticsReply] =
+  def getAllFlowStat : List[OFStatistics] =
     generateFlowStatisticalReplyFromFlowEntryList(queryTableByMatch(new OFMatch))
 
 
-  def queryByFlowStatRequest(offlowstatreq: OFFlowStatisticsRequest): List[OFFlowStatisticsReply] = {
+  def queryByFlowStatRequest(offlowstatreq: OFFlowStatisticsRequest): List[OFStatistics] = {
     val qualifiedflows = queryTableByMatchAndOutport(offlowstatreq.getMatch,
       offlowstatreq.getOutPort)
     logTrace("qualified matchfield number: " + qualifiedflows.length)

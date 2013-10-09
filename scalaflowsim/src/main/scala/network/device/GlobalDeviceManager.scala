@@ -15,4 +15,12 @@ object GlobalDeviceManager {
   def addNewNode(ip: String, node: Node) {
     globalNodeMap += ip -> node
   }
+
+  def getAllRouters = {
+    globalNodeMap.values.filter(node => node.nodetype != HostType)
+  }
+
+  def getAllHosts = {
+    globalNodeMap.values.filter(node => node.nodetype == HostType)
+  }
 }

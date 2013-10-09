@@ -35,10 +35,10 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
 
   private var lldpcnt = 0
 
-  private [openflow] var toControllerChannel : Channel = null
+  private [network] var toControllerChannel : Channel = null
 
   private [openflow] lazy val ofinterfacemanager = node.interfacesManager.asInstanceOf[OpenFlowPortManager]
-  private [forwarding] val ofmsgsender = new OpenFlowMsgSender
+  private [network] val ofmsgsender = new OpenFlowMsgSender
 
   private var config_flags : Short = 0
   private var miss_send_len : Short = 1000
@@ -267,6 +267,24 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     }
   }
 
+  /**
+   * send the flow counters to the controller actively
+   */
+  def sendFlowCounters() {
+    val ofstatreply = factory.getMessage(OFType.STATS_REPLY).asInstanceOf[OFStatisticsReply]
+    val statreplylist = flowtables(0).getAllFlowStat
+    //resemble the ofstatreply
+    ofstatreply.setStatistics(statreplylist.toList.asJava)
+    ofstatreply.setStatisticType(OFStatisticsType.FLOW)
+    ofstatreply.setStatisticsFactory(factory)
+    //calculate the message length
+    var l = 0
+    statreplylist.foreach(statreply => l += statreply.getLength)
+    ofstatreply.setLength((l + ofstatreply.getLength).toShort)
+    ofstatreply.setXid(0)
+    ofmsgsender.pushInToBuffer(ofstatreply)
+  }
+
   private def generateDataplaneDesc(ofstatreq : OFStatisticsRequest) = {
     val statdescreply = factory.getStatistics(OFType.STATS_REPLY,OFStatisticsType.DESC)
       .asInstanceOf[OFDescriptionStatistics]
@@ -336,8 +354,8 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
         for (i <- 0 until flowtables.length) {
           val referred_table = flowtables(i)
           stataggreply.setFlowCount(stataggreply.getFlowCount + referred_table.tableCounter.referencecount)
-          stataggreply.setPacketCount(stataggreply.getPacketCount + referred_table.tableCounter.packetlookup +
-            referred_table.tableCounter.packetmatches)
+          stataggreply.setPacketCount(stataggreply.getPacketCount + referred_table.tableCounter.packetlookup
+            + referred_table.tableCounter.packetmatches)
           stataggreply.setByteCount(stataggreply.getByteCount + referred_table.tableCounter.flowbytes)
         }
       } else {
