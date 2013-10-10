@@ -1,6 +1,6 @@
 package network.forwarding.dataplane
 
-import network.device._
+import network.topology._
 import network.traffic.{RunningFlow, ChangingRateFlow, FlowRateOrdering}
 import simengine.utils.Logging
 

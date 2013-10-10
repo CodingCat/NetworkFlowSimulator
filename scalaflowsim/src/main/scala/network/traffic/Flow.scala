@@ -1,6 +1,6 @@
 package network.traffic
 
-import network.device.{HostType, Node, Link}
+import network.topology.{HostType, Node, Link}
 import scala.collection.mutable
 import simengine.utils.{XmlParser, Logging}
 import network.events.CompleteFlowEvent

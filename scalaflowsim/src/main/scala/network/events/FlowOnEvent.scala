@@ -4,7 +4,7 @@ import simengine.{SimulationEngine, EventOfSingleEntity}
 import network.traffic.{CompletedFlow, Flow}
 import scala.util.Random
 import application.OnOffApp
-import network.device.GlobalDeviceManager
+import network.topology.GlobalDeviceManager
 import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
 import org.openflow.protocol.OFMatch
 import simengine.utils.Logging

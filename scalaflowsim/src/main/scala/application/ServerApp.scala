@@ -1,6 +1,6 @@
 package application
 
-import network.device.HostContainer
+import network.topology.HostContainer
 import simengine.utils.Logging
 
 abstract class ServerApp(protected val servers : HostContainer) extends Logging {

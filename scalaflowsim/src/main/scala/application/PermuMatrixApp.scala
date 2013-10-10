@@ -2,7 +2,7 @@ package application
 
 import scala.collection.mutable.{HashSet, MultiMap, HashMap, Set}
 import scala.util.Random
-import network.device.{Host, HostContainer}
+import network.topology.{Host, HostContainer}
 import network.traffic.Flow
 import simengine.SimulationEngine
 import network.events.StartNewFlowEvent

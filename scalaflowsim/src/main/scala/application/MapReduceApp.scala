@@ -1,6 +1,6 @@
 package application
 
-import network.device.HostContainer
+import network.topology.HostContainer
 
 
 class MapReduceApp (servers : HostContainer) extends ServerApp (servers) {

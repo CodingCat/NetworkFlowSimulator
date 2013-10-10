@@ -1,6 +1,6 @@
 package network.forwarding.dataplane
 
-import network.device.{Node, Link}
+import network.topology.{Node, Link}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import network.traffic._

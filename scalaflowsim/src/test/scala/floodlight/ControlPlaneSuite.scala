@@ -3,7 +3,7 @@ package floodlight
 import org.scalatest.FunSuite
 import scalasim.network.component.builder.{LanBuilder, AddressInstaller}
 import simengine.utils.{Logging, XmlParser}
-import network.device._
+import network.topology._
 import network.traffic._
 import simengine.SimulationEngine
 import network.events.StartNewFlowEvent
@@ -19,7 +19,7 @@ class ControlPlaneSuite extends FunSuite with Logging {
     rackservers.create(2)
     AddressInstaller.assignIPAddress(torrouter, "10.0.0.1")
     AddressInstaller.assignIPAddress(torrouter.ip_addr(0), 2, rackservers, 0, rackservers.size - 1)
-    LanBuilder.buildLan(torrouter, rackservers, 0, rackservers.size - 1)
+    LanBuilder.buildRack(torrouter, rackservers, 0, rackservers.size - 1)
     val flow1 = Flow(rackservers(0).toString, rackservers(1).toString,
       rackservers(0).mac_addr(0), rackservers(1).mac_addr(0), appDataSize = 1)
     val flow2 = Flow(rackservers(1).toString, rackservers(0).toString,
@@ -38,7 +38,7 @@ class ControlPlaneSuite extends FunSuite with Logging {
     rackservers.create(2)
     AddressInstaller.assignIPAddress(torrouter, "10.0.0.1")
     AddressInstaller.assignIPAddress(torrouter.ip_addr(0), 2, rackservers, 0, rackservers.size - 1)
-    LanBuilder.buildLan(torrouter, rackservers, 0, rackservers.size - 1)
+    LanBuilder.buildRack(torrouter, rackservers, 0, rackservers.size - 1)
     val flow1 = Flow(rackservers(0).toString, rackservers(1).toString,
       rackservers(0).mac_addr(0), rackservers(1).mac_addr(0), fflag = true, appDataSize = 1)
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1, rackservers(0), 0))

@@ -1,6 +1,6 @@
 package network.forwarding.interface
 
-import network.device._
+import network.topology._
 
 /**
  * InterfacesManager manages the interfaces in the device connecting with others

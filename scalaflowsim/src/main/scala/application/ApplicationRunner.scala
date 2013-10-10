@@ -2,7 +2,7 @@ package application
 
 import scala.collection.mutable
 import simengine.utils.XmlParser
-import network.device.HostContainer
+import network.topology.HostContainer
 
 object ApplicationRunner {
 

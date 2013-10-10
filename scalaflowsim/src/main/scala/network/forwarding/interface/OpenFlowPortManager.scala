@@ -1,6 +1,6 @@
 package network.forwarding.interface
 
-import network.device.{HostType, GlobalDeviceManager, Link, Node}
+import network.topology.{HostType, GlobalDeviceManager, Link, Node}
 import scala.collection.mutable.HashMap
 import org.openflow.protocol._
 import org.openflow.util.HexString

@@ -1,6 +1,6 @@
 package application
 
-import network.device.{Host, HostContainer}
+import network.topology.{Host, HostContainer}
 import scala.collection.mutable.{HashSet, MultiMap, Set, HashMap}
 import scala.util.Random
 import network.events.{FlowOffEvent, StartNewFlowEvent}

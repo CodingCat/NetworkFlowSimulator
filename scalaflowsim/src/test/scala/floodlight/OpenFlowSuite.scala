@@ -2,7 +2,7 @@ package floodlight
 
 import org.scalatest.FunSuite
 import root.SimulationRunner
-import network.device._
+import network.topology._
 import scalasim.network.component.builder.AddressInstaller
 import simengine.utils.XmlParser
 import org.openflow.util.{U32, HexString}

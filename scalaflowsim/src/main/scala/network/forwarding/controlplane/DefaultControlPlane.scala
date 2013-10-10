@@ -1,7 +1,7 @@
 package network.forwarding.controlplane
 
 import org.openflow.protocol.OFMatch
-import network.device._
+import network.topology._
 import simengine.utils.Logging
 import network.traffic.Flow
 import utils.IPAddressConvertor

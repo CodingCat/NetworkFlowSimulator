@@ -1,6 +1,6 @@
 package network.forwarding.interface
 
-import network.device.{Link, HostType, Node}
+import network.topology.{Link, HostType, Node}
 import simengine.utils.XmlParser
 import scala.collection.mutable.HashMap
 

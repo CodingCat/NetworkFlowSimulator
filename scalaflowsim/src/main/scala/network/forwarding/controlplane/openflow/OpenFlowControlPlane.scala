@@ -1,6 +1,6 @@
 package network.forwarding.controlplane.openflow
 
-import network.device._
+import network.topology._
 import network.forwarding.controlplane.DefaultControlPlane
 import org.openflow.protocol._
 import simengine.utils.XmlParser

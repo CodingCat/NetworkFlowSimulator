@@ -3,7 +3,7 @@ package network.forwarding.controlplane
 import scala.collection.mutable.{ArrayBuffer, HashMap}
 import scala.collection.mutable
 import org.openflow.protocol.OFMatch
-import network.device._
+import network.topology._
 import network.traffic.Flow
 import simengine.utils.{XmlParser, Logging}
 import network.forwarding.controlplane.openflow.{OFMatchField, OpenFlowControlPlane}

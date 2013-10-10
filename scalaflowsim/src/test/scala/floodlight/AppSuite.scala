@@ -3,7 +3,7 @@ package floodlight
 import org.scalatest.FunSuite
 import simengine.utils.XmlParser
 import simengine.SimulationEngine
-import network.device.Pod
+import network.topology.Pod
 import application.{PermuMatrixApp, ApplicationRunner}
 
 class AppSuite extends FunSuite {

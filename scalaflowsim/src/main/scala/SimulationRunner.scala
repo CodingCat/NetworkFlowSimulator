@@ -1,6 +1,6 @@
 package root
 
-import _root_.network.device.{Pod, GlobalDeviceManager}
+import _root_.network.topology.{Pod, GlobalDeviceManager}
 import simengine.{PeriodicalEventManager, SimulationEngine}
 import _root_.simengine.utils.XmlParser
 import application.ApplicationRunner

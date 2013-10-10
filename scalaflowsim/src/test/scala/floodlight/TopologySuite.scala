@@ -2,7 +2,7 @@ package floodlight
 
 import scalasim.network.component.builder.{LanBuilder, AddressInstaller}
 import org.scalatest.FunSuite
-import network.device._
+import network.topology._
 import root.SimulationRunner
 
 class TopologySuite extends FunSuite {
@@ -34,11 +34,11 @@ class TopologySuite extends FunSuite {
     val hostContainer = new  HostContainer()
     hostContainer.create(10)
     var exception = intercept[RuntimeException] {
-      LanBuilder.buildLan(router, hostContainer, 0, 9)
+      LanBuilder.buildRack(router, hostContainer, 0, 9)
     }
     router.assignIP("10.0.0.1")
     exception = intercept[RuntimeException] {
-      LanBuilder.buildLan(router, hostContainer, 0, 9)
+      LanBuilder.buildRack(router, hostContainer, 0, 9)
     }
   }
 
@@ -49,11 +49,11 @@ class TopologySuite extends FunSuite {
     val routerContainer = new RouterContainer()
     routerContainer.create(10, ToRRouterType)
     var exception = intercept[RuntimeException] {
-      LanBuilder.buildLan(router, routerContainer, 0, 9)
+      LanBuilder.buildPod(router, routerContainer, 0, 9)
     }
     router.assignIP("10.0.0.1")
     exception = intercept[RuntimeException] {
-      LanBuilder.buildLan(router, routerContainer, 0, 9)
+      LanBuilder.buildPod(router, routerContainer, 0, 9)
     }
   }
 
@@ -64,7 +64,7 @@ class TopologySuite extends FunSuite {
     AddressInstaller.assignIPAddress(router, "10.0.0.1")
     hosts.create(10)
     AddressInstaller.assignIPAddress(router.ip_addr(0), 2, hosts, 0, 9)
-    LanBuilder.buildLan(router, hosts, 0, 9)
+    LanBuilder.buildRack(router, hosts, 0, 9)
     for (i <- 0 to 9) {
       val hostOutLink = hosts(i).interfacesManager.getOutLinks("10.0.0.1")
       //check host outlink
@@ -81,7 +81,7 @@ class TopologySuite extends FunSuite {
     AddressInstaller.assignIPAddress(aggRouter, "10.0.0.1")
     routers.create(10, ToRRouterType)
     AddressInstaller.assignIPAddress(aggRouter.ip_addr(0), 2, routers, 0, 9)
-    LanBuilder.buildLan(aggRouter, routers, 0, 9)
+    LanBuilder.buildPod(aggRouter, routers, 0, 9)
     for (i <- 0 to 9) {
       val routerOutlink = routers(i).interfacesManager.getOutLinks("10.0.0.1")
       //check tor routers outlink

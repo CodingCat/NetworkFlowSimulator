@@ -3,7 +3,7 @@ package network.events
 import org.openflow.protocol.OFMatch
 import network.traffic.{GlobalFlowStore, Flow}
 import simengine.{EventOfSingleEntity, SimulationEngine}
-import network.device.GlobalDeviceManager
+import network.topology.GlobalDeviceManager
 import simengine.utils.Logging
 import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
 import network.utils.FlowReporter
