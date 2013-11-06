@@ -154,16 +154,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     miss_send_len = m
   }
 
-  lazy val DPID = {
-    val impl_dependent = node.nodetype match {
-      case ToRRouterType => "00"
-      case AggregateRouterType => "01"
-      case CoreRouterType => "02"
-    }
-    val t = node.ip_addr(0).substring(node.ip_addr(0).indexOf('.') + 1, node.ip_addr(0).size)
-    val podid = HexString.toHexString(Integer.parseInt(t.substring(0, t.indexOf('.'))), 1)
-    HexString.toLong(impl_dependent + ":" + podid + ":" + node.mac_addr(0))
-  }
+
 
   private def getSwitchFeature (xid : Short) : OFFeaturesReply = {
     //TODO: specify the switch features
