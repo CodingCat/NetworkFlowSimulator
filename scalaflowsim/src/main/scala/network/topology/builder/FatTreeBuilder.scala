@@ -35,15 +35,27 @@ class FatTreeBuilder (private val podnum: Int = 4,
 
    */
 
-  def buildRack(edgeRouters : RouterContainer, hosts: HostContainer) {
-    for (edge_idx <- edge_sws_idx) {
-      for (host_idx <- hosts_idx) {
-        val newlink = new Link(hosts(host_idx - 2), edgeRouters(edge_idx), linkspeed)
-        hosts(host_idx - 2).interfacesManager.registerOutgoingLink(newlink)
-        edgeRouters(edge_idx).interfacesManager.registerIncomeLink(newlink)
-        GlobalDeviceManager.addNewNode(hosts(host_idx - 2).ip_addr(0), hosts(host_idx - 2))
+  def buildNetwork(aggRouters : RouterContainer, edgeRouters : RouterContainer,
+                   hosts: HostContainer) {
+    for (pod_idx <- pods) {
+      for (edge_idx <- edge_sws_idx) {
+        for (host_idx <- hosts_idx) {
+          val newlink = new Link(hosts(host_idx - 2), edgeRouters(edge_idx), linkspeed)
+          hosts(host_idx - 2).interfacesManager.registerOutgoingLink(newlink)
+          edgeRouters(edge_idx).interfacesManager.registerIncomeLink(newlink)
+          GlobalDeviceManager.addNewNode(hosts(host_idx - 2).ip_addr(0), hosts(host_idx - 2))
+        }
+        GlobalDeviceManager.addNewNode(edgeRouters(edge_idx).ip_addr(0), edgeRouters(edge_idx))
+
+        for (agg_idx <- agg_sws_idx) {
+          val newlink = new Link(edgeRouters(edge_idx), aggRouters(agg_idx - podnum / 2), linkspeed)
+          aggRouters(agg_idx - podnum / 2).interfacesManager.registerIncomeLink(newlink)
+          edgeRouters(edge_idx).interfacesManager.registerOutgoingLink(newlink)
+          GlobalDeviceManager.addNewNode(aggRouters(agg_idx - podnum / 2).ip_addr(0),
+            aggRouters(agg_idx - podnum / 2))
+        }
       }
-      GlobalDeviceManager.addNewNode(edgeRouters(edge_idx).ip_addr(0), edgeRouters(edge_idx))
+
     }
   }
 }
