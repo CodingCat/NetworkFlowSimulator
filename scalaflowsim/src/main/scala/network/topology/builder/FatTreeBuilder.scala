@@ -19,7 +19,9 @@ class FatTreeBuilder (private val podnum: Int = 4,
     for (pod_idx <- pods) {
       //connect the eage to each aggregate switch and make the connection within the rack
       for (edge_idx <- edge_sws_idx) {
+        edgeRouters(edge_idx).id_gen(pod_idx, edge_idx, 1)
         for (host_idx <- hosts_idx) {
+          hosts(host_idx - 2).id_gen(pod_idx, edge_idx, host_idx)
           val newlink = new Link(hosts(host_idx - 2), edgeRouters(edge_idx), linkspeed)
           hosts(host_idx - 2).interfacesManager.registerOutgoingLink(newlink)
           edgeRouters(edge_idx).interfacesManager.registerIncomeLink(newlink)
@@ -28,6 +30,7 @@ class FatTreeBuilder (private val podnum: Int = 4,
         GlobalDeviceManager.addNewNode(edgeRouters(edge_idx).ip_addr(0), edgeRouters(edge_idx))
 
         for (agg_idx <- agg_sws_idx) {
+          aggRouters(agg_idx - podnum / 2).id_gen(pod_idx, agg_idx, 1)
           val newlink = new Link(edgeRouters(edge_idx), aggRouters(agg_idx - podnum / 2), linkspeed)
           aggRouters(agg_idx - podnum / 2).interfacesManager.registerIncomeLink(newlink)
           edgeRouters(edge_idx).interfacesManager.registerOutgoingLink(newlink)
@@ -37,9 +40,9 @@ class FatTreeBuilder (private val podnum: Int = 4,
       }
 
       for (agg_idx <- agg_sws_idx) {
-       // val c_index = agg_idx - podnum / 2 + 1
-
+        val c_index = agg_idx - podnum / 2 + 1
         for (core_idx <- core_sws_idx) {
+          coreRouters(core_idx - 1).id_gen(pod_idx, c_index, 1)
           val newlink = new Link(coreRouters(core_idx), aggRouters(agg_idx - podnum / 2),
             linkspeed)
           aggRouters(agg_idx - podnum / 2).interfacesManager.registerOutgoingLink(newlink)

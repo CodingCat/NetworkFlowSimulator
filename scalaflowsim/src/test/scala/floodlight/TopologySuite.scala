@@ -1,6 +1,6 @@
 package floodlight
 
-import scalasim.network.component.builder.{LanBuilder, AddressInstaller}
+import scalasim.network.component.builder.{AddressInstaller}
 import org.scalatest.FunSuite
 import network.topology._
 import root.SimulationRunner

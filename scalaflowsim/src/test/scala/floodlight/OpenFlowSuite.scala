@@ -28,8 +28,8 @@ class OpenFlowSuite extends FunSuite {
     val torrouter = new Router(ToRRouterType, GlobalDeviceManager.globaldevicecounter)
     AddressInstaller.assignIPAddress(aggrouter, "10.1.0.1")
     AddressInstaller.assignIPAddress(torrouter, "10.1.0.2")
-    assert(aggrouter.getDPID === HexString.toLong("01:01:" + aggrouter.mac_addr(0)))
-    assert(torrouter.getDPID === HexString.toLong("00:01:" + torrouter.mac_addr(0)))
+    assert(aggrouter.DPID === HexString.toLong("01:01:" + aggrouter.mac_addr(0)))
+    assert(torrouter.DPID === HexString.toLong("00:01:" + torrouter.mac_addr(0)))
   }
 
   test ("decimal dot ip address can be translated into integer correctly") {

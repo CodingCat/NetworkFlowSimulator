@@ -21,7 +21,6 @@ class Router (nodetype : NodeType, globaldevid : Int)
   def setrid (r : Int) { rid = r }
   def getrid = rid
 
-  def getDPID = controlplane.asInstanceOf[OpenFlowControlPlane].DPID
 }
 
 class RouterContainer () extends NodeContainer {

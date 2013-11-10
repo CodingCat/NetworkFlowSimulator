@@ -4,6 +4,7 @@ import scala.collection.mutable.ListBuffer
 import network.forwarding.dataplane.ResourceAllocator
 import network.forwarding.interface.InterfacesManager
 import network.forwarding.controlplane.RoutingProtocol
+import org.openflow.util.HexString
 
 abstract class NodeType
 
@@ -15,14 +16,28 @@ case object HostType extends NodeType
 class Node (val nodetype : NodeType,
   val globalDeviceId : Int) {
 
+  def id_gen(pid : Int, swid: Int, hostid: Int) = {
+    pod_id = pid
+    sw_id = swid
+    host_id = hostid
+    dpid = (pod_id << 16) + (sw_id << 8) + host_id
+    dpid
+  }
+
+  private var pod_id: Int = 0
+  private var sw_id: Int = 0
+  private var host_id: Int = 0
+  private var dpid: Long = 0
+
+  val DPID = dpid
+
   val mac_addr : ListBuffer[String] = new ListBuffer[String]
   val ip_addr : ListBuffer[String] = new ListBuffer[String]
 
   val controlplane = RoutingProtocol(this)
-
   val dataplane =  ResourceAllocator(this)
-
   val interfacesManager = InterfacesManager(this)
+
 
   def assignIP(ip : String) {
     ip_addr += ip

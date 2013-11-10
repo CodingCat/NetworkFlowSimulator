@@ -1,7 +1,7 @@
 package floodlight
 
 import org.scalatest.FunSuite
-import scalasim.network.component.builder.{LanBuilder, AddressInstaller}
+import scalasim.network.component.builder.{AddressInstaller}
 import simengine.utils.{Logging, XmlParser}
 import network.topology._
 import network.traffic._

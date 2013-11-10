@@ -1,6 +1,6 @@
 package network.topology
 
-import scalasim.network.component.builder.{LanBuilder, AddressInstaller}
+import scalasim.network.component.builder.{AddressInstaller}
 import simengine.utils.XmlParser
 
 
