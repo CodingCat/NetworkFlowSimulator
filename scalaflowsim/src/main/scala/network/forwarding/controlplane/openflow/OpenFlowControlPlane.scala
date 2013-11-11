@@ -81,7 +81,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
       .setReason(OFPacketIn.OFPacketInReason.NO_MATCH)
       .setTotalLength(payload.length.toShort)
       .setLength((payload.length + 18).toShort)
-      .setVersion(0)
+      .setVersion(1)
     packet_in_msg
   }
 
@@ -180,6 +180,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     //TODO: only support output action for now
     featurereply.setActions(1) //only support output action for now
     featurereply.setXid(xid)
+    featurereply.setVersion(1)
     featurereply
   }
 
@@ -202,6 +203,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     echoreply.setXid(echoreq.getXid)
     echoreply.setPayload(echoreq.getPayload)
     echoreply.setLength((OFMessage.MINIMUM_LENGTH + payloadlength).toShort)
+    echoreply.setVersion(echoreq.getVersion)
     echoreply
   }
 
@@ -291,6 +293,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     statreplylist.foreach(statreply => l += statreply.getLength)
     ofstatreply.setLength((l + ofstatreply.getLength).toShort)
     ofstatreply.setXid(0)
+    ofstatreply.setVersion(1)
     ofmsgsender.pushInToBuffer(ofstatreply)
   }
 
@@ -311,6 +314,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     statreply.setStatisticsFactory(factory)
     statreply.setLength((statdescreply.getLength+ statreply.getLength).toShort)
     statreply.setXid(ofstatreq.getXid)
+    statreply.setVersion(ofstatreq.getVersion)
     statreply
   }
 
@@ -348,6 +352,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     statreplylist.foreach(statreply => l += statreply.getLength)
     ofstatreply.setLength((l + ofstatreply.getLength).toShort)
     ofstatreply.setXid(ofstatrequest.getXid)
+    ofstatreply.setVersion(ofstatrequest.getVersion)
     ofmsgsender.pushInToBuffer(ofstatreply)
   }
 
@@ -383,6 +388,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     //calculate the message length
     ofstatreply.setLength((stataggreply.getLength + ofstatreply.getLength).toShort)
     ofstatreply.setXid(ofstatrequest.getXid)
+    ofstatreply.setVersion(ofstatrequest.getVersion)
     ofmsgsender.pushInToBuffer(ofstatreply)
   }
 
