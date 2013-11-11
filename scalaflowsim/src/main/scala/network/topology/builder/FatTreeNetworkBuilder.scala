@@ -108,4 +108,6 @@ object FatTreeNetworkBuilder {
       for (i <- 0 until edgeRouters.size()) edgeRouters(i).connectTOController()
     }
   }
+
+  def getAllHosts = hosts
 }

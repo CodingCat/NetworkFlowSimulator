@@ -27,6 +27,16 @@ object SimulationRunner {
     FatTreeNetworkBuilder.initOFNetwork()
     println("Warming up...")
     Thread.sleep(20 * 1000)
+
+    ApplicationRunner.setResource(FatTreeNetworkBuilder.getAllHosts)
+    ApplicationRunner.installApplication()
+    ApplicationRunner.run()
+    PeriodicalEventManager.event = new UpdateFlowPropertyEvent(0)
+    SimulationEngine.startTime = 0.0
+    SimulationEngine.endTime = 10000.0
+    SimulationEngine.reporter = FlowReporter
+    SimulationEngine.run()
+    SimulationEngine.summary()
   }
 }
 
