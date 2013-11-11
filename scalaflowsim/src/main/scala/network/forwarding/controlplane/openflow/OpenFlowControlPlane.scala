@@ -403,7 +403,8 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
         setParameter(setconfigmsg.getFlags, setconfigmsg.getMissSendLength)
       }
       case OFType.HELLO => {
-        logger.trace(node + " received a hello message")
+        val hellomsg = msg.asInstanceOf[OFHello]
+        logger.trace(node + " received a hello message, version number:" + hellomsg.getVersion)
         ofmsgsender.pushInToBuffer(generateHelloMsg(msg.asInstanceOf[OFHello]))
       }
       case OFType.FEATURES_REQUEST => {
