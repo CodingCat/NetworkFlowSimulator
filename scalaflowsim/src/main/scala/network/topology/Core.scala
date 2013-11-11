@@ -13,10 +13,10 @@ class Core (private val coreRouterNumber : Int,
 
   def init() {
     pods.foreach(pod => {
-      for (i <- 0 to pod.numAggRouters)
+      for (i <- 0 until pod.numAggRouters)
         aggContainer.addNode(pod.getAggregatRouter(i))
     })
-    coreContainer.create(coreRouterNumber)
+    coreContainer.create(coreRouterNumber, CoreRouterType)
   }
 
   def assignIPtoCoreLayer() {
@@ -28,13 +28,10 @@ class Core (private val coreRouterNumber : Int,
     }
   }
 
-  def buildCoreNetwork() {
-    for (i <- 0 until coreRouterNumber) {
-      LanBuilder.buildPod(coreContainer(i), aggContainer, 0, aggContainer.size - 1)
-    }
-  }
+  def getAllCoreSwitches = coreContainer
+
 
   init()
   assignIPtoCoreLayer()
-  buildCoreNetwork()
+ // buildCoreNetwork()
 }

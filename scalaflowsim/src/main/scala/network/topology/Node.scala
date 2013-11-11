@@ -29,7 +29,7 @@ class Node (val nodetype : NodeType,
   private var host_id: Int = 0
   private var dpid: Long = 0
 
-  val DPID = dpid
+  lazy val DPID = dpid
 
   val mac_addr : ListBuffer[String] = new ListBuffer[String]
   val ip_addr : ListBuffer[String] = new ListBuffer[String]

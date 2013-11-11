@@ -55,7 +55,17 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
   private val logger = LoggerFactory.getLogger("OpenFlowControlPlane")
   private val factory = new BasicFactory
 
-  def getSwitchDescription = node.ip_addr(0)
+  lazy val getSwitchDescription = {
+    /*if (node.ip_addr.size < 1) "no description"
+    else */
+    //if (node.ip_addr.size < 1) println("fuck your dirty ASS " + node.nodetype.toString)
+    node.ip_addr(0)
+  }
+
+  lazy val getMacAddress = {
+    /*if (node.mac_addr.size < 1) "no hardware addr"
+    else*/ node.mac_addr(0)
+  }
 
   private def openflowInit() {
     for (i <- 0 until flowtables.length) flowtables(i) = new OFFlowTable(i.toShort, this)
@@ -291,7 +301,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     //TODO: descriptions are not complete
     val statlist = new ListBuffer[OFStatistics]
     statdescreply.setDatapathDescription(getSwitchDescription)
-    statdescreply.setHardwareDescription(node.mac_addr(0))
+    statdescreply.setHardwareDescription(getMacAddress)
     statdescreply.setManufacturerDescription("simulated router")
     statdescreply.setSoftwareDescription("simulated router software")
     statdescreply.setSerialNumber("1")

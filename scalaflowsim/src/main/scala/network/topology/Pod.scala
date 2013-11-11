@@ -44,18 +44,6 @@ class Pod (private [topology] val cellID : Int,
       }
     }
 
-    def buildLanOnAggregate() {
-      for (i <- 0 until aggregateRouterNumber) {
-        LanBuilder.buildPod(aggContainer(i), torContainer, 0, torContainer.size - 1)
-      }
-    }
-
-    def buildLanOnRack() {
-      for (i <- 0 until rackNumber) {
-        LanBuilder.buildRack(torContainer(i), hostsContainer, i * rackSize,
-          (i + 1) * rackSize - 1)
-      }
-    }
 
     hostsContainer.create(rackNumber * rackSize)
     torContainer.create(rackNumber, ToRRouterType)
@@ -64,8 +52,6 @@ class Pod (private [topology] val cellID : Int,
     //main part of buildNetwork
     assignIPtoRacks()
     assignIPtoAggLayer()
-    buildLanOnAggregate()
-    buildLanOnRack()
     initOFNetwork()
   }
 
@@ -83,6 +69,9 @@ class Pod (private [topology] val cellID : Int,
   def getAggregatRouter(idx : Int) : Router = aggContainer(idx)
   def getToRRouter(idx : Int) : Router = torContainer(idx)
   def getHost(rackID : Int, hostID : Int) : Host = hostsContainer(rackID * rackSize + hostID)
+
+  def getAllAggRouters: RouterContainer = aggContainer
+  def getAllToRRouters: RouterContainer = torContainer
   def getAllHostsInPod : HostContainer = hostsContainer
 
   buildNetwork()
