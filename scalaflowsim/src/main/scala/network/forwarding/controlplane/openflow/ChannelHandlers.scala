@@ -69,6 +69,7 @@ class OpenFlowMessageDispatcher (private val ofcontrolplane : OpenFlowControlPla
       for (ofm <- barriedmsglist) {
         msglistenerList.foreach(handler => handler.handleMessage(ofm))
       }
+      barriedmsglist.clear()
     }
     //send out all messages
     if (e.getChannel != null && e.getChannel.isConnected)

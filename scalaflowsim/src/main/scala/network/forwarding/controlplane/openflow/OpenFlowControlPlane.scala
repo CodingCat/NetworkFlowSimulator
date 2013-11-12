@@ -191,7 +191,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
   private def generateBarrierReply(barrierreq : OFBarrierRequest): OFBarrierReply = {
     val barrierReply = factory.getMessage(OFType.BARRIER_REPLY).asInstanceOf[OFBarrierReply]
     barrierReply.setType(OFType.BARRIER_REPLY)
-    barrierReply.setVersion(barrierreq.getVersion)
+    barrierReply.setVersion(1)
     barrierReply.setXid(barrierreq.getXid)
     barrierReply
   }
@@ -201,7 +201,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     getconfigreply.setFlags(config_flags)
     getconfigreply.setMissSendLength(miss_send_len)
     getconfigreply.setXid(xid)
-    getconfigreply.setVersion(version)
+    getconfigreply.setVersion(1)
     getconfigreply.setLength(12)
     getconfigreply
   }
@@ -215,7 +215,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     echoreply.setXid(echoreq.getXid)
     echoreply.setPayload(echoreq.getPayload)
     echoreply.setLength((OFMessage.MINIMUM_LENGTH + payloadlength).toShort)
-    echoreply.setVersion(echoreq.getVersion)
+    echoreply.setVersion(1)
     echoreply
   }
 
@@ -326,7 +326,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     statreply.setStatisticsFactory(factory)
     statreply.setLength((statdescreply.getLength+ statreply.getLength).toShort)
     statreply.setXid(ofstatreq.getXid)
-    statreply.setVersion(ofstatreq.getVersion)
+    statreply.setVersion(1)
     statreply
   }
 
@@ -364,7 +364,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     statreplylist.foreach(statreply => l += statreply.getLength)
     ofstatreply.setLength((l + ofstatreply.getLength).toShort)
     ofstatreply.setXid(ofstatrequest.getXid)
-    ofstatreply.setVersion(ofstatrequest.getVersion)
+    ofstatreply.setVersion(1)
     ofmsgsender.pushInToBuffer(ofstatreply)
   }
 
@@ -400,7 +400,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     //calculate the message length
     ofstatreply.setLength((stataggreply.getLength + ofstatreply.getLength).toShort)
     ofstatreply.setXid(ofstatrequest.getXid)
-    ofstatreply.setVersion(ofstatrequest.getVersion)
+    ofstatreply.setVersion(1)
     ofmsgsender.pushInToBuffer(ofstatreply)
   }
 
@@ -409,7 +409,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     helloreply.setLength(8)
     helloreply.setType(OFType.HELLO)
     helloreply.setXid(hellomsg.getXid)
-    helloreply.setVersion(hellomsg.getVersion)
+    helloreply.setVersion(1)
     helloreply
   }
 
