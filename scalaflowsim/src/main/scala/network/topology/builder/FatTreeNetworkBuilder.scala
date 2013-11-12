@@ -27,17 +27,18 @@ class FatTreeBuilder (private val podnum: Int = 4,
           "10." + pod_idx + "." + edge_idx + ".1")
         GlobalDeviceManager.addNewNode(edgeRouters(edgeRouterGID).ip_addr(0),
           edgeRouters(edgeRouterGID))
+        //assign ip address to hosts
+        AddressInstaller.assignIPAddress(
+          edgeRouters(edgeRouterGID).ip_addr(0),
+          2, hosts, edgeRouterGID * podnum / 2,
+          (edgeRouterGID + 1) * podnum / 2 - 1)
         for (host_idx <- hosts_idx) {
           val hostGID = edgeRouterGID * podnum / 2 + host_idx - 2
           //assign ip addresses to the hosts
-          AddressInstaller.assignIPAddress(
-            edgeRouters(edgeRouterGID).ip_addr(0),
-            2, hosts, edgeRouterGID * podnum / 2,
-            (edgeRouterGID + 1) * podnum / 2 - 1)
           hosts(hostGID).id_gen(pod_idx, edge_idx, host_idx)
-          val newlink = new Link(hosts(hostGID), edgeRouters(edge_idx), linkspeed)
+          val newlink = new Link(hosts(hostGID), edgeRouters(edgeRouterGID), linkspeed)
           hosts(hostGID).interfacesManager.registerOutgoingLink(newlink)
-          edgeRouters(edge_idx).interfacesManager.registerIncomeLink(newlink)
+          edgeRouters(edgeRouterGID).interfacesManager.registerIncomeLink(newlink)
           GlobalDeviceManager.addNewNode(hosts(hostGID).ip_addr(0), hosts(hostGID))
         }
 

@@ -112,6 +112,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
   }
 
   def sendLLDPtoController (l : Link, lldpData : Array[Byte]) {
+    assert(ofinterfacemanager.linkphysicalportsMap.contains(l))
     val port = ofinterfacemanager.linkphysicalportsMap(l)
     //send out packet_in
     lldpcnt += 1
@@ -122,8 +123,10 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
   private def replyLLDP (pktoutMsg : OFPacketOut) {
     //send out through all ports
     val outport = pktoutMsg.getActions.get(0).asInstanceOf[OFActionOutput].getPort
-    printf("outport:" + outport)
     val outlink = ofinterfacemanager.reverseSelection(outport)
+    if (outlink == null) {
+      println(node.nodetype.toString)
+    }
     val neighbor = Link.otherEnd(outlink, node)
     val lldpdata = pktoutMsg.getPacketData
     //TODO: only support the situation that all routers are openflow-enabled
