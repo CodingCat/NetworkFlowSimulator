@@ -122,6 +122,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
   private def replyLLDP (pktoutMsg : OFPacketOut) {
     //send out through all ports
     val outport = pktoutMsg.getActions.get(0).asInstanceOf[OFActionOutput].getPort
+    printf("outport:" + outport)
     val outlink = ofinterfacemanager.reverseSelection(outport)
     val neighbor = Link.otherEnd(outlink, node)
     val lldpdata = pktoutMsg.getPacketData
