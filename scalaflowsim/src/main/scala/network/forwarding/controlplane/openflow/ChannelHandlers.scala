@@ -9,6 +9,7 @@ import org.jboss.netty.handler.codec.oneone.OneToOneEncoder
 import org.openflow.protocol.factory.BasicFactory
 import scala.collection.mutable.{ListBuffer, ArrayBuffer}
 import scala.collection.mutable
+import java.util
 
 class OpenFlowMsgEncoder extends OneToOneEncoder {
 
@@ -37,7 +38,7 @@ class OpenFlowMessageDispatcher (private val ofcontrolplane : OpenFlowControlPla
   extends SimpleChannelHandler {
 
   private var barrier_set: Boolean = false
-  private val barriedmsglist: mutable.LinkedList[OFMessage] = new mutable.LinkedList[OFMessage]
+  private val barriedmsglist: util.ArrayList[OFMessage] = new util.ArrayList[OFMessage]
 
   private val msglistenerList = new ListBuffer[MessageListener]
   private def registerMessageListener {
