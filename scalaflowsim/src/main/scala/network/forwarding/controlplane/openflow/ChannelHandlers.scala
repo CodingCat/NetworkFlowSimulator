@@ -8,6 +8,7 @@ import scala.collection.JavaConversions._
 import org.jboss.netty.handler.codec.oneone.OneToOneEncoder
 import org.openflow.protocol.factory.BasicFactory
 import scala.collection.mutable.{ListBuffer, ArrayBuffer}
+import scala.collection.mutable
 
 class OpenFlowMsgEncoder extends OneToOneEncoder {
 
@@ -35,6 +36,9 @@ class OpenFlowMsgDecoder extends FrameDecoder {
 class OpenFlowMessageDispatcher (private val ofcontrolplane : OpenFlowControlPlane)
   extends SimpleChannelHandler {
 
+  private var barrier_set: Boolean = false
+  private val barriedmsglist: mutable.LinkedList[OFMessage] = new mutable.LinkedList[OFMessage]
+
   private val msglistenerList = new ListBuffer[MessageListener]
   private def registerMessageListener {
     msglistenerList += ofcontrolplane
@@ -50,7 +54,20 @@ class OpenFlowMessageDispatcher (private val ofcontrolplane : OpenFlowControlPla
     if (!e.getMessage.isInstanceOf[java.util.ArrayList[_]]) return
     val msglist = e.getMessage.asInstanceOf[java.util.ArrayList[OFMessage]]
     for (ofm: OFMessage <- msglist) {
-      msglistenerList.foreach(handler => handler.handleMessage(ofm))
+      if (ofm.getType == OFType.BARRIER_REQUEST) barrier_set = true
+      msglistenerList.foreach(handler =>
+        if (!barrier_set)
+          handler.handleMessage(ofm)
+        else
+          barriedmsglist.add(ofm)
+      )
+    }
+    //note: we process the messaes in linear, so the barrier does not make any sense
+    barrier_set = false
+    if (!barrier_set) {
+      for (ofm <- barriedmsglist) {
+        msglistenerList.foreach(handler => handler.handleMessage(ofm))
+      }
     }
     //send out all messages
     if (e.getChannel != null && e.getChannel.isConnected)

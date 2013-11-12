@@ -184,6 +184,14 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     featurereply
   }
 
+  private def generateBarrierReply(barrierreq : OFBarrierRequest): OFBarrierReply = {
+    val barrierReply = factory.getMessage(OFType.BARRIER_REPLY).asInstanceOf[OFBarrierReply]
+    barrierReply.setType(OFType.BARRIER_REPLY)
+    barrierReply.setVersion(barrierreq.getVersion)
+    barrierReply.setXid(barrierreq.getXid)
+    barrierReply
+  }
+
   private def generateSwitchConfigReply(xid : Short, version : Byte): OFGetConfigReply = {
     val getconfigreply = factory.getMessage(OFType.GET_CONFIG_REPLY).asInstanceOf[OFGetConfigReply]
     getconfigreply.setFlags(config_flags)
@@ -436,6 +444,10 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
           case OFStatisticsType.AGGREGATE => processAggregateStatisticsQuery(ofstatrequest)
           case _ => {}
         }
+      }
+      case OFType.BARRIER_REQUEST => {
+        logger.trace(node +  " received a barrier request")
+        ofmsgsender.pushInToBuffer(generateBarrierReply(msg.asInstanceOf[OFBarrierRequest]))
       }
       case _ => {}
     }
