@@ -63,7 +63,7 @@ class OpenFlowMessageDispatcher (private val ofcontrolplane : OpenFlowControlPla
           barriedmsglist.add(ofm)
       )
     }
-    //note: we process the messaes in linear, so the barrier does not make any sense
+    //note: we process the messaes in sequence, so the barrier does not make any sense
     barrier_set = false
     if (!barrier_set) {
       for (ofm <- barriedmsglist) {

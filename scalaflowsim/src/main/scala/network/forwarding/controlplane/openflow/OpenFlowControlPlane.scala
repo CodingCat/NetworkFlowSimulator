@@ -79,9 +79,10 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
       .setInPort(inPortnum)
       .setPacketData(payload)
       .setReason(OFPacketIn.OFPacketInReason.NO_MATCH)
-      .setTotalLength(payload.length.toShort)
-      .setLength((payload.length + 18).toShort)
+      .setTotalLength(payload.size.toShort)
+      .setLength(80)
       .setVersion(1)
+    //logger.debug("frame size:" + payload.size + " total length of packet_in:" + packet_in_msg.getTotalLength)
     packet_in_msg
   }
 
