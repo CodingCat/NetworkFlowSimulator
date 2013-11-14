@@ -138,6 +138,7 @@ class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node)
             ofstatreply.setStatisticType(OFStatisticsType.PORT)
             ofstatreply.setXid(ofstatrequest.getXid)
             ofstatreply.setVersion(1)
+            ofstatreply.setType(OFType.STATS_REPLY)
             //calculate the length
             ofstatreply.setLength((12 + statList.length * statList(0).getLength).toShort)
             node.controlplane.asInstanceOf[OpenFlowControlPlane].ofmsgsender.pushInToBuffer(ofstatreply)

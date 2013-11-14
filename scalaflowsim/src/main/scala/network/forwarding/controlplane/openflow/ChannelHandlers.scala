@@ -8,28 +8,39 @@ import scala.collection.JavaConversions._
 import org.jboss.netty.handler.codec.oneone.OneToOneEncoder
 import org.openflow.protocol.factory.BasicFactory
 import scala.collection.mutable.{ListBuffer, ArrayBuffer}
-import scala.collection.mutable
 import java.util
 
 class OpenFlowMsgEncoder extends OneToOneEncoder {
 
   override def encode(ctx: ChannelHandlerContext, channel: Channel, msg: AnyRef): AnyRef = {
-    if (!msg.isInstanceOf[ArrayBuffer[_]]) return msg
+    //if (!msg.isInstanceOf[ArrayBuffer]) return msg
     val msglist = msg.asInstanceOf[ArrayBuffer[OFMessage]]
     var size: Int = 0
     msglist.foreach(ofm => size += ofm.getLength)
     val buf = ChannelBuffers.buffer(size)
-    msglist.foreach(ofm =>
-      if (ofm != null) ofm.writeTo(buf))
+    try {
+      msglist.foreach(ofm => {
+        println("buffer size:" + buf.capacity() + " write index:" + buf.writerIndex())
+        if (buf == null) println("NULL BUFFER")
+        else if (ofm == null) println("NULL OFM")
+        if (ofm != null) {
+          ofm.writeTo(buf)
+        }
+      })
+    } catch {
+      case e: ArrayIndexOutOfBoundsException => {
+        println()
+      }
+    }
     buf
   }
 }
 
 class OpenFlowMsgDecoder extends FrameDecoder {
   val factory = new BasicFactory
-  override def decode(ctx: ChannelHandlerContext, channel: Channel, buffer: ChannelBuffer)  : AnyRef = {
+  override def decode(ctx: ChannelHandlerContext, channel: Channel, buffer: ChannelBuffer): java.util.List[OFMessage] = {
     //parse the channelbuffer into the list of ofmessage
-    if (!channel.isConnected) return None
+    if (!channel.isConnected) return null
     factory.parseMessage(buffer)
   }
 }
@@ -52,25 +63,26 @@ class OpenFlowMessageDispatcher (private val ofcontrolplane : OpenFlowControlPla
   }
 
   override def messageReceived(ctx: ChannelHandlerContext, e: MessageEvent) {
-    if (!e.getMessage.isInstanceOf[java.util.ArrayList[_]]) return
-    val msglist = e.getMessage.asInstanceOf[java.util.ArrayList[OFMessage]]
+    if (!e.getMessage.isInstanceOf[java.util.List[_]]) return
+    val msglist = e.getMessage.asInstanceOf[java.util.List[OFMessage]]
     for (ofm: OFMessage <- msglist) {
-      if (ofm.getType == OFType.BARRIER_REQUEST) barrier_set = true
+      //if (ofm.getType == OFType.BARRIER_REQUEST) barrier_set = true
       msglistenerList.foreach(handler =>
-        if (!barrier_set)
+        /*if (!barrier_set)
           handler.handleMessage(ofm)
         else
-          barriedmsglist.add(ofm)
+          barriedmsglist.add(ofm)*/
+        handler.handleMessage(ofm)
       )
     }
-    //note: we process the messaes in sequence, so the barrier does not make any sense
-    barrier_set = false
+    //note: we process the messages in sequence, so the barrier does not make any sense
+   /* barrier_set = false
     if (!barrier_set) {
       for (ofm <- barriedmsglist) {
         msglistenerList.foreach(handler => handler.handleMessage(ofm))
       }
       barriedmsglist.clear()
-    }
+    } */
     //send out all messages
     if (e.getChannel != null && e.getChannel.isConnected)
       ofcontrolplane.ofmsgsender.flushBuffer(e.getChannel)

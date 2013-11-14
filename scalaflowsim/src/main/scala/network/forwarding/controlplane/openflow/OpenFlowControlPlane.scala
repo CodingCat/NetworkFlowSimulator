@@ -80,7 +80,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
       .setPacketData(payload)
       .setReason(OFPacketIn.OFPacketInReason.NO_MATCH)
       .setTotalLength(payload.size.toShort)
-      .setLength(80)
+      .setLength((payload.size + 18).toShort)
       .setVersion(1)
     //logger.debug("frame size:" + payload.size + " total length of packet_in:" + packet_in_msg.getTotalLength)
     packet_in_msg
@@ -125,9 +125,6 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     //send out through all ports
     val outport = pktoutMsg.getActions.get(0).asInstanceOf[OFActionOutput].getPort
     val outlink = ofinterfacemanager.reverseSelection(outport)
-    if (outlink == null) {
-      println(node.nodetype.toString)
-    }
     val neighbor = Link.otherEnd(outlink, node)
     val lldpdata = pktoutMsg.getPacketData
     //TODO: only support the situation that all routers are openflow-enabled
@@ -135,6 +132,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
       neighbor.controlplane.asInstanceOf[OpenFlowControlPlane].sendLLDPtoController(outlink, lldpdata)
   }
 
+  /*
   def topologyReady() : Boolean = {
     val expectedNumber = {
       val alllinks = ofinterfacemanager.outlinks.values.toList :::
@@ -142,7 +140,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
       alllinks.count(l => Link.otherEnd(l, node).nodetype != HostType)
     }
     lldpcnt >= expectedNumber
-  }
+  } */
 
   //build channel to the controller
   def connectToController() {
@@ -186,6 +184,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     featurereply.setActions(1) //only support output action for now
     featurereply.setXid(xid)
     featurereply.setVersion(1)
+    featurereply.setType(OFType.FEATURES_REPLY)
     featurereply
   }
 
@@ -203,7 +202,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     getconfigreply.setMissSendLength(miss_send_len)
     getconfigreply.setXid(xid)
     getconfigreply.setVersion(1)
-    getconfigreply.setLength(12)
+    getconfigreply.setType(OFType.GET_CONFIG_REPLY)
     getconfigreply
   }
 
@@ -215,8 +214,9 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     }
     echoreply.setXid(echoreq.getXid)
     echoreply.setPayload(echoreq.getPayload)
-    echoreply.setLength((OFMessage.MINIMUM_LENGTH + payloadlength).toShort)
+    echoreply.setLength((OFEchoReply.MINIMUM_LENGTH + payloadlength).toShort)
     echoreply.setVersion(1)
+    echoreply.setType(OFType.ECHO_REPLY)
     echoreply
   }
 
@@ -244,6 +244,8 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
    */
   def processOFPacketOut (pktoutmsg : OFPacketOut) {
     //-1 is reserved for lldp packets
+    //log.debug(pktoutmsg.toString)
+    //if (pktoutmsg.getActions)
     if (pktoutmsg.getBufferId == -1) {
       //the packet data is included in the packoutmsg
       replyLLDP(pktoutmsg)
@@ -307,6 +309,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     ofstatreply.setLength((l + ofstatreply.getLength).toShort)
     ofstatreply.setXid(0)
     ofstatreply.setVersion(1)
+    ofstatreply.setType(OFType.STATS_REPLY)
     ofmsgsender.pushInToBuffer(ofstatreply)
   }
 
@@ -328,6 +331,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     statreply.setLength((statdescreply.getLength+ statreply.getLength).toShort)
     statreply.setXid(ofstatreq.getXid)
     statreply.setVersion(1)
+    statreply.setType(OFType.STATS_REPLY)
     statreply
   }
 
@@ -366,6 +370,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     ofstatreply.setLength((l + ofstatreply.getLength).toShort)
     ofstatreply.setXid(ofstatrequest.getXid)
     ofstatreply.setVersion(1)
+    ofstatreply.setType(OFType.STATS_REPLY)
     ofmsgsender.pushInToBuffer(ofstatreply)
   }
 
@@ -401,6 +406,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     //calculate the message length
     ofstatreply.setLength((stataggreply.getLength + ofstatreply.getLength).toShort)
     ofstatreply.setXid(ofstatrequest.getXid)
+    ofstatreply.setType(OFType.STATS_REPLY)
     ofstatreply.setVersion(1)
     ofmsgsender.pushInToBuffer(ofstatreply)
   }
