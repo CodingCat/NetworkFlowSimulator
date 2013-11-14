@@ -1,36 +1,34 @@
 package network.forwarding.controlplane.openflow
 
-import scala.collection.mutable.ArrayBuffer
 import org.openflow.protocol.OFMessage
-import scala.collection.mutable
 import org.jboss.netty.channel.Channel
+import scala.collection.immutable.ListSet
 
 
 class OpenFlowMsgSender () {
 
   //used to batch IO
-  private [openflow] val ioBatchBuffer = new ArrayBuffer[OFMessage] with
-    mutable.SynchronizedBuffer[OFMessage]
+  private [openflow] var ioBatchBuffer = new ListSet[OFMessage]
+
   //used to store those messages pended for the unconnected messages
-  private [openflow] val msgPendingBuffer = new ArrayBuffer[OFMessage] with
-    mutable.SynchronizedBuffer[OFMessage]
+  private [openflow] var msgPendingBuffer = new ListSet[OFMessage]
 
   def pushInToBuffer (msg : OFMessage) {
-    ioBatchBuffer += msg
+    ioBatchBuffer +=  msg
   }
 
   def sendMessageToController(channel : Channel, message : OFMessage) {
     msgPendingBuffer += message
     if (channel != null && channel.isConnected) {
       channel.write(msgPendingBuffer)
-      msgPendingBuffer.clear()
+      msgPendingBuffer = new ListSet[OFMessage]
     }
   }
 
   def flushBuffer(channel : Channel) {
     if (channel != null && channel.isConnected) {
       channel.write(ioBatchBuffer)
-      ioBatchBuffer.clear()
+      ioBatchBuffer = new ListSet[OFMessage]
     }
   }
 }

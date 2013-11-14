@@ -4,22 +4,20 @@ import org.jboss.netty.handler.codec.frame.FrameDecoder
 import org.jboss.netty.channel._
 import org.jboss.netty.buffer.{ChannelBuffers, ChannelBuffer}
 import org.openflow.protocol._
-import scala.collection.JavaConversions._
 import org.jboss.netty.handler.codec.oneone.OneToOneEncoder
 import org.openflow.protocol.factory.BasicFactory
-import scala.collection.mutable.{ListBuffer, ArrayBuffer}
-import java.util
+import scala.collection.immutable.ListSet
+import scala.collection.JavaConversions._
 
 class OpenFlowMsgEncoder extends OneToOneEncoder {
 
   override def encode(ctx: ChannelHandlerContext, channel: Channel, msg: AnyRef): AnyRef = {
     //if (!msg.isInstanceOf[ArrayBuffer]) return msg
-    val msglist = msg.asInstanceOf[ArrayBuffer[OFMessage]]
+    val msglist = msg.asInstanceOf[ListSet[OFMessage]]
     var size: Int = 0
     msglist.foreach(ofm => size += ofm.getLength)
     val buf = ChannelBuffers.buffer(size)
-    try {
-      msglist.foreach(ofm => {
+    msglist.foreach(ofm => {
         println("buffer size:" + buf.capacity() + " write index:" + buf.writerIndex())
         if (buf == null) println("NULL BUFFER")
         else if (ofm == null) println("NULL OFM")
@@ -27,11 +25,6 @@ class OpenFlowMsgEncoder extends OneToOneEncoder {
           ofm.writeTo(buf)
         }
       })
-    } catch {
-      case e: ArrayIndexOutOfBoundsException => {
-        println()
-      }
-    }
     buf
   }
 }
@@ -48,10 +41,10 @@ class OpenFlowMsgDecoder extends FrameDecoder {
 class OpenFlowMessageDispatcher (private val ofcontrolplane : OpenFlowControlPlane)
   extends SimpleChannelHandler {
 
-  private var barrier_set: Boolean = false
-  private val barriedmsglist: util.ArrayList[OFMessage] = new util.ArrayList[OFMessage]
+  //private var barrier_set: Boolean = false
+  //private val barriedmsglist: util.ArrayList[OFMessage] = new util.ArrayList[OFMessage]
 
-  private val msglistenerList = new ListBuffer[MessageListener]
+  private var msglistenerList = new ListSet[MessageListener]
   private def registerMessageListener {
     msglistenerList += ofcontrolplane
     msglistenerList += ofcontrolplane.ofinterfacemanager
