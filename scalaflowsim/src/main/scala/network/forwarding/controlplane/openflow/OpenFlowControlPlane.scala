@@ -21,7 +21,7 @@ import scala.collection.JavaConverters._
 import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
 import org.openflow.protocol.statistics._
 import scala.collection.mutable.ListBuffer
-import packets.{Data, TCP, IPv4, Ethernet}
+import packets._
 
 /**
  * this class implement the functions for routers to contact with
@@ -243,17 +243,22 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
    * @param pktoutmsg
    */
   def processOFPacketOut (pktoutmsg : OFPacketOut) {
-    //-1 is reserved for lldp packets
-    //log.debug(pktoutmsg.toString)
-    //if (pktoutmsg.getActions)
-    if (pktoutmsg.getBufferId == -1) {
+
+    def isLLDP = {
+      val ethernet = new Ethernet
+      ethernet.deserialize(pktoutmsg.getPacketData, 0, pktoutmsg.getLength -
+        16 - pktoutmsg.getActionsLength)
+      ethernet.getPayload.isInstanceOf[LLDP]
+    }
+
+    if (isLLDP) {
       //the packet data is included in the packoutmsg
       replyLLDP(pktoutmsg)
     } else {
       //TODO: is there any difference if we are on packet-level simulation?
-      log.trace("receive a packet_out to certain buffer:" + pktoutmsg.toString + " at " + node)
       if (!pendingFlows.contains(pktoutmsg.getBufferId)) {
         //in case of duplicate packet out message
+        logger.debug("receive bufid = " + pktoutmsg.getBufferId + " on " + node.ip_addr(0))
         return
       }
       val pendingflow = pendingFlows(pktoutmsg.getBufferId)
