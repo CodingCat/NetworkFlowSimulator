@@ -3,15 +3,16 @@ package network.forwarding.controlplane.openflow
 import org.openflow.protocol.OFMessage
 import org.jboss.netty.channel.Channel
 import scala.collection.immutable.ListSet
+import scala.concurrent.Lock
 
 
 class OpenFlowMsgSender () {
 
   //used to batch IO
-  private [openflow] var ioBatchBuffer = new ListSet[OFMessage]
+  private var ioBatchBuffer = new ListSet[OFMessage]
 
   //used to store those messages pended for the unconnected messages
-  private [openflow] var msgPendingBuffer = new ListSet[OFMessage]
+  private var msgPendingBuffer = new ListSet[OFMessage]
 
   def pushInToBuffer (msg : OFMessage) {
     ioBatchBuffer +=  msg

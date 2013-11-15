@@ -249,8 +249,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     if (pktoutmsg.getBufferId == -1) {
       //the packet data is included in the packoutmsg
       replyLLDP(pktoutmsg)
-    }
-    else {
+    } else {
       //TODO: is there any difference if we are on packet-level simulation?
       log.trace("receive a packet_out to certain buffer:" + pktoutmsg.toString + " at " + node)
       if (!pendingFlows.contains(pktoutmsg.getBufferId)) {
