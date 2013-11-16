@@ -1,12 +1,13 @@
 package root
 
-import network.topology.{Core, Pod, GlobalDeviceManager}
+import network.topology.{Host, Core, Pod, GlobalDeviceManager}
 import simengine.{PeriodicalEventManager, SimulationEngine}
 import _root_.simengine.utils.XmlParser
 import application.ApplicationRunner
 import network.utils.FlowReporter
-import network.events.UpdateFlowPropertyEvent
+import network.events.{StartNewFlowEvent, UpdateFlowPropertyEvent}
 import network.topology.builder.FatTreeNetworkBuilder
+import network.traffic.Flow
 
 
 object SimulationRunner {
@@ -31,6 +32,13 @@ object SimulationRunner {
     ApplicationRunner.setResource(FatTreeNetworkBuilder.getAllHosts)
     ApplicationRunner.installApplication()
     ApplicationRunner.run()
+    /*val flow1 = Flow(GlobalDeviceManager.getNode("10.0.0.2").toString,
+      GlobalDeviceManager.getNode("10.3.1.2").toString,
+      GlobalDeviceManager.getNode("10.0.0.2").mac_addr(0),
+      GlobalDeviceManager.getNode("10.3.1.2").mac_addr(0), appDataSize = 1)
+    SimulationEngine.addEvent(new StartNewFlowEvent(flow1,
+      GlobalDeviceManager.getNode("10.0.0.2").asInstanceOf[Host], 0))*/
+    SimulationEngine.run
     PeriodicalEventManager.event = new UpdateFlowPropertyEvent(0)
     SimulationEngine.startTime = 0.0
     SimulationEngine.endTime = 10000.0

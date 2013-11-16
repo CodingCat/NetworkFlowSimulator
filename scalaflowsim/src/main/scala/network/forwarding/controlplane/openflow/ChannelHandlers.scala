@@ -16,16 +16,7 @@ class OpenFlowMsgEncoder extends OneToOneEncoder {
     var size: Int = 0
     msglist.foreach(ofm => size += ofm.getLength)
     val buf = ChannelBuffers.buffer(size)
-    msglist.foreach(ofm => {
-        //println("buffer size:" + buf.capacity() + " write index:" + buf.writerIndex())
-        if (buf == null) println("NULL BUFFER")
-        else if (ofm == null) println("NULL OFM")
-        if (ofm != null) {
-          if (ofm.getType == OFType.PACKET_IN && ofm.asInstanceOf[OFPacketIn].getBufferId != -1)
-            println("send a PACKET_IN:" + ofm.asInstanceOf[OFPacketIn].toString)
-          ofm.writeTo(buf)
-        }
-      })
+    msglist.foreach(ofm => ofm.writeTo(buf))
     buf
   }
 }

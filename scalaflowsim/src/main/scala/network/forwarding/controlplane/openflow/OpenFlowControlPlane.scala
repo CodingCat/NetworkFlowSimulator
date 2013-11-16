@@ -258,7 +258,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
       //TODO: is there any difference if we are on packet-level simulation?
       if (!pendingFlows.contains(pktoutmsg.getBufferId)) {
         //in case of duplicate packet out message
-        logger.debug("receive bufid = " + pktoutmsg.getBufferId + " on " + node.ip_addr(0))
+        logger.debug("receive non-existing bufid = " + pktoutmsg.getBufferId + " on " + node.ip_addr(0))
         return
       }
       val pendingflow = pendingFlows(pktoutmsg.getBufferId)
