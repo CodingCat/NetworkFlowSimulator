@@ -229,7 +229,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
         }
       }
       case OFFlowMod.OFPFC_ADD => {
-        logger.trace("receive OFPFC_ADD:" + offlowmod.toString)
+        logger.trace("receive OFPFC_ADD:" + offlowmod.toString + " at " + node.ip_addr(0))
         //table(0) for openflow 1.0
         flowtables(0).addFlowTableEntry(offlowmod)
       }
