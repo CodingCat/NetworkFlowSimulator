@@ -12,7 +12,11 @@ object AddressInstaller {
    */
   def assignIPAddress(node : Node, ip : String) {
     node.assignIP(ip)
-    node.assignMac(HexString.toHexString(node.globalDeviceId, 6))
+    //node.assignMac(HexString.toHexString(node.globalDeviceId, 6))
+  }
+
+  def assignMacAddress(node: Node, macaddr: String) {
+    node.assignMac(macaddr)
   }
 
   /**
@@ -31,7 +35,6 @@ object AddressInstaller {
     val ip_prefix : String =  ipbase.substring(0, ipbase.lastIndexOf('.') + 1)
     for (i <- startIdx to endIdx) {
       nodes(i).assignIP(ip_prefix + (startAddress + i - startIdx).toString)
-      nodes(i).assignMac(HexString.toHexString(nodes(i).globalDeviceId, 6))
     }
   }
 }

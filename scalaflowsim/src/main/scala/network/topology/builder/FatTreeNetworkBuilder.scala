@@ -25,6 +25,8 @@ class FatTreeBuilder (private val podnum: Int = 4,
         //assign ip to the TOR router
         AddressInstaller.assignIPAddress(edgeRouters(edgeRouterGID),
           "10." + pod_idx + "." + edge_idx + ".1")
+        AddressInstaller.assignMacAddress(edgeRouters(edgeRouterGID),
+          s"00:00:00:$pod_idx:$edge_idx:1")
         GlobalDeviceManager.addNewNode(edgeRouters(edgeRouterGID).ip_addr(0),
           edgeRouters(edgeRouterGID))
         //assign ip address to hosts
@@ -36,6 +38,8 @@ class FatTreeBuilder (private val podnum: Int = 4,
           val hostGID = edgeRouterGID * podnum / 2 + host_idx - 2
           //assign ip addresses to the hosts
           hosts(hostGID).id_gen(pod_idx, edge_idx, host_idx)
+          AddressInstaller.assignMacAddress(hosts(hostGID),
+            s"00:00:00:$pod_idx:$edge_idx:$host_idx")
           val newlink = new Link(hosts(hostGID), edgeRouters(edgeRouterGID), linkspeed)
           hosts(hostGID).interfacesManager.registerOutgoingLink(newlink)
           edgeRouters(edgeRouterGID).interfacesManager.registerIncomeLink(newlink)
@@ -47,6 +51,8 @@ class FatTreeBuilder (private val podnum: Int = 4,
           AddressInstaller.assignIPAddress(
             aggRouters(aggRouterGID),
             "10." + pod_idx + "." + agg_idx + ".1")
+          AddressInstaller.assignMacAddress(aggRouters(aggRouterGID),
+            s"00:00:00:$pod_idx:$agg_idx:1")
           aggRouters(aggRouterGID).id_gen(pod_idx, agg_idx, 1)
           val newlink = new Link(edgeRouters(edgeRouterGID), aggRouters(aggRouterGID), linkspeed)
           aggRouters(aggRouterGID).interfacesManager.registerIncomeLink(newlink)
@@ -64,11 +70,11 @@ class FatTreeBuilder (private val podnum: Int = 4,
           //assign ip address to core switches
           AddressInstaller.assignIPAddress(coreRouters(coreRouterGID), "10." + cellsegment +
             "."  + coreRouterGID + ".1")
+          AddressInstaller.assignMacAddress(coreRouters(coreRouterGID),
+            s"00:00:00:$podnum:$c_index:$core_idx")
           coreRouters(coreRouterGID).id_gen(podnum, c_index, core_idx)
           val newlink = new Link(aggRouters(aggRouterGID), coreRouters(coreRouterGID),
             linkspeed)
-          println("make a link between " + aggRouters(aggRouterGID).ip_addr(0) + " and " +
-            coreRouters(coreRouterGID).ip_addr(0))
           aggRouters(aggRouterGID).interfacesManager.registerOutgoingLink(newlink)
           coreRouters(coreRouterGID).interfacesManager.registerIncomeLink(newlink)
           GlobalDeviceManager.addNewNode(coreRouters(coreRouterGID).ip_addr(0),
