@@ -67,6 +67,8 @@ class FatTreeBuilder (private val podnum: Int = 4,
           coreRouters(coreRouterGID).id_gen(podnum, c_index, core_idx)
           val newlink = new Link(aggRouters(aggRouterGID), coreRouters(coreRouterGID),
             linkspeed)
+          println("make a link between " + aggRouters(aggRouterGID).ip_addr(0) + " and " +
+            coreRouters(coreRouterGID).ip_addr(0))
           aggRouters(aggRouterGID).interfacesManager.registerOutgoingLink(newlink)
           coreRouters(coreRouterGID).interfacesManager.registerIncomeLink(newlink)
           GlobalDeviceManager.addNewNode(coreRouters(coreRouterGID).ip_addr(0),
