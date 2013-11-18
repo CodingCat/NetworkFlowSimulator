@@ -38,8 +38,8 @@ object SimulationRunner {
       GlobalDeviceManager.getNode("10.3.1.2").mac_addr(0), appDataSize = 1)
     SimulationEngine.addEvent(new StartNewFlowEvent(flow1,
       GlobalDeviceManager.getNode("10.0.0.2").asInstanceOf[Host], 0))*/
-    SimulationEngine.run
-    PeriodicalEventManager.event = new UpdateFlowPropertyEvent(0)
+    //SimulationEngine.run
+   // PeriodicalEventManager.event = new UpdateFlowPropertyEvent(0)
     SimulationEngine.startTime = 0.0
     SimulationEngine.endTime = 10000.0
     SimulationEngine.reporter = FlowReporter

@@ -283,6 +283,9 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
               floodoutFlow(node, pendingflow, matchfield, ilink)
             } else {
               logTrace("forward the flow " + pendingflow + " through " + olink + " at node " + node)
+              logger.debug("receive PACKET_OUT:" + pktoutmsg + ", the output link is " + outaction.getPort +
+                ", " + olink.toString + ", at " + node.ip_addr(0) + " for " + pendingflow.toString())
+
               if (ilink != olink) {
                 pendingflow.floodflag = false
                 forward(node, olink, ilink, pendingflow, matchfield)

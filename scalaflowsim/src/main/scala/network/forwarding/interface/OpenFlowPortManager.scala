@@ -72,6 +72,7 @@ class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node)
     linkphysicalportsMap += l -> port
     physicalportsMap += (port.getPortNumber -> port)
     portcounters += (port.getPortNumber -> new OFPortCount(port.getPortNumber))
+    logDebug("add physical port " + port.getPortNumber + " as " + l.toString + " at node " + node.ip_addr(0))
   }
 
   override def registerOutgoingLink(l : Link) {
