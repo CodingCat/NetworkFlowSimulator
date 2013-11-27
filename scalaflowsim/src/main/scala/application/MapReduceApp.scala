@@ -11,8 +11,6 @@ import scala.util.Random
 
 class MapReduceApp (servers : HostContainer) extends ServerApp (servers) {
 
-  private val selectedPair = new HashMap[Host, Set[Host]] with MultiMap[Host, Host]//src ip -> dst ip
-  private val ipHostMap = new HashMap[String, Host]//ip -> host
 
   private val jobnum = XmlParser.getInt("scalasim.app.mapreduce.jobnum", 10)
   private val arrivalinterval = XmlParser.getDouble("scalasim.app.mapreduce.interval", 10)
@@ -20,11 +18,6 @@ class MapReduceApp (servers : HostContainer) extends ServerApp (servers) {
   private val maxreducernum = XmlParser.getInt("scalasim.app.mapreduce.maxreducenum", 20)
   private val flowsize = XmlParser.getInt("scalasim.app.mapreduce.flowsize", 200)
 
-  def init() {
-    for (i <- 0 until servers.size) {
-      ipHostMap += servers(i).ip_addr(0) -> servers(i)
-    }
-  }
 
   def generateJob(startTime : Double) {
     var selectedMapperIndices = List[Int]()
@@ -80,5 +73,4 @@ class MapReduceApp (servers : HostContainer) extends ServerApp (servers) {
 
   }
 
-  init()
 }
