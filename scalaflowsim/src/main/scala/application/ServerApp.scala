@@ -13,6 +13,7 @@ object ServerApp {
     appName match {
       case "PermuMatrixApp" => new PermuMatrixApp(servers)
       case "OnOffApp" => new OnOffApp(servers)
+      case "MapReduce" => new MapReduceApp(servers)
     }
   }
 }

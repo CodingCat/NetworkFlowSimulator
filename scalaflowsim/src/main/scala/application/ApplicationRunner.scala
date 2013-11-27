@@ -24,11 +24,6 @@ object ApplicationRunner {
 
   def run(appname : String) = apps(appname).run()
 
-  def apply(name : String) : ServerApp = name match {
-    case "PermuMatrixApp" => apps(name).asInstanceOf[PermuMatrixApp]
-    case "OnOffApp" => apps(name).asInstanceOf[OnOffApp]
-  }
-
   def reset() {
     for (app <- apps.values) app.reset
   }
