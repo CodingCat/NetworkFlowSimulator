@@ -22,7 +22,7 @@ class PermuMatrixApp (servers : HostContainer) extends ServerApp(servers) {
         proposedIdx == i) {
         proposedIdx = Random.nextInt(servers.size())
       }
-      selectedHost = i :: selectedHost
+      selectedHost = proposedIdx :: selectedHost
       selectedPair += servers(i) -> servers(proposedIdx)
     }
   }

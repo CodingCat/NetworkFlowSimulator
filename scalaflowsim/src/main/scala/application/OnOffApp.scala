@@ -19,9 +19,11 @@ class OnOffApp (servers : HostContainer) extends ServerApp(servers) {
       while (selectedHost.contains(proposedIdx) ||
         proposedIdx == i) {
         proposedIdx = Random.nextInt(servers.size())
+        println("selecting new servers")
       }
-      selectedHost = i :: selectedHost
+      selectedHost = proposedIdx :: selectedHost
       selectedPair += servers(i) -> servers(proposedIdx)
+      logInfo("selecting " + i + " with " + proposedIdx)
     }
   }
 
