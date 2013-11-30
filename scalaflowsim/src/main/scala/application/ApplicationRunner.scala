@@ -22,8 +22,6 @@ object ApplicationRunner {
 
   def run() { for (app <- apps.valuesIterator) app.run() }
 
-  def run(appname : String) = apps(appname).run()
-
   def reset() {
     for (app <- apps.values) app.reset
   }
