@@ -22,12 +22,14 @@ object SimulationRunner {
   def main(args:Array[String]) = {
     XmlParser.loadConf(args(0))
 
+    val startime = System.currentTimeMillis()
+
     FatTreeNetworkBuilder.k = 4
     FatTreeNetworkBuilder.initNetwork()
-    FatTreeNetworkBuilder.buildFatTreeNetwork(1.0)
+    FatTreeNetworkBuilder.buildFatTreeNetwork(1000.0)
     FatTreeNetworkBuilder.initOFNetwork()
     println("Warming up...")
-    Thread.sleep(20 * 1000)
+    Thread.sleep(2 * 1000)
 
     ApplicationRunner.setResource(FatTreeNetworkBuilder.getAllHosts)
     ApplicationRunner.installApplication()
@@ -45,6 +47,8 @@ object SimulationRunner {
     SimulationEngine.reporter = FlowReporter
     SimulationEngine.run()
     SimulationEngine.summary()
+
+    println("time cost:" + (System.currentTimeMillis() - startime))
   }
 }
 

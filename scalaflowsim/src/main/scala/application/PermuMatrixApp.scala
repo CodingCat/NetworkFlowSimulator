@@ -15,22 +15,29 @@ class PermuMatrixApp (servers : HostContainer) extends ServerApp(servers) {
 
   private var selectedHost = List[Int]()
 
-  private def selectMachinePairs() {
+  private def selectMachinePairs(): Boolean = {
     for (i <- 0 until servers.size) {
       var proposedIdx = Random.nextInt(servers.size())
       while (selectedHost.contains(proposedIdx) ||
         proposedIdx == i) {
         proposedIdx = Random.nextInt(servers.size())
+        if (i == servers.size - 1 && proposedIdx == i &&
+          !selectedHost.contains(servers(i))) {
+          //restart the selection
+          reset()
+          return false
+        }
       }
       selectedHost = proposedIdx :: selectedHost
       selectedPair += servers(i) -> servers(proposedIdx)
     }
+    true
   }
 
   def selectedPairSize = selectedPair.size
 
   def run() {
-    selectMachinePairs()
+    while (!selectMachinePairs()){}
     for (srcdstPair <- selectedPair) {
       val newflowevent = new StartNewFlowEvent(
         Flow(srcdstPair._1.ip_addr(0), srcdstPair._2.ip_addr(0),
@@ -43,6 +50,7 @@ class PermuMatrixApp (servers : HostContainer) extends ServerApp(servers) {
 
   def reset() {
     selectedPair = new HashMap[Host, Host]
+    selectedHost = List()
   }
 }
 
