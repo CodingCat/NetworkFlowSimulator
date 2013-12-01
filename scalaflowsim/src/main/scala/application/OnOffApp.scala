@@ -6,6 +6,7 @@ import network.events.{FlowOffEvent, StartNewFlowEvent}
 import network.traffic.Flow
 import simengine.SimulationEngine
 import scala.collection.immutable.HashMap
+import simengine.utils.XmlParser
 
 
 class OnOffApp (servers : HostContainer) extends ServerApp(servers) {
@@ -51,6 +52,6 @@ class OnOffApp (servers : HostContainer) extends ServerApp(servers) {
 }
 
 object OnOffApp {
-  val onLength = 10
-  val offLength = 5
+  val onLength = XmlParser.getInt("scalasim.app.onoff.onlength", 10)
+  val offLength = XmlParser.getInt("scalasim.app.onoff.offlength", 5)
 }

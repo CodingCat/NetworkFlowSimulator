@@ -110,11 +110,20 @@ object FatTreeNetworkBuilder {
   def initOFNetwork() {
     if (XmlParser.getString("scalasim.simengine.model", "tcp") == "openflow") {
       //CORE ROUTERS
-      for (i <- 0 until coreRouters.size()) coreRouters(i).connectTOController()
+      for (i <- 0 until coreRouters.size()) {
+        coreRouters(i).connectTOController()
+        Thread.sleep(500)
+      }
       //aggeregate routers
-      for (i <- 0 until aggregateRouters.size()) aggregateRouters(i).connectTOController()
+      for (i <- 0 until aggregateRouters.size()) {
+        aggregateRouters(i).connectTOController()
+        Thread.sleep(500)
+      }
       //ToR routers
-      for (i <- 0 until edgeRouters.size()) edgeRouters(i).connectTOController()
+      for (i <- 0 until edgeRouters.size()) {
+        edgeRouters(i).connectTOController()
+        Thread.sleep(500)
+      }
     }
   }
 

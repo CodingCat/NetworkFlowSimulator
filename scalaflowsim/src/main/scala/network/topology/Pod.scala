@@ -23,6 +23,7 @@ class Pod (private [topology] val cellID : Int,
         //ToR routers
         for (i <- 0 until numRacks) torContainer(i).connectTOController()
         //waiting for controller to process the topology
+        //Thread.sleep(1000)
       }
     }
 

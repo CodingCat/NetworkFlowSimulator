@@ -51,6 +51,7 @@ trait ResourceAllocator extends Logging {
     if (localnode.ip_addr(0) == flow.srcIP) {
       startFlow(flow)
     } else {
+      logDebug("localnode:" + localnode)
       val laststep = {
         if (localnode.ip_addr(0) == flow.dstIP) startinglink
         else flow.getLastHop(startinglink)

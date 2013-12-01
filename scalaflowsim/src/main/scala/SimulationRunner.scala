@@ -24,12 +24,12 @@ object SimulationRunner {
 
     val startime = System.currentTimeMillis()
 
-    FatTreeNetworkBuilder.k = 4
+    FatTreeNetworkBuilder.k = XmlParser.getInt("scalasim.topo.fatree.podnum", 4)
     FatTreeNetworkBuilder.initNetwork()
     FatTreeNetworkBuilder.buildFatTreeNetwork(1000.0)
     FatTreeNetworkBuilder.initOFNetwork()
     println("Warming up...")
-    Thread.sleep(2 * 1000)
+    Thread.sleep(XmlParser.getInt("scalasim.app.warmingtime", 2))
 
     ApplicationRunner.setResource(FatTreeNetworkBuilder.getAllHosts)
     ApplicationRunner.installApplication()

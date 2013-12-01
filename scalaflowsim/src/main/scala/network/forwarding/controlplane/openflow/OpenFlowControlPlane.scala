@@ -32,6 +32,8 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
 
   private val controllerIP = XmlParser.getString("scalasim.network.controlplane.openflow.controller.host", "127.0.0.1")
   private val controllerPort = XmlParser.getInt("scalasim.network.controlplane.openflow.controller.port", 6633)
+  private var floodedflows = List[Flow]()
+
 
   private var lldpcnt = 0
 
@@ -97,6 +99,8 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
         bufferIDs.foldLeft(-1)((b, a) => Math.max(b, a))
       }
     }
+    if (RIBIn.contains(OFFlowTable.createMatchField(flow,
+      wcard = (OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_DST_MASK & ~OFMatch.OFPFW_NW_SRC_MASK)))) return
     assert(ofinterfacemanager.linkphysicalportsMap.contains(inlink))
     val inport = ofinterfacemanager.linkphysicalportsMap(inlink)
     pendingFlowLock.acquire()
@@ -149,6 +153,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
         Executors.newCachedThreadPool(),
         Executors.newCachedThreadPool())
       val clientbootstrap = new ClientBootstrap(clientfactory)
+      clientbootstrap.setOption("connectTimeoutMillis", 600000)
       clientbootstrap.setPipelineFactory(new OpenFlowMsgPipelineFactory(this))
       clientbootstrap.connect(new InetSocketAddress(controllerIP, controllerPort))
     }
@@ -278,9 +283,12 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
             pendingFlowLock.release()
             if (outaction.getPort == OFPort.OFPP_FLOOD.getValue) {
               //flood the flow since the controller does not know the location of the destination
-              logTrace("flood the flow " + pendingflow + " at " + node)
-              pendingflow.floodflag = false
-              floodoutFlow(node, pendingflow, matchfield, ilink)
+              if (!floodedflows.contains(pendingflow)) {
+                logTrace("flood the flow " + pendingflow + " at " + node)
+                pendingflow.floodflag = false
+                floodoutFlow(node, pendingflow, matchfield, ilink)
+                floodedflows = floodedflows :+ pendingflow
+              }
             } else {
               logTrace("forward the flow " + pendingflow + " through " + olink + " at node " + node)
               logger.debug("receive PACKET_OUT:" + pktoutmsg + ", the output link is " + outaction.getPort +
@@ -472,6 +480,9 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
 
   //abstract methods
   override def selectNextHop(flow: Flow, matchfield: OFMatchField, inPort: Link): Link = {
+    if (floodedflows.contains(flow)) {
+      return null
+    }
     if (!RIBOut.contains(matchfield)) {
       //send packet_in to controller
       logDebug("miss the matchfield:" + matchfield.toString)

@@ -1,7 +1,6 @@
 package network.traffic
 
 import network.topology.{HostType, Node, Link}
-import scala.collection.mutable
 import simengine.utils.{XmlParser, Logging}
 import network.events.CompleteFlowEvent
 import simengine.SimulationEngine
@@ -10,6 +9,7 @@ import network.forwarding.controlplane.openflow.OpenFlowControlPlane
 import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
 import org.openflow.protocol.OFMatch
 import network.forwarding.interface.OpenFlowPortManager
+import scala.concurrent.Lock
 
 /**
  *
@@ -49,8 +49,9 @@ class Flow (
    * track the flow's hops,
    * used to allocate resource in reverse order
    */
-  private val trace_laststeptrack = new mutable.ListBuffer[(Link, Int)]   //(link, lastlinkindex)
-  private val trace = new mutable.ListBuffer[Link]
+  private val tracelock = new Lock
+  private var trace_laststeptrack = Vector[(Link, Int)]()   //(link, lastlinkindex)
+  private var trace = Vector[Link]()
 
   def DstIP = dstIP
   def SrcIP = srcIP
@@ -184,16 +185,20 @@ class Flow (
     if (lastlink != null) lastlinkindex = trace.indexOf(lastlink)
     logDebug("add trace, currentlink:" + newlink + ", lastlink:" + lastlink +
       ", flow:" + this.toString)
-    trace_laststeptrack += Tuple2(newlink, lastlinkindex)
-    trace += newlink
+    this.synchronized {
+      trace_laststeptrack = trace_laststeptrack :+ (newlink, lastlinkindex)
+      trace = trace :+ newlink
+    }
   }
 
   def getLastHop(curlink : Link) : Link = {
     logDebug("get the link " + curlink + "'s last step, flow:" + this.toString)
     val laststepindex = trace_laststeptrack(trace.indexOf(curlink))._2
-    if (laststepindex < 0) return null
-    val ret = trace(laststepindex)
-    ret
+    if (laststepindex < 0) {
+      logDebug("last link index is smaller than 0")
+      return null
+    }
+    trace(laststepindex)
   }
 
   private def cancelBindedEvent() {
