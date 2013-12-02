@@ -69,7 +69,7 @@ class FatTreeBuilder (private val podnum: Int = 4,
           val coreRouterGID = (agg_idx - podnum / 2) * podnum / 2 + core_idx - 1
           //assign ip address to core switches
           AddressInstaller.assignIPAddress(coreRouters(coreRouterGID), "10." + cellsegment +
-            "."  + coreRouterGID + ".1")
+            "."  + c_index + "." + core_idx)
           AddressInstaller.assignMacAddress(coreRouters(coreRouterGID),
             s"00:00:00:$podnum:$c_index:$core_idx")
           coreRouters(coreRouterGID).id_gen(podnum, c_index, core_idx)
@@ -109,20 +109,21 @@ object FatTreeNetworkBuilder {
 
   def initOFNetwork() {
     if (XmlParser.getString("scalasim.simengine.model", "tcp") == "openflow") {
+      val connectioninterval = XmlParser.getInt("scalasim.simengine.connectioninterval", 500)
       //CORE ROUTERS
       for (i <- 0 until coreRouters.size()) {
         coreRouters(i).connectTOController()
-        Thread.sleep(500)
+        Thread.sleep(connectioninterval)
       }
       //aggeregate routers
       for (i <- 0 until aggregateRouters.size()) {
         aggregateRouters(i).connectTOController()
-        Thread.sleep(500)
+        Thread.sleep(connectioninterval)
       }
       //ToR routers
       for (i <- 0 until edgeRouters.size()) {
         edgeRouters(i).connectTOController()
-        Thread.sleep(500)
+        Thread.sleep(connectioninterval)
       }
     }
   }
