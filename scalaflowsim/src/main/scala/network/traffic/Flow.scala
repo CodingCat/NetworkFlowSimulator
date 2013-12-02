@@ -26,7 +26,7 @@ class Flow (
   private [network] val dstIP : String,
   private [network] val srcMac : String,
   private [network] val dstMac : String,
-  private [network] val vlanID : Short = 0,
+  private [network] val vlanID : Short = 0xffff.asInstanceOf[Short],
   private [network] val prioritycode: Byte = 0,
   private [network] val srcPort : Short = 0,
   private [network] val dstPort : Short = 0,//set to 0 to wildcarding src/dst ports
@@ -71,8 +71,7 @@ class Flow (
       if (node.nodetype != HostType) {
         val oftables = node.controlplane.asInstanceOf[OpenFlowControlPlane].FlowTables
         oftables.foreach(table => {
-          val entries = table.matchFlow(OFFlowTable.createMatchField(
-            this, wcard = (OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_DST_MASK & ~OFMatch.OFPFW_NW_SRC_MASK)))
+          val entries = table.matchFlow(OFFlowTable.createMatchField(this))
           if (entries != null) {
             //increase table counter
             // for flow simulation, we only set 0 to packet counters
@@ -274,7 +273,7 @@ object Flow {
    * @return
    */
   def apply(srcIP : String, dstIP : String, srcMac : String, dstMac : String,
-            sPort : Short = 1, dPort : Short = 1, vlanID : Short = 0,
+            sPort : Short = 1, dPort : Short = 1, vlanID : Short = 0xffff.asInstanceOf[Short],
             prioritycode : Byte = 0, appDataSize : Double, fflag : Boolean = false) : Flow = {
     new Flow(srcIP, dstIP, srcMac, dstMac, vlanID, prioritycode, srcPort = sPort, dstPort = dPort,
       remainingAppData = appDataSize, floodflag = fflag)

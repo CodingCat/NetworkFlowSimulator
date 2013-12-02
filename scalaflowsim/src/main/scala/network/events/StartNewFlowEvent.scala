@@ -24,8 +24,7 @@ final class StartNewFlowEvent (flow : Flow, host : Host, timestamp : Double)
     logDebug("acquire lock at StartEvent")
     FlowReporter.registerFlowStart(flow)
     host.controlplane.routing(host, flow,
-      OFFlowTable.createMatchField(flow = flow,
-        wcard = OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_DST_MASK & ~OFMatch.OFPFW_NW_SRC_MASK),
+      OFFlowTable.createMatchField(flow = flow),
       null)
   }
 }

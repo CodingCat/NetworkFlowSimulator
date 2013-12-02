@@ -56,7 +56,7 @@ class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : Open
       }
       if (expireMoment != 0) {
         expireEvent = new OFFlowTableEntryExpireEvent(table,
-          OFFlowTable.createMatchField(ofmatch, ofmatch.getWildcards),
+          OFFlowTable.createMatchFieldFromOFMatch(ofmatch),
           expireMoment)
         SimulationEngine.addEvent(expireEvent)
       }
@@ -73,25 +73,27 @@ class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : Open
   def TableCounter = tableCounter
 
   def clear() {
+    logDebug("entries were cleared in " + ofcontrolplane.node.ip_addr(0))
     entries.clear()
   }
 
   def matchFlow(flowmatch : OFMatch, topk : Int = 1) : List[OFFlowTableEntryAttaches] = {
     assert(topk > 0)
-    val ret = new ListBuffer[OFFlowTableEntryAttaches]
-    val matchfield = OFFlowTable.createMatchField(flowmatch, flowmatch.getWildcards)
+    var ret = List[OFFlowTableEntryAttaches]()
+    val matchfield = OFFlowTable.createMatchFieldFromOFMatch(flowmatch)
+    logDebug("matching flow, entry length:" + entries.size)
     entries.foreach(entry => {
     //  logDebug(entry._1.toCompleteString() + "\t" + matchfield.toCompleteString())
-      if (entry._1.matching(matchfield)) ret += entry._2
+      if (entry._1.matching(matchfield)) ret = ret :+ entry._2
     })
-    ret.toList.sortWith(_.priority > _.priority).slice(0, topk)
+    ret.sortWith(_.priority > _.priority).slice(0, topk)
   }
 
   private def queryTable(matchrule : OFMatchField, topk : Int = 1) : List[OFFlowTableEntryAttaches] = {
     assert(topk > 0)
-    val ret = new ListBuffer[OFFlowTableEntryAttaches]
-    entries.foreach(entry => {if (matchrule.matching(entry._1)) ret += entry._2})
-    ret.toList.sortWith(_.priority > _.priority).slice(0, topk)
+    var ret = List[OFFlowTableEntryAttaches]()
+    entries.foreach(entry => {if (matchrule.matching(entry._1)) ret = ret :+ entry._2})
+    ret.sortWith(_.priority > _.priority).slice(0, topk)
   }
 
   def queryTableByMatch(ofmatch : OFMatch) : List[OFFlowTableEntryAttaches] = {
@@ -99,7 +101,7 @@ class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : Open
       logDebug("return all flows: " + entries.values.toList.length)
       entries.values.toList
     } else {
-      queryTable(OFFlowTable.createMatchField(ofmatch, ofmatch.getWildcards))
+      queryTable(OFFlowTable.createMatchFieldFromOFMatch(ofmatch, ofmatch.getWildcards))
     }
   }
 
@@ -127,6 +129,7 @@ class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : Open
   }
 
   def removeEntry (matchfield : OFMatchField) {
+    logTrace(matchfield + " was removed from " + ofcontrolplane.node.ip_addr(0))
     entries -= matchfield
   }
 
@@ -137,6 +140,7 @@ class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : Open
    */
   def addFlowTableEntry (flow_mod : OFFlowMod) = {
     assert(flow_mod.getCommand == OFFlowMod.OFPFC_ADD)
+    logDebug(ofcontrolplane.node.ip_addr(0) + " insert flow table entry with " + flow_mod.getMatch)
     val entryAttach = new OFFlowTableEntryAttaches(this)
     entryAttach.ofmatch = flow_mod.getMatch
     entryAttach.priority = flow_mod.getPriority
@@ -145,7 +149,7 @@ class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : Open
     entryAttach.flowHardExpireMoment = (SimulationEngine.currentTime + flow_mod.getHardTimeout).toInt
     entryAttach.flowIdleDuration = flow_mod.getIdleTimeout
     entryAttach.refreshlastAccessPoint()
-    entries += (OFFlowTable.createMatchField(entryAttach.ofmatch, entryAttach.ofmatch.getWildcards)
+    entries += (OFFlowTable.createMatchFieldFromOFMatch(entryAttach.ofmatch, entryAttach.ofmatch.getWildcards)
       -> entryAttach)
     entries
   }
@@ -195,13 +199,15 @@ object OFFlowTable {
    * @param wcard
    * @return
    */
-  def createMatchField(flow : Flow, wcard : Int) : OFMatchField = {
+  def createMatchField(flow : Flow, wcard : Int = OFMatch.OFPFW_ALL & OFMatch.OFPFW_IN_PORT) : OFMatchField = {
     val matchfield = new OFMatchField()
     matchfield.setWildcards(wcard)
     matchfield.setInputPort(flow.inport)
     matchfield.setDataLayerDestination(flow.dstMac)
     matchfield.setDataLayerSource(flow.srcMac)
+    matchfield.setDataLayerType(0x800)
     matchfield.setDataLayerVirtualLan(flow.vlanID)
+    matchfield.setNetworkProtocol(6)
     matchfield.setNetworkDestination(U32.t(IPAddressConvertor.DecimalStringToInt(flow.dstIP)))
     matchfield.setNetworkSource(U32.t(IPAddressConvertor.DecimalStringToInt(flow.srcIP)))
     matchfield
@@ -213,13 +219,16 @@ object OFFlowTable {
    * @param wcard
    * @return
    */
-  def createMatchField(ofmatch : OFMatch, wcard : Int) : OFMatchField = {
+  def createMatchFieldFromOFMatch(ofmatch : OFMatch,
+                                  wcard : Int = OFMatch.OFPFW_ALL & OFMatch.OFPFW_IN_PORT) : OFMatchField = {
     val matchfield = new OFMatchField
-    matchfield.setWildcards(OFMatch.OFPFW_ALL & wcard)
+    matchfield.setWildcards(wcard)
     matchfield.setInputPort(ofmatch.getInputPort)
     matchfield.setDataLayerDestination(ofmatch.getDataLayerDestination)
     matchfield.setDataLayerSource(ofmatch.getDataLayerSource)
+    matchfield.setDataLayerType(0x800)
     matchfield.setDataLayerVirtualLan(ofmatch.getDataLayerVirtualLan)
+    matchfield.setNetworkProtocol(6)
     matchfield.setNetworkDestination(ofmatch.getNetworkDestination)
     matchfield.setNetworkSource(ofmatch.getNetworkSource)
     matchfield

@@ -21,12 +21,10 @@ trait RoutingProtocol extends Logging {
   protected val RIBOut = new mutable.HashMap[OFMatchField, Link]
     with mutable.SynchronizedMap[OFMatchField, Link]
 
-  protected var wildcard = OFMatch.OFPFW_ALL &
-    ~OFMatch.OFPFW_NW_DST_MASK &
-    ~OFMatch.OFPFW_NW_SRC_MASK
+  protected var wildcard = ~OFMatch.OFPFW_ALL
 
   def fetchInRoutingEntry(ofmatch : OFMatch) : Link = {
-    val matchfield = OFFlowTable.createMatchField(ofmatch, wildcard)
+    val matchfield = OFFlowTable.createMatchFieldFromOFMatch(ofmatch)
     logDebug("quering matchfield: " + matchfield + "(" + matchfield.hashCode + ")" +
       " node:" + this)
     assert(RIBIn.contains(matchfield))
@@ -34,7 +32,7 @@ trait RoutingProtocol extends Logging {
   }
 
   def fetchOutRoutingEntry(ofmatch : OFMatch) : Link = {
-    val matchfield = OFFlowTable.createMatchField(ofmatch, wildcard)
+    val matchfield = OFFlowTable.createMatchFieldFromOFMatch(ofmatch)
     assert(RIBOut.contains(matchfield))
     RIBOut(matchfield)
   }
@@ -44,27 +42,20 @@ trait RoutingProtocol extends Logging {
       IPAddressConvertor.IntToDecimalString(ofmatch.getNetworkSource) + "->" +
       IPAddressConvertor.IntToDecimalString(ofmatch.getNetworkDestination) +
       " with the link " + link.toString)
-    val matchfield = OFFlowTable.createMatchField(ofmatch = ofmatch, wcard = wildcard)
+    val matchfield = OFFlowTable.createMatchFieldFromOFMatch(ofmatch = ofmatch)
     RIBOut += (matchfield -> link)
-    //add source host to global device
-    if (link.end_from.ip_addr(0) ==
-      IPAddressConvertor.IntToDecimalString(matchfield.getNetworkSource)) {
-    }
+
   }
 
   def insertInPath (ofmatch : OFMatch, link : Link) {
-    val matchfield = OFFlowTable.createMatchField(ofmatch = ofmatch, wcard = wildcard)
+    val matchfield = OFFlowTable.createMatchFieldFromOFMatch(ofmatch = ofmatch)
     RIBIn += (matchfield -> link)
     logTrace(this + " insert inRIB entry " + matchfield + "(" + matchfield.hashCode
       + ") -> " + link + " RIBIn Length:" + RIBIn.size)
-    //add destination host to global device
-    if (link.end_from.ip_addr(0) ==
-      IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination)) {
-    }
   }
 
   def deleteEntry(ofmatch : OFMatch) {
-    val matchfield = OFFlowTable.createMatchField(ofmatch, wildcard)
+    val matchfield = OFFlowTable.createMatchFieldFromOFMatch(ofmatch)
     logTrace("delete entry:" + matchfield + " at node:" + this)
     RIBIn -= matchfield
     RIBOut -= matchfield

@@ -3,6 +3,7 @@ package network.forwarding.controlplane.openflow
 import network.topology._
 import network.forwarding.controlplane.DefaultControlPlane
 import org.openflow.protocol._
+import scala.collection.JavaConversions._
 import simengine.utils.XmlParser
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory
 import java.util.concurrent.Executors
@@ -16,12 +17,12 @@ import org.openflow.protocol.action.{OFActionType, OFAction, OFActionOutput}
 import network.traffic.Flow
 import network.forwarding.interface.OpenFlowPortManager
 import scala.concurrent.Lock
-import org.openflow.util.HexString
 import scala.collection.JavaConverters._
 import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
 import org.openflow.protocol.statistics._
 import scala.collection.mutable.ListBuffer
 import packets._
+import java.net.ConnectException
 
 /**
  * this class implement the functions for routers to contact with
@@ -99,8 +100,8 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
         bufferIDs.foldLeft(-1)((b, a) => Math.max(b, a))
       }
     }
-    if (RIBIn.contains(OFFlowTable.createMatchField(flow,
-      wcard = (OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_DST_MASK & ~OFMatch.OFPFW_NW_SRC_MASK)))) return
+    if (RIBIn.contains(OFFlowTable.createMatchField(flow)))
+	    return
     assert(ofinterfacemanager.linkphysicalportsMap.contains(inlink))
     val inport = ofinterfacemanager.linkphysicalportsMap(inlink)
     pendingFlowLock.acquire()
@@ -140,17 +141,24 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
 
   //build channel to the controller
   def connectToController() {
-    try {
-      val clientfactory = new NioClientSocketChannelFactory(
-        Executors.newCachedThreadPool(),
-        Executors.newCachedThreadPool())
-      val clientbootstrap = new ClientBootstrap(clientfactory)
-      clientbootstrap.setOption("connectTimeoutMillis", 600000)
-      clientbootstrap.setPipelineFactory(new OpenFlowMsgPipelineFactory(this))
-      clientbootstrap.connect(new InetSocketAddress(controllerIP, controllerPort))
-    }
-    catch {
-      case e : Exception => e.printStackTrace()
+    val clientfactory = new NioClientSocketChannelFactory(
+      Executors.newCachedThreadPool(),
+      Executors.newCachedThreadPool())
+    val clientbootstrap = new ClientBootstrap(clientfactory)
+    clientbootstrap.setOption("connectTimeoutMillis", 600000)
+    clientbootstrap.setOption("keepAlive", true)
+    clientbootstrap.setPipelineFactory(new OpenFlowMsgPipelineFactory(this))
+    while (true) {
+      try {
+        clientbootstrap.connect(new InetSocketAddress(controllerIP, controllerPort))
+        logger.info(node.ip_addr(0) + " connected successfully")
+        return
+      }
+      catch {
+        case e : Exception => {
+          logger.warn(node.ip_addr(0) + " connected failed")
+        }
+      }
     }
   }
 
@@ -223,17 +231,32 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
       case OFFlowMod.OFPFC_DELETE => {
         if (offlowmod.getMatch.getWildcards == OFMatch.OFPFW_ALL) {
           //clear to initialize matchfield tables;
-          flowtables.foreach(table => table.clear)
+          flowtables.foreach(table => table.clear())
         }
       }
       case OFFlowMod.OFPFC_ADD => {
         logger.trace("receive OFPFC_ADD:" + offlowmod.toString + " at " + node.ip_addr(0))
         //table(0) for openflow 1.0
-        if (offlowmod.getActions.size() > 0)
-          flowtables(0).addFlowTableEntry(offlowmod)
-        else
+
+        if (offlowmod.getActions.size() > 0) {
+          var outport = -1
+          for (action <- offlowmod.getActions) {
+            if (action.isInstanceOf[OFActionOutput]) {
+              outport = action.asInstanceOf[OFActionOutput].getPort
+            }
+          }
+          RIBOut.synchronized{
+            if (outport >= 0)
+              insertOutPath(offlowmod.getMatch,
+                ofinterfacemanager.reverseSelection(outport.asInstanceOf[Short]))
+            flowtables(0).addFlowTableEntry(offlowmod)
+            logDebug("flowtable length:" + flowtables(0).entries.size + " at " + node.ip_addr(0))
+          }
+        } else {
           logger.debug("clear buffer " + offlowmod.getBufferId)
           pendingFlows -= offlowmod.getBufferId
+        }
+
       }
       case _ => throw new Exception("unrecognized OFFlowMod command type:" + offlowmod.getCommand)
     }
@@ -269,8 +292,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
           //only support output for now
           case OFActionType.OUTPUT => {
             val outaction = action.asInstanceOf[OFActionOutput]
-            val wildcard = (OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_DST_MASK & ~OFMatch.OFPFW_NW_SRC_MASK)
-            val matchfield = OFFlowTable.createMatchField(flow = pendingflow, wcard = wildcard)
+            val matchfield = OFFlowTable.createMatchField(flow = pendingflow)
             val ilink = ofinterfacemanager.reverseSelection(pktoutmsg.getInPort)
             val olink = ofinterfacemanager.reverseSelection(outaction.getPort)
             log.trace("removing flow " + pendingflow + " from pending buffer " + pktoutmsg.getBufferId +
@@ -475,23 +497,33 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     }
   }
 
+  override def deleteEntry(ofmatch : OFMatch) {
+    val matchfield = OFFlowTable.createMatchFieldFromOFMatch(ofmatch)
+    logTrace("delete entry:" + matchfield + " at node:" + this)
+    //RIBIn -= matchfield
+    RIBOut -= matchfield
+  }
+
   //abstract methods
   override def selectNextHop(flow: Flow, matchfield: OFMatchField, inPort: Link): Link = {
-    if (floodedflows.contains(flow)) {
+    if (floodedflows.contains(flow) || RIBIn.contains(matchfield)) {
       return null
     }
     if (!RIBOut.contains(matchfield)) {
       //send packet_in to controller
-      logDebug("miss the matchfield:" + matchfield.toString)
+
+      val debugstr = "miss the matchfield " + matchfield.toString + " with hashcode " + matchfield.hashCode
+      logDebug(debugstr)
+      /*for (key <- RIBOut.keys) {
+        logDebug(key.toString + ", " + key.hashCode)
+      } */
+
       val dummypayload = new Array[Byte](1)
       dummypayload(0) = (0).toByte
       val ethernetFrame = new Ethernet
       ethernetFrame.setEtherType(Ethernet.TYPE_IPv4)
         .setSourceMACAddress(matchfield.getDataLayerSource)
         .setDestinationMACAddress(matchfield.getDataLayerDestination)
-        .setPriorityCode(0)
-        .setPad(true)
-        .setVlanID(0)
         .setPayload(new IPv4()
         .setSourceAddress(matchfield.getNetworkSource)
         .setDestinationAddress(matchfield.getNetworkDestination)
@@ -505,8 +537,9 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
       null
     } else {
       //openflow 1.0
-      logDebug("hit RIBOut with " + matchfield.toString)
+      logDebug("hit RIBOut with " + matchfield.toString + " at " + node.ip_addr(0))
       //assume return only one result
+      logDebug(flowtables(0).matchFlow(matchfield).toString())
       for (entryattach <- flowtables(0).matchFlow(matchfield)) {
         //TODO: support other actions
         entryattach.actions.foreach(action =>

@@ -25,8 +25,7 @@ class FlowOffEvent (flow : Flow, timestamp : Double)
         GlobalDeviceManager.getNode(flow.srcIP).dataplane.reallocate(
           GlobalDeviceManager.getNode(flow.dstIP), //destination host
           flow, //offflow
-          OFFlowTable.createMatchField(flow = flow,
-            wcard = (OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_DST_MASK & ~OFMatch.OFPFW_NW_SRC_MASK))) //matchfield
+          OFFlowTable.createMatchField(flow = flow)) //matchfield
       }
     }
   }

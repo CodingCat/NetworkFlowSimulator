@@ -57,52 +57,65 @@ class OFMatchField() extends OFMatch {
 
   def matching(toCompare : OFMatchField) : Boolean = {
     if ((wildcards & OFMatch.OFPFW_IN_PORT) == 0 &&
-      this.inputPort != toCompare.getInputPort)
+      this.inputPort != toCompare.getInputPort) {
       return false
+    }
     if ((wildcards & OFMatch.OFPFW_DL_DST) == 0 &&
-      !util.Arrays.equals(this.dataLayerDestination, toCompare.getDataLayerDestination))
+      !util.Arrays.equals(this.dataLayerDestination, toCompare.getDataLayerDestination)) {
       return false
+    }
     if ((wildcards & OFMatch.OFPFW_DL_SRC) == 0 &&
-      !util.Arrays.equals(this.dataLayerSource, toCompare.getDataLayerSource))
+      !util.Arrays.equals(this.dataLayerSource, toCompare.getDataLayerSource)) {
       return false
+    }
     if ((wildcards & OFMatch.OFPFW_DL_TYPE) == 0
-      && this.dataLayerType != toCompare.getDataLayerType)
+      && this.dataLayerType != toCompare.getDataLayerType) {
       return false
+    }
     if ((wildcards & OFMatch.OFPFW_DL_VLAN) == 0 &&
-      this.dataLayerVirtualLan != toCompare.getDataLayerVirtualLan)
+      this.dataLayerVirtualLan != toCompare.getDataLayerVirtualLan) {
       return false
+    }
     if ((wildcards & OFMatch.OFPFW_DL_VLAN_PCP) == 0 &&
-      this.dataLayerVirtualLanPriorityCodePoint != toCompare.getDataLayerVirtualLanPriorityCodePoint)
+      this.dataLayerVirtualLanPriorityCodePoint != toCompare.getDataLayerVirtualLanPriorityCodePoint) {
       return false
+    }
     if ((wildcards & OFMatch.OFPFW_NW_PROTO) == 0 &&
-      this.networkProtocol != toCompare.getNetworkProtocol)
+      this.networkProtocol != toCompare.getNetworkProtocol) {
       return false
+    }
     if ((wildcards & OFMatch.OFPFW_NW_TOS) == 0 &&
-      this.networkTypeOfService != toCompare.getNetworkTypeOfService)
+      this.networkTypeOfService != toCompare.getNetworkTypeOfService) {
       return false
+    }
     //compare network layer src/dst
     val dstmasklen = getNetworkDestinationMaskLen
     val srcmasklen = getNetworkSourceMaskLen
     if (dstmasklen > 32 && networkDestination != toCompare.getNetworkDestination) {
       return false
     }
-    if (srcmasklen > 32 && networkSource != toCompare.getNetworkSource)
+    if (srcmasklen > 32 && networkSource != toCompare.getNetworkSource) {
       return false
+    }
     val dstmask = ~((1 << (32 - dstmasklen)) - 1)
     val srcmask = ~((1 << (32 - srcmasklen)) - 1)
     if (dstmasklen <= 32 &&
-      (networkDestination & dstmask) != (toCompare.getNetworkDestination & dstmask))
+      (networkDestination & dstmask) != (toCompare.getNetworkDestination & dstmask)) {
       return false
+    }
     if (srcmasklen <= 32 &&
-      (networkSource & srcmask) != (toCompare.getNetworkSource & srcmask))
+      (networkSource & srcmask) != (toCompare.getNetworkSource & srcmask)) {
       return false
+    }
     //layer - 4
     if ((wildcards & OFMatch.OFPFW_TP_DST) == 0 &&
-      this.transportDestination != toCompare.getTransportDestination)
+      this.transportDestination != toCompare.getTransportDestination) {
       return false
+    }
     if ((wildcards & OFMatch.OFPFW_TP_SRC) == 0 &&
-      this.transportSource != toCompare.getTransportSource)
+      this.transportSource != toCompare.getTransportSource) {
       return false
+    }
     true
   }
 

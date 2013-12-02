@@ -27,9 +27,15 @@ class OpenFlowMsgSender () {
   }
 
   def flushBuffer(channel : Channel) {
-    if (channel != null && channel.isConnected) {
-      channel.write(ioBatchBuffer)
-      ioBatchBuffer = new ListSet[OFMessage]
+    try {
+      if (channel != null && channel.isConnected) {
+        channel.write(ioBatchBuffer)
+        ioBatchBuffer = new ListSet[OFMessage]
+      }
+    } catch {
+      case e: Exception => {
+        System.out.println("\n\n\n\nFUCK!!!!!\n\n\n\n")
+      }
     }
   }
 }
