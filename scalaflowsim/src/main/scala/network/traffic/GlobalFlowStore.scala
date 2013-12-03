@@ -14,4 +14,6 @@ object GlobalFlowStore {
   }
 
   def getFlows : List[Flow] = flowstore.toList
+
+  def size = flowstore.size
 }

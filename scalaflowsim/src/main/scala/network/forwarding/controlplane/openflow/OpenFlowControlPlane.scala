@@ -505,7 +505,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
 
   //abstract methods
   override def selectNextHop(flow: Flow, matchfield: OFMatchField, inPort: Link): Link = {
-    if (floodedflows.contains(flow) || RIBIn.contains(flow)) {
+    if (floodedflows.contains(flow) || RIBIn.contains(matchfield)) {
       //TODO: should allow the duplicate flow
       SimulationEngine.queueReadingLock.release()
       return null
