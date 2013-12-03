@@ -3,7 +3,7 @@ package application
 import network.topology.{Host, HostContainer}
 import scala.collection.mutable.{HashSet, MultiMap, Set, HashMap}
 import simengine.utils.XmlParser
-import network.events.StartNewFlowEvent
+import network.events.{FlowOffEvent, StartNewFlowEvent}
 import network.traffic.Flow
 import simengine.SimulationEngine
 import scala.util.Random
@@ -52,15 +52,19 @@ class MapReduceApp (servers : HostContainer) extends ServerApp (servers) {
 
     for (i <- 0 to selectedMapperIndices.length;
          j <- 0 until selectedReducerIndices.length) {
+      val flow = Flow(servers(selectedMapperIndices(i)).ip_addr(0),
+        servers(selectedReducerIndices(j)).ip_addr(0),
+        servers(selectedMapperIndices(i)).mac_addr(0),
+        servers(selectedReducerIndices(j)).mac_addr(0),
+        appDataSize = flowsize)
       val newflowevent = new StartNewFlowEvent(
-        Flow(servers(selectedMapperIndices(i)).ip_addr(0),
-          servers(selectedReducerIndices(j)).ip_addr(0),
-          servers(selectedMapperIndices(i)).mac_addr(0),
-          servers(selectedReducerIndices(j)).mac_addr(0),
-          appDataSize = flowsize),
+        flow,
         servers(i),
         startTime)
       SimulationEngine.addEvent(newflowevent)
+      //start a off
+      SimulationEngine.addEvent(new FlowOffEvent(flow,
+        SimulationEngine.currentTime + Random.nextInt(OnOffApp.offLength)))
     }
   }
 
