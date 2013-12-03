@@ -59,7 +59,7 @@ class MapReduceApp (servers : HostContainer) extends ServerApp (servers) {
         appDataSize = flowsize)
       val newflowevent = new StartNewFlowEvent(
         flow,
-        servers(i),
+        servers(selectedMapperIndices(i)),
         startTime)
       SimulationEngine.addEvent(newflowevent)
       //start a off
