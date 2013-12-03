@@ -49,7 +49,6 @@ class Flow (
    * track the flow's hops,
    * used to allocate resource in reverse order
    */
-  private val tracelock = new Lock
   private var trace_laststeptrack = Vector[(Link, Int)]()   //(link, lastlinkindex)
   private var trace = Vector[Link]()
 

@@ -64,7 +64,7 @@ class MapReduceApp (servers : HostContainer) extends ServerApp (servers) {
       SimulationEngine.addEvent(newflowevent)
       //start a off
       SimulationEngine.addEvent(new FlowOffEvent(flow,
-        SimulationEngine.currentTime + Random.nextInt(OnOffApp.offLength)))
+        startTime + Random.nextInt(OnOffApp.offLength)))
     }
   }
 
