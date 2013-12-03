@@ -50,7 +50,7 @@ class MapReduceApp (servers : HostContainer) extends ServerApp (servers) {
     selectMapperServers()
     selectReducerServers()
 
-    for (i <- 0 to selectedMapperIndices.length;
+    for (i <- 0 until selectedMapperIndices.length;
          j <- 0 until selectedReducerIndices.length) {
       val flow = Flow(servers(selectedMapperIndices(i)).ip_addr(0),
         servers(selectedReducerIndices(j)).ip_addr(0),
