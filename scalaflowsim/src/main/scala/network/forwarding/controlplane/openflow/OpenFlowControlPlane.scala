@@ -23,6 +23,7 @@ import org.openflow.protocol.statistics._
 import scala.collection.mutable.ListBuffer
 import packets._
 import java.net.ConnectException
+import simengine.SimulationEngine
 
 /**
  * this class implement the functions for routers to contact with
@@ -504,7 +505,9 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
 
   //abstract methods
   override def selectNextHop(flow: Flow, matchfield: OFMatchField, inPort: Link): Link = {
-    if (floodedflows.contains(flow)) {
+    if (floodedflows.contains(flow) || RIBIn.contains(flow)) {
+      //TODO: should allow the duplicate flow
+      SimulationEngine.queueReadingLock.release()
       return null
     }
     if (!RIBOut.contains(matchfield)) {

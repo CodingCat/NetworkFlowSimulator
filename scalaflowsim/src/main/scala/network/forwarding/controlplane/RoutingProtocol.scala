@@ -112,16 +112,13 @@ trait RoutingProtocol extends Logging {
   }
 
   def forward (localnode: Node, olink : Link, inlink : Link, flow : Flow, matchfield : OFMatchField) {
-    //remove duplicate flow (when forwarding)
     if (!RIBIn.contains(matchfield)) {
       val nextnode = Link.otherEnd(olink, localnode)
       logDebug("send through " + olink)
       flow.addTrace(olink, inlink)
       nextnode.controlplane.routing(nextnode, flow, matchfield, olink)
       if (inlink != null) insertInPath(matchfield, inlink)
-    } /*else {
-      logDebug("duplicate flow: " + flow)
-    }   */
+    }
   }
 
 
