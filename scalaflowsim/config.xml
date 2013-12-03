@@ -53,4 +53,8 @@
         <name>scalasim.simengine.connectioninterval</name>
         <value>1000</value>
     </property>
+    <property>
+        <name>scalasim.app.appsize</name>
+        <value>200</value>
+    </property>
 </configuration>

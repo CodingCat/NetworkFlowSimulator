@@ -34,7 +34,7 @@ class OnOffApp (servers : HostContainer) extends ServerApp(servers) {
     for (srcdstPair <- selectedPair) {
       val flow = Flow(srcdstPair._1.ip_addr(0), srcdstPair._2.ip_addr(0),
         srcdstPair._1.mac_addr(0), srcdstPair._2.mac_addr(0),
-        appDataSize = 100)
+        appDataSize = XmlParser.getDouble("scalasim.app.appsize", 100))
       val newflowevent = new StartNewFlowEvent(
         flow,
         srcdstPair._1,
