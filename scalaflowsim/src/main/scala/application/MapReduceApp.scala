@@ -16,7 +16,7 @@ class MapReduceApp (servers : HostContainer) extends ServerApp (servers) {
   private val arrivalinterval = XmlParser.getDouble("scalasim.app.mapreduce.interval", 10)
   private val maxmappernum = XmlParser.getInt("scalasim.app.mapreduce.maxmapnum", 20)
   private val maxreducernum = XmlParser.getInt("scalasim.app.mapreduce.maxreducenum", 20)
-  private val flowsize = XmlParser.getInt("scalasim.app.mapreduce.flowsize", 200)
+  private val flowsize = XmlParser.getInt("scalasim.app.mapreduce.flowsize", 100)
 
 
   def generateJob(startTime : Double) {

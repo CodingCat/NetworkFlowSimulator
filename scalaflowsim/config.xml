@@ -57,4 +57,20 @@
         <name>scalasim.app.appsize</name>
         <value>200</value>
     </property>
+    <property>
+        <name>scalasim.app.mapreduce.jobnum</name>
+        <value>10</value>
+    </property>
+    <property>
+        <name>scalasim.app.mapreduce.interval</name>
+        <value>10</value>
+    </property>
+    <property>
+        <name>scalasim.app.mapreduce.maxmapnum</name>
+        <value>4</value>
+    </property>
+    <property>
+        <name>scalasim.app.mapreduce.maxreducenum</name>
+        <value>4</value>
+    </property>
 </configuration>
