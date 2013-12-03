@@ -506,7 +506,7 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
 
   //abstract methods
   override def selectNextHop(flow: Flow, matchfield: OFMatchField, inPort: Link): Link = {
-    if (floodedflows.contains(flow) || RIBIn.contains(matchfield)) {
+    if (floodedflows.contains(flow)) {
       return null
     }
     if (!RIBOut.contains(matchfield)) {
