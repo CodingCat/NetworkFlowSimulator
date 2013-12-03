@@ -100,8 +100,6 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
         bufferIDs.foldLeft(-1)((b, a) => Math.max(b, a))
       }
     }
-    if (RIBIn.contains(OFFlowTable.createMatchField(flow)))
-	    return
     assert(ofinterfacemanager.linkphysicalportsMap.contains(inlink))
     val inport = ofinterfacemanager.linkphysicalportsMap(inlink)
     pendingFlowLock.acquire()
